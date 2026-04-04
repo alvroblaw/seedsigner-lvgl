@@ -1,0 +1,12 @@
+build/
+.vscode/
+.idea/
+__pycache__/
+.pytest_cache/
+*.o
+*.a
+*.so
+*.elf
+*.bin
+*.map
+compile_commands.json
