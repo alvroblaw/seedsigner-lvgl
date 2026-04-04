@@ -56,11 +56,13 @@ void test_external_scan_flow_demo() {
     assert(runtime.screen_registry().register_route(RouteId{"demo.scan"}, []() -> std::unique_ptr<Screen> { return std::make_unique<seedsigner::lvgl::CameraPreviewScreen>(); }));
     assert(runtime.screen_registry().register_route(RouteId{"demo.result"}, []() -> std::unique_ptr<Screen> { return std::make_unique<seedsigner::lvgl::ResultScreen>(); }));
 
-    auto active = runtime.activate(RouteDescriptor{.route_id = RouteId{"demo.menu"}, .args = {{"title", "Main Menu"}, {"items", "scan:Scan QR|back:Back"}}});
+    auto active = runtime.activate(RouteDescriptor{.route_id = RouteId{"demo.menu"}, .args = {{"title", "Main Menu"}, {"items", "scan|Scan QR\nback|Back"}}});
     assert(active.has_value());
     assert(runtime.send_input(InputEvent{.key = InputKey::Press}));
     auto menu_action = next_matching(runtime, EventType::ActionInvoked);
-    assert(menu_action.has_value() && menu_action->action_id == std::optional<std::string>{"scan"});
+    assert(menu_action.has_value() && menu_action->action_id == std::optional<std::string>{"item_selected"});
+    assert(menu_action->meta.has_value());
+    assert(menu_action->meta->key == "scan");
 
     active = runtime.activate(RouteDescriptor{.route_id = RouteId{"demo.scan"}, .args = {{"title", "Scan QR"}, {"status", "Waiting for host capture command"}}});
     assert(active.has_value());
