@@ -5,11 +5,11 @@ namespace seedsigner::lvgl {
 NavigationController::NavigationController(const ScreenRegistry& registry)
     : registry_(registry) {}
 
-std::optional<ActiveRoute> NavigationController::activate(const RouteDescriptor& route) {
-    return replace(route);
+std::optional<ActiveRoute> NavigationController::activate(const RouteDescriptor& route, const ScreenContext& context) {
+    return replace(route, context);
 }
 
-std::optional<ActiveRoute> NavigationController::replace(const RouteDescriptor& route) {
+std::optional<ActiveRoute> NavigationController::replace(const RouteDescriptor& route, const ScreenContext& context) {
     auto next_screen = registry_.create(route.route_id);
     if (!next_screen) {
         return std::nullopt;
@@ -23,7 +23,7 @@ std::optional<ActiveRoute> NavigationController::replace(const RouteDescriptor& 
         .stack_depth = 1,
     };
 
-    next_screen->create(route);
+    next_screen->create(context, route);
     next_screen->on_activate();
     active_screen_ = ScreenSlot{.route = active_route, .screen = std::move(next_screen)};
     return active_route;
@@ -35,10 +35,6 @@ std::optional<ActiveRoute> NavigationController::get_active_route() const noexce
     }
 
     return active_screen_->route;
-}
-
-std::optional<ActiveRoute> NavigationController::install(const RouteDescriptor& route) {
-    return replace(route);
 }
 
 void NavigationController::teardown_active() {

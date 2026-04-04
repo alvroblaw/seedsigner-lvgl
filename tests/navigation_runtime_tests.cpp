@@ -4,8 +4,14 @@
 #include <utility>
 #include <vector>
 
+#include <lvgl.h>
+
 #include "seedsigner_lvgl/runtime/UiRuntime.hpp"
 #include "seedsigner_lvgl/screen/Screen.hpp"
+
+namespace tests {
+void test_headless_runtime_bootstrap();
+}
 
 namespace {
 
@@ -17,7 +23,8 @@ class RecordingScreen : public seedsigner::lvgl::Screen {
 public:
     explicit RecordingScreen(LifecycleLog& log) : log_(log) {}
 
-    void create(const seedsigner::lvgl::RouteDescriptor& route) override {
+    void create(const seedsigner::lvgl::ScreenContext& context, const seedsigner::lvgl::RouteDescriptor& route) override {
+        assert(context.root != nullptr);
         log_.entries.push_back("create:" + route.route_id.value());
         if (const auto it = route.args.find("title"); it != route.args.end()) {
             log_.entries.push_back("arg:title=" + it->second);
@@ -43,6 +50,7 @@ private:
 void test_registry_and_activation() {
     LifecycleLog log;
     seedsigner::lvgl::UiRuntime runtime;
+    assert(runtime.init());
 
     const bool registered = runtime.screen_registry().register_route(
         seedsigner::lvgl::RouteId{"main_menu"},
@@ -72,6 +80,7 @@ void test_replace_tears_down_previous_screen() {
     LifecycleLog first_log;
     LifecycleLog second_log;
     seedsigner::lvgl::UiRuntime runtime;
+    assert(runtime.init());
 
     runtime.screen_registry().register_route(
         seedsigner::lvgl::RouteId{"main_menu"},
@@ -103,15 +112,22 @@ void test_replace_tears_down_previous_screen() {
 
 void test_unknown_route_does_not_install_screen() {
     seedsigner::lvgl::UiRuntime runtime;
+    assert(runtime.init());
+
     const auto missing = runtime.activate({.route_id = seedsigner::lvgl::RouteId{"missing"}});
 
     assert(!missing.has_value());
     assert(!runtime.get_active_route().has_value());
+
+    const auto error = runtime.next_event();
+    assert(error.has_value());
+    assert(error->type == seedsigner::lvgl::EventType::Error);
 }
 
 void test_failed_replace_keeps_existing_screen() {
     LifecycleLog log;
     seedsigner::lvgl::UiRuntime runtime;
+    assert(runtime.init());
 
     runtime.screen_registry().register_route(
         seedsigner::lvgl::RouteId{"main_menu"},
@@ -136,5 +152,6 @@ int main() {
     test_replace_tears_down_previous_screen();
     test_unknown_route_does_not_install_screen();
     test_failed_replace_keeps_existing_screen();
+    tests::test_headless_runtime_bootstrap();
     return 0;
 }

@@ -12,18 +12,17 @@ class NavigationController {
 public:
     explicit NavigationController(const ScreenRegistry& registry);
 
-    std::optional<ActiveRoute> activate(const RouteDescriptor& route);
-    std::optional<ActiveRoute> replace(const RouteDescriptor& route);
+    std::optional<ActiveRoute> activate(const RouteDescriptor& route, const ScreenContext& context);
+    std::optional<ActiveRoute> replace(const RouteDescriptor& route, const ScreenContext& context);
     std::optional<ActiveRoute> get_active_route() const noexcept;
 
 private:
+    void teardown_active();
+
     struct ScreenSlot {
         ActiveRoute route;
         std::unique_ptr<Screen> screen;
     };
-
-    std::optional<ActiveRoute> install(const RouteDescriptor& route);
-    void teardown_active();
 
     const ScreenRegistry& registry_;
     std::optional<ScreenSlot> active_screen_;
