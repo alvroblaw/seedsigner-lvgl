@@ -15,15 +15,19 @@ std::optional<ActiveRoute> NavigationController::replace(const RouteDescriptor& 
         return std::nullopt;
     }
 
-    teardown_active();
-
     const ActiveRoute active_route{
         .route_id = route.route_id,
         .screen_token = next_screen_token_++,
         .stack_depth = 1,
     };
 
-    next_screen->create(context, route);
+    ScreenContext active_context = context;
+    active_context.route_id = active_route.route_id;
+    active_context.screen_token = active_route.screen_token;
+
+    teardown_active();
+
+    next_screen->create(active_context, route);
     next_screen->on_activate();
     active_screen_ = ScreenSlot{.route = active_route, .screen = std::move(next_screen)};
     return active_route;
