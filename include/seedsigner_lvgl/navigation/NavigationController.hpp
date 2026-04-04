@@ -4,6 +4,8 @@
 #include <optional>
 
 #include "seedsigner_lvgl/contracts/RouteDescriptor.hpp"
+#include "seedsigner_lvgl/runtime/CameraFrame.hpp"
+#include "seedsigner_lvgl/runtime/InputEvent.hpp"
 #include "seedsigner_lvgl/screen/ScreenRegistry.hpp"
 
 namespace seedsigner::lvgl {
@@ -15,6 +17,10 @@ public:
     std::optional<ActiveRoute> activate(const RouteDescriptor& route, const ScreenContext& context);
     std::optional<ActiveRoute> replace(const RouteDescriptor& route, const ScreenContext& context);
     std::optional<ActiveRoute> get_active_route() const noexcept;
+    bool send_input(const InputEvent& input);
+    bool set_active_screen_data(const PropertyMap& data);
+    bool patch_active_screen_data(const PropertyMap& patch);
+    bool push_frame_to_active_screen(const CameraFrame& frame);
 
 private:
     void teardown_active();
