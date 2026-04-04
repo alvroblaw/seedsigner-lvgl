@@ -8,7 +8,9 @@
 #include <lvgl.h>
 
 #include "seedsigner_lvgl/contracts/RouteDescriptor.hpp"
+#include "seedsigner_lvgl/runtime/CameraFrame.hpp"
 #include "seedsigner_lvgl/runtime/Event.hpp"
+#include "seedsigner_lvgl/runtime/InputEvent.hpp"
 
 namespace seedsigner::lvgl {
 
@@ -71,6 +73,10 @@ public:
     virtual void on_activate() {}
     virtual void on_deactivate() {}
     virtual void destroy() {}
+    virtual bool handle_input(const InputEvent&) { return false; }
+    virtual bool set_data(const PropertyMap&) { return false; }
+    virtual bool patch_data(const PropertyMap&) { return false; }
+    virtual bool push_frame(const CameraFrame&) { return false; }
 };
 
 }  // namespace seedsigner::lvgl

@@ -41,6 +41,22 @@ std::optional<ActiveRoute> NavigationController::get_active_route() const noexce
     return active_screen_->route;
 }
 
+bool NavigationController::send_input(const InputEvent& input) {
+    return active_screen_ && active_screen_->screen->handle_input(input);
+}
+
+bool NavigationController::set_active_screen_data(const PropertyMap& data) {
+    return active_screen_ && active_screen_->screen->set_data(data);
+}
+
+bool NavigationController::patch_active_screen_data(const PropertyMap& patch) {
+    return active_screen_ && active_screen_->screen->patch_data(patch);
+}
+
+bool NavigationController::push_frame_to_active_screen(const CameraFrame& frame) {
+    return active_screen_ && active_screen_->screen->push_frame(frame);
+}
+
 void NavigationController::teardown_active() {
     if (!active_screen_) {
         return;
