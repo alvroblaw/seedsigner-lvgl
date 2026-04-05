@@ -16,6 +16,7 @@ void test_headless_runtime_bootstrap();
 void test_settings_selection_route_demo();
 void test_settings_selection_multi_select_demo();
 void test_external_scan_flow_demo();
+void test_settings_menu_route_demo();
 }
 
 namespace {
@@ -138,5 +139,6 @@ int main() {
     tests::test_settings_selection_route_demo();
     tests::test_settings_selection_multi_select_demo();
     tests::test_external_scan_flow_demo();
+    tests::test_settings_menu_route_demo();
     return 0;
 }

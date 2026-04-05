@@ -34,6 +34,7 @@ add_library(seedsigner_lvgl
   src/screens/PlaceholderScreen.cpp
   src/screens/ResultScreen.cpp
   src/screens/SettingsSelectionScreen.cpp
+  src/screens/SettingsMenuScreen.cpp
 )
 
 target_include_directories(seedsigner_lvgl

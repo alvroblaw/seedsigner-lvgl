@@ -13,8 +13,11 @@
 #include "seedsigner_lvgl/screens/PlaceholderScreen.hpp"
 #include "seedsigner_lvgl/screens/ResultScreen.hpp"
 #include "seedsigner_lvgl/screens/SettingsSelectionScreen.hpp"
+#include "seedsigner_lvgl/screens/SettingsMenuScreen.hpp"
 
 namespace tests {
+
+void test_settings_menu_route_demo();
 
 namespace {
 using seedsigner::lvgl::CameraFrame;
@@ -270,6 +273,81 @@ void test_external_scan_flow_demo() {
     assert(runtime.send_input(InputEvent{.key = InputKey::Press}));
     auto result_action = next_matching(runtime, EventType::ActionInvoked);
     assert(result_action.has_value() && result_action->action_id == std::optional<std::string>{"continue"});
+
+    runtime.tick(16);
+    runtime.refresh_now();
+    assert(runtime.display()->flush_count() > 0);
+}
+
+void test_settings_menu_route_demo() {
+    using seedsigner::lvgl::UiRuntime;
+    using seedsigner::lvgl::RouteId;
+    using seedsigner::lvgl::RouteDescriptor;
+    using seedsigner::lvgl::InputEvent;
+    using seedsigner::lvgl::InputKey;
+    using seedsigner::lvgl::SettingDefinition;
+    using seedsigner::lvgl::SettingValueType;
+    using seedsigner::lvgl::make_settings_route_args;
+    using seedsigner::lvgl::make_settings_menu_route_args;
+
+    UiRuntime runtime;
+    assert(runtime.init());
+    assert(runtime.screen_registry().register_route(RouteId{"settings.menu"}, []() -> std::unique_ptr<seedsigner::lvgl::Screen> {
+        return std::make_unique<seedsigner::lvgl::SettingsMenuScreen>();
+    }));
+
+    std::vector<SettingDefinition> definitions = {
+        {
+            .id = "locale",
+            .title = "Settings",
+            .subtitle = "Language",
+            .section_title = "Display language",
+            .help_text = "Choose one language for the active UI session.",
+            .value_type = SettingValueType::SingleChoice,
+            .default_values = {"en"},
+            .current_values = {"es"},
+            .items = {{.id = "en", .label = "English", .secondary_text = "Use the default Latin font stack"},
+                      {.id = "es", .label = "Español", .secondary_text = "Use accented glyphs in the UI"},
+                      {.id = "fr", .label = "Français", .secondary_text = "Preview wider Latin text coverage"}}
+        },
+        {
+            .id = "features",
+            .title = "Settings",
+            .subtitle = "Advanced features",
+            .section_title = "Enabled features",
+            .value_type = SettingValueType::MultiChoice,
+            .default_values = {"dire_warnings"},
+            .current_values = {"dire_warnings", "compact_seedqr"},
+            .items = {{.id = "dire_warnings", .label = "Dire warnings", .secondary_text = "Require explicit confirm on dangerous flows", .item_type = seedsigner::lvgl::SettingItemType::Toggle},
+                      {.id = "compact_seedqr", .label = "Compact SeedQR", .secondary_text = "Prefer compact QR exports when possible", .item_type = seedsigner::lvgl::SettingItemType::Toggle},
+                      {.id = "passphrase", .label = "Passphrase support", .secondary_text = "Enable passphrase entry flows", .item_type = seedsigner::lvgl::SettingItemType::Toggle}}
+        }
+    };
+
+    auto args = make_settings_menu_route_args(definitions);
+    args["title"] = "Settings";
+    args["help_text"] = "Select a setting to adjust.";
+    args["selected_index"] = "1";
+
+    const auto active = runtime.activate({.route_id = RouteId{"settings.menu"}, .args = args});
+    assert(active.has_value());
+    // consume route activated and screen ready events
+    assert(next_matching(runtime, seedsigner::lvgl::EventType::RouteActivated).has_value());
+    assert(next_matching(runtime, seedsigner::lvgl::EventType::ScreenReady).has_value());
+
+    // move selection up
+    assert(runtime.send_input(InputEvent{.key = InputKey::Up}));
+    auto focus_event = next_matching(runtime, seedsigner::lvgl::EventType::ActionInvoked);
+    assert(focus_event.has_value());
+    assert(focus_event->action_id == std::optional<std::string>{"focus_changed"});
+    assert(focus_event->meta && focus_event->meta->key == "locale");
+
+    // select current item
+    assert(runtime.send_input(InputEvent{.key = InputKey::Press}));
+    auto select_event = next_matching(runtime, seedsigner::lvgl::EventType::ActionInvoked);
+    assert(select_event.has_value());
+    assert(select_event->action_id == std::optional<std::string>{"setting_selected"});
+    assert(select_event->meta && select_event->meta->key == "locale");
 
     runtime.tick(16);
     runtime.refresh_now();
