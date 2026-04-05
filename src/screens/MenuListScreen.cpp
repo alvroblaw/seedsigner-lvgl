@@ -115,8 +115,9 @@ bool MenuListScreen::handle_input(const InputEvent& input) {
 }
 
 bool MenuListScreen::set_data(const PropertyMap& data) {
+    const auto context = context_;
     destroy();
-    create(context_, RouteDescriptor{.route_id = context_.route_id, .args = data});
+    create(context, RouteDescriptor{.route_id = context.route_id, .args = data});
     return true;
 }
 
