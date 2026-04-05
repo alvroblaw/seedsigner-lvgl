@@ -338,6 +338,7 @@ Event fields should generally include:
 - `timestamp_ms`
 
 See also `docs/api/STATE_MODEL.md` for ownership rules.
+For the first concrete settings-family payload/schema bridge, see `docs/api/SETTINGS_CONTRACT.md`.
 
 ---
 

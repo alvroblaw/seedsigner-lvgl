@@ -2,21 +2,18 @@
 
 #include <cstddef>
 #include <string>
+#include <string_view>
 #include <unordered_set>
 #include <vector>
 
+#include "seedsigner_lvgl/contracts/SettingsContract.hpp"
 #include "seedsigner_lvgl/screen/Screen.hpp"
 
 namespace seedsigner::lvgl {
 
 class SettingsSelectionScreen : public Screen {
 public:
-    struct Item {
-        std::string id;
-        std::string label;
-        std::string secondary_text;
-        std::string accessory;
-    };
+    using Item = SettingItemDefinition;
 
     void create(const ScreenContext& context, const RouteDescriptor& route) override;
     void destroy() override;
@@ -30,17 +27,8 @@ public:
     const std::string& section_title() const noexcept { return section_title_; }
 
 private:
-    enum class SelectionMode {
-        Single,
-        Multi,
-    };
-
-    static std::vector<Item> parse_items(const PropertyMap& args);
     static std::size_t parse_selected_index(const PropertyMap& args);
     static std::string value_or(const PropertyMap& values, const char* key, const char* fallback = "");
-    static SelectionMode parse_selection_mode(const PropertyMap& args);
-    static std::vector<std::string> parse_id_list(std::string_view raw);
-    static std::string join_ids(const std::vector<std::string>& ids);
 
     void apply_selection(std::size_t index);
     void emit_focus_changed(const ScreenContext& context, std::size_t index) const;
@@ -69,7 +57,7 @@ private:
     std::string section_title_;
     std::string help_text_;
     std::string footer_text_;
-    SelectionMode selection_mode_{SelectionMode::Single};
+    SettingDefinition definition_{};
     std::string current_value_id_;
     std::unordered_set<std::string> current_value_ids_set_{};
     std::vector<Item> items_{};

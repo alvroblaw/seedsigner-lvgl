@@ -1,7 +1,6 @@
 #include "seedsigner_lvgl/screens/SettingsSelectionScreen.hpp"
 
 #include <algorithm>
-#include <sstream>
 #include <string>
 #include <string_view>
 #include <utility>
@@ -18,23 +17,13 @@ constexpr const char* kSubtitleArg = "subtitle";
 constexpr const char* kSectionTitleArg = "section_title";
 constexpr const char* kHelpTextArg = "help_text";
 constexpr const char* kFooterTextArg = "footer_text";
-constexpr const char* kItemsArg = "items";
 constexpr const char* kSelectedIndexArg = "selected_index";
-constexpr const char* kSelectionModeArg = "selection_mode";
 constexpr const char* kCurrentValueArg = "current_value";
 constexpr const char* kCurrentValuesArg = "current_values";
+constexpr const char* kDefaultValueArg = "default_value";
+constexpr const char* kDefaultValuesArg = "default_values";
 constexpr const char* kCheckboxChecked = "[x]";
 constexpr const char* kCheckboxUnchecked = "[ ]";
-
-std::string trim(std::string value) {
-    const auto first = value.find_first_not_of(" \t\r\n");
-    if (first == std::string::npos) {
-        return {};
-    }
-
-    const auto last = value.find_last_not_of(" \t\r\n");
-    return value.substr(first, last - first + 1);
-}
 
 const char* accessory_glyph(std::string_view accessory) {
     if (accessory == "check" || accessory == "checked" || accessory == "selected") {
@@ -59,13 +48,13 @@ const char* accessory_glyph(std::string_view accessory) {
 
 void SettingsSelectionScreen::create(const ScreenContext& context, const RouteDescriptor& route) {
     context_ = context;
-    title_ = value_or(route.args, kTitleArg, "Settings");
-    subtitle_ = value_or(route.args, kSubtitleArg);
-    section_title_ = value_or(route.args, kSectionTitleArg);
-    help_text_ = value_or(route.args, kHelpTextArg);
-    footer_text_ = value_or(route.args, kFooterTextArg);
-    selection_mode_ = parse_selection_mode(route.args);
-    items_ = parse_items(route.args);
+    definition_ = parse_setting_definition(route.args);
+    title_ = definition_.title;
+    subtitle_ = definition_.subtitle;
+    section_title_ = definition_.section_title;
+    help_text_ = definition_.help_text;
+    footer_text_ = definition_.footer_text;
+    items_ = definition_.items;
     selected_index_ = parse_selected_index(route.args);
     apply_current_values_from_route(route.args);
     item_buttons_.clear();
@@ -215,9 +204,9 @@ void SettingsSelectionScreen::destroy() {
     section_title_.clear();
     help_text_.clear();
     footer_text_.clear();
+    definition_ = {};
     current_value_id_.clear();
     current_value_ids_set_.clear();
-    selection_mode_ = SelectionMode::Single;
     context_ = {};
 }
 
@@ -257,43 +246,6 @@ bool SettingsSelectionScreen::set_data(const PropertyMap& data) {
     return true;
 }
 
-std::vector<SettingsSelectionScreen::Item> SettingsSelectionScreen::parse_items(const PropertyMap& args) {
-    std::vector<Item> items;
-
-    const auto it = args.find(kItemsArg);
-    if (it == args.end() || it->second.empty()) {
-        return items;
-    }
-
-    std::stringstream lines{it->second};
-    std::string line;
-    while (std::getline(lines, line)) {
-        line = trim(line);
-        if (line.empty()) {
-            continue;
-        }
-
-        std::vector<std::string> parts;
-        std::stringstream columns{line};
-        std::string part;
-        while (std::getline(columns, part, '|')) {
-            parts.push_back(trim(part));
-        }
-
-        if (parts.empty() || parts[0].empty()) {
-            continue;
-        }
-
-        Item item{.id = parts[0],
-                  .label = parts.size() >= 2 && !parts[1].empty() ? parts[1] : parts[0],
-                  .secondary_text = parts.size() >= 3 ? parts[2] : std::string{},
-                  .accessory = parts.size() >= 4 ? parts[3] : std::string{}};
-        items.push_back(std::move(item));
-    }
-
-    return items;
-}
-
 std::size_t SettingsSelectionScreen::parse_selected_index(const PropertyMap& args) {
     const auto it = args.find(kSelectedIndexArg);
     if (it == args.end() || it->second.empty()) {
@@ -312,56 +264,28 @@ std::string SettingsSelectionScreen::value_or(const PropertyMap& values, const c
     return it == values.end() ? std::string{fallback} : it->second;
 }
 
-SettingsSelectionScreen::SelectionMode SettingsSelectionScreen::parse_selection_mode(const PropertyMap& args) {
-    const auto raw = value_or(args, kSelectionModeArg, "single");
-    return raw == "multi" ? SelectionMode::Multi : SelectionMode::Single;
-}
-
-std::vector<std::string> SettingsSelectionScreen::parse_id_list(std::string_view raw) {
-    std::vector<std::string> values;
-    std::string current;
-    for (char ch : raw) {
-        if (ch == ',' || ch == '\n' || ch == ';') {
-            auto trimmed = trim(current);
-            if (!trimmed.empty()) {
-                values.push_back(std::move(trimmed));
-            }
-            current.clear();
-            continue;
-        }
-        current.push_back(ch);
-    }
-
-    auto trimmed = trim(current);
-    if (!trimmed.empty()) {
-        values.push_back(std::move(trimmed));
-    }
-    return values;
-}
-
-std::string SettingsSelectionScreen::join_ids(const std::vector<std::string>& ids) {
-    std::string joined;
-    for (std::size_t i = 0; i < ids.size(); ++i) {
-        if (i != 0) {
-            joined += ',';
-        }
-        joined += ids[i];
-    }
-    return joined;
-}
-
 void SettingsSelectionScreen::apply_current_values_from_route(const PropertyMap& args) {
     current_value_id_.clear();
     current_value_ids_set_.clear();
 
-    if (selection_mode_ == SelectionMode::Multi) {
-        for (const auto& id : parse_id_list(value_or(args, kCurrentValuesArg))) {
+    if (definition_.value_type == SettingValueType::MultiChoice) {
+        auto current_values = definition_.current_values;
+        if (current_values.empty()) {
+            const auto fallback_values = value_or(args, kDefaultValuesArg);
+            current_values = parse_setting_value_list(current_values.empty() ? value_or(args, kCurrentValuesArg, fallback_values.c_str()) : std::string{});
+        }
+        for (const auto& id : current_values) {
             current_value_ids_set_.insert(id);
         }
         return;
     }
 
-    current_value_id_ = value_or(args, kCurrentValueArg);
+    if (!definition_.current_values.empty()) {
+        current_value_id_ = definition_.current_values.front();
+    } else {
+        const auto fallback_value = value_or(args, kDefaultValueArg);
+        current_value_id_ = value_or(args, kCurrentValueArg, fallback_value.c_str());
+    }
     if (current_value_id_.empty() && selected_index_ < items_.size()) {
         current_value_id_ = items_[selected_index_].id;
     }
@@ -412,7 +336,7 @@ void SettingsSelectionScreen::toggle_current_value(std::size_t index) {
     }
 
     const auto& id = items_[index].id;
-    if (selection_mode_ == SelectionMode::Multi) {
+    if (definition_.value_type == SettingValueType::MultiChoice) {
         if (current_value_ids_set_.count(id) != 0U) {
             current_value_ids_set_.erase(id);
         } else {
@@ -425,14 +349,14 @@ void SettingsSelectionScreen::toggle_current_value(std::size_t index) {
 }
 
 bool SettingsSelectionScreen::is_current_value(std::string_view id) const noexcept {
-    if (selection_mode_ == SelectionMode::Multi) {
+    if (definition_.value_type == SettingValueType::MultiChoice) {
         return current_value_ids_set_.count(std::string{id}) != 0U;
     }
     return current_value_id_ == id;
 }
 
 std::vector<std::string> SettingsSelectionScreen::current_value_ids() const {
-    if (selection_mode_ == SelectionMode::Multi) {
+    if (definition_.value_type == SettingValueType::MultiChoice) {
         std::vector<std::string> ids;
         ids.reserve(current_value_ids_set_.size());
         for (const auto& item : items_) {
@@ -450,26 +374,15 @@ std::vector<std::string> SettingsSelectionScreen::current_value_ids() const {
 }
 
 std::string SettingsSelectionScreen::payload_for_item(std::size_t index, std::string_view event_name) const {
-    const auto current_ids = current_value_ids();
-    const auto& item = items_[index];
-    std::string payload;
-    payload += "event=";
-    payload += event_name;
-    payload += ";mode=";
-    payload += selection_mode_ == SelectionMode::Multi ? "multi" : "single";
-    payload += ";index=";
-    payload += std::to_string(index);
-    payload += ";id=";
-    payload += item.id;
-    payload += ";label=";
-    payload += item.label;
-    payload += ";is_current=";
-    payload += is_current_value(item.id) ? "true" : "false";
-    payload += ";current_value=";
-    payload += selection_mode_ == SelectionMode::Single ? current_value_id_ : std::string{};
-    payload += ";current_values=";
-    payload += join_ids(current_ids);
-    return payload;
+    return encode_setting_event_payload(SettingEventPayload{.event_name = std::string{event_name},
+                                                            .setting_id = definition_.id,
+                                                            .setting_label = !definition_.section_title.empty() ? definition_.section_title : definition_.subtitle,
+                                                            .value_type = definition_.value_type,
+                                                            .default_values = definition_.default_values,
+                                                            .current_values = current_value_ids(),
+                                                            .index = index,
+                                                            .item = items_[index],
+                                                            .is_current = is_current_value(items_[index].id)});
 }
 
 void SettingsSelectionScreen::refresh_item_accessories() {
@@ -482,7 +395,7 @@ void SettingsSelectionScreen::refresh_item_accessories() {
 }
 
 const char* SettingsSelectionScreen::accessory_text_for_item(const Item& item) const {
-    if (selection_mode_ == SelectionMode::Multi) {
+    if (definition_.value_type == SettingValueType::MultiChoice || item.item_type == SettingItemType::Toggle) {
         return is_current_value(item.id) ? kCheckboxChecked : kCheckboxUnchecked;
     }
 
@@ -491,7 +404,7 @@ const char* SettingsSelectionScreen::accessory_text_for_item(const Item& item) c
     }
 
     if (item.accessory.empty()) {
-        return "";
+        return item.item_type == SettingItemType::Action ? LV_SYMBOL_RIGHT : "";
     }
 
     const char* glyph = accessory_glyph(item.accessory);

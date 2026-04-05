@@ -48,7 +48,7 @@ The initial simulator target is deliberately headless. It uses LVGL with a dummy
 
 `MenuListScreen` now accepts either simple rows (`id|Label`) or richer structured rows (`id|Label|Secondary text|accessory`). The current accessory shortcuts are `check` and `chevron`, which are enough to start building settings-family and selector-family screens without inventing a new payload format yet.
 
-`SettingsSelectionScreen` is the first concrete consumer of that list model. It adds route-level framing (`title`, `subtitle`, `section_title`) on top of the same row payload and emits `focus_changed` / `setting_selected` events from the `settings_selection` component.
+`SettingsSelectionScreen` is the first concrete consumer of that list model. It now also has a host-side typed bridge in `SettingsContract.hpp`, so callers can build a `SettingDefinition`, convert it with `make_settings_route_args(...)`, and receive cleaner payloads carrying `setting_id`, `setting_type`, defaults, current values, and per-item `item_type` metadata in `focus_changed` / `setting_selected` events from the `settings_selection` component.
 
 The repo now carries its own LVGL configuration in [`config/lv_conf.h`](config/lv_conf.h), so host builds do not require contributors to copy `lv_conf_template.h` or maintain a machine-local `lv_conf.h`.
 
