@@ -18,6 +18,10 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(lvgl)
 set_target_properties(lvgl_examples lvgl_demos PROPERTIES EXCLUDE_FROM_ALL TRUE)
 
+set(SEEDSIGNER_LV_CONF_DIR ${CMAKE_CURRENT_SOURCE_DIR}/config)
+target_include_directories(lvgl PUBLIC ${SEEDSIGNER_LV_CONF_DIR})
+target_compile_definitions(lvgl PUBLIC LV_CONF_INCLUDE_SIMPLE)
+
 add_library(seedsigner_lvgl
   src/navigation/NavigationController.cpp
   src/platform/HeadlessDisplay.cpp
@@ -33,8 +37,11 @@ add_library(seedsigner_lvgl
 target_include_directories(seedsigner_lvgl
   PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${SEEDSIGNER_LV_CONF_DIR}
     ${lvgl_SOURCE_DIR}
 )
+
+target_compile_definitions(seedsigner_lvgl PUBLIC LV_CONF_INCLUDE_SIMPLE)
 
 target_link_libraries(seedsigner_lvgl PUBLIC lvgl)
 
