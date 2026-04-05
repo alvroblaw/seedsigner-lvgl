@@ -98,8 +98,12 @@ void test_settings_selection_route_demo() {
                                                          .args = {{"title", "Settings"},
                                                                   {"subtitle", "Language"},
                                                                   {"section_title", "Display language"},
+                                                                  {"help_text", "Choose one language for the active UI session."},
+                                                                  {"footer_text", "Press to apply. Back to cancel."},
+                                                                  {"selection_mode", "single"},
+                                                                  {"current_value", "es"},
                                                                   {"selected_index", "1"},
-                                                                  {"items", "en|English|Use the default Latin font stack\nes|Español|Use accented glyphs in the UI|check\nfr|Français|Preview wider Latin text coverage"}}});
+                                                                  {"items", "en|English|Use the default Latin font stack\nes|Español|Use accented glyphs in the UI\nfr|Français|Preview wider Latin text coverage"}}});
     assert(active.has_value());
     runtime.tick(16);
     runtime.refresh_now();
@@ -107,6 +111,8 @@ void test_settings_selection_route_demo() {
     assert(label_tree_contains(lv_scr_act(), "Settings"));
     assert(label_tree_contains(lv_scr_act(), "Language"));
     assert(label_tree_contains(lv_scr_act(), "Display language"));
+    assert(label_tree_contains(lv_scr_act(), "Choose one language for the active UI session."));
+    assert(label_tree_contains(lv_scr_act(), "Press to apply. Back to cancel."));
 
     runtime.next_event();
     runtime.next_event();
@@ -115,6 +121,8 @@ void test_settings_selection_route_demo() {
     assert(focus_event.has_value() && focus_event->action_id == std::optional<std::string>{"focus_changed"});
     assert(focus_event->meta.has_value());
     assert(focus_event->meta->key == "en");
+    assert(std::get<std::string>(focus_event->meta->value).find("mode=single") != std::string::npos);
+    assert(std::get<std::string>(focus_event->meta->value).find("current_value=es") != std::string::npos);
 
     assert(runtime.send_input(InputEvent{.key = InputKey::Press}));
     auto select_event = next_matching(runtime, EventType::ActionInvoked);
@@ -122,8 +130,50 @@ void test_settings_selection_route_demo() {
     assert(select_event->component_id == std::optional<std::string>{"settings_selection"});
     assert(select_event->meta.has_value());
     assert(select_event->meta->key == "en");
+    assert(std::get<std::string>(select_event->meta->value).find("current_value=en") != std::string::npos);
+    assert(std::get<std::int64_t>(*select_event->value) == 0);
 
     assert(runtime.display()->flush_count() > 0);
+}
+
+void test_settings_selection_multi_select_demo() {
+    UiRuntime runtime;
+    assert(runtime.init());
+    assert(runtime.screen_registry().register_route(RouteId{"settings.features"}, []() -> std::unique_ptr<Screen> { return std::make_unique<seedsigner::lvgl::SettingsSelectionScreen>(); }));
+
+    const auto active = runtime.activate(RouteDescriptor{.route_id = RouteId{"settings.features"},
+                                                         .args = {{"title", "Settings"},
+                                                                  {"subtitle", "Advanced features"},
+                                                                  {"section_title", "Enabled features"},
+                                                                  {"selection_mode", "multi"},
+                                                                  {"current_values", "dire_warnings,compact_seedqr"},
+                                                                  {"selected_index", "1"},
+                                                                  {"items", "dire_warnings|Dire warnings|Require explicit confirm on dangerous flows\ncompact_seedqr|Compact SeedQR|Prefer compact QR exports when possible\npassphrase|Passphrase support|Enable passphrase entry flows"}}});
+    assert(active.has_value());
+
+    runtime.next_event();
+    runtime.next_event();
+    assert(runtime.send_input(InputEvent{.key = InputKey::Press}));
+    auto toggle_off = next_matching(runtime, EventType::ActionInvoked);
+    assert(toggle_off.has_value());
+    assert(toggle_off->meta.has_value());
+    assert(toggle_off->meta->key == "compact_seedqr");
+    assert(std::get<std::string>(toggle_off->meta->value).find("mode=multi") != std::string::npos);
+    assert(std::get<std::string>(toggle_off->meta->value).find("current_values=dire_warnings") != std::string::npos);
+
+    assert(runtime.send_input(InputEvent{.key = InputKey::Down}));
+    auto focus_event = next_matching(runtime, EventType::ActionInvoked);
+    assert(focus_event.has_value());
+    assert(focus_event->meta.has_value());
+    assert(focus_event->meta->key == "passphrase");
+    assert(std::get<std::string>(focus_event->meta->value).find("current_values=dire_warnings") != std::string::npos);
+
+    assert(runtime.send_input(InputEvent{.key = InputKey::Press}));
+    auto toggle_on = next_matching(runtime, EventType::ActionInvoked);
+    assert(toggle_on.has_value());
+    assert(toggle_on->meta.has_value());
+    assert(toggle_on->meta->key == "passphrase");
+    assert(std::get<std::string>(toggle_on->meta->value).find("current_values=dire_warnings,passphrase") != std::string::npos);
 }
 
 void test_external_scan_flow_demo() {
@@ -134,14 +184,21 @@ void test_external_scan_flow_demo() {
     assert(runtime.screen_registry().register_route(RouteId{"demo.result"}, []() -> std::unique_ptr<Screen> { return std::make_unique<seedsigner::lvgl::ResultScreen>(); }));
     assert(runtime.screen_registry().register_route(RouteId{"settings.locale"}, []() -> std::unique_ptr<Screen> { return std::make_unique<seedsigner::lvgl::SettingsSelectionScreen>(); }));
 
-    auto active = runtime.activate(RouteDescriptor{.route_id = RouteId{"settings.locale"}, .args = {{"title", "Settings"}, {"subtitle", "Language"}, {"section_title", "Display language"}, {"selected_index", "1"}, {"items", "en|English|Use the default Latin font stack\nes|Español|Use accented glyphs in the UI|check\nfr|Français|Preview wider Latin text coverage"}}});
+    auto active = runtime.activate(RouteDescriptor{.route_id = RouteId{"settings.locale"},
+                                                   .args = {{"title", "Settings"},
+                                                            {"subtitle", "Language"},
+                                                            {"section_title", "Display language"},
+                                                            {"selection_mode", "single"},
+                                                            {"current_value", "es"},
+                                                            {"selected_index", "1"},
+                                                            {"items", "en|English|Use the default Latin font stack\nes|Español|Use accented glyphs in the UI\nfr|Français|Preview wider Latin text coverage"}}});
     assert(active.has_value());
     assert(runtime.send_input(InputEvent{.key = InputKey::Press}));
     auto locale_action = next_matching(runtime, EventType::ActionInvoked);
     assert(locale_action.has_value() && locale_action->action_id == std::optional<std::string>{"setting_selected"});
     assert(locale_action->meta.has_value());
     assert(locale_action->meta->key == "es");
-
+    assert(std::get<std::string>(locale_action->meta->value).find("current_value=es") != std::string::npos);
 
     active = runtime.activate(RouteDescriptor{.route_id = RouteId{"demo.menu"}, .args = {{"title", "Settings"}, {"items", "network|Network|Configure host bridge|chevron\ndisplay|Persistent display|Keep screen awake while plugged in|check\nback|Back"}}});
     assert(active.has_value());

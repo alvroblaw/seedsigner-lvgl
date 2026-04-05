@@ -50,7 +50,7 @@ Implemented in `main` today:
 | Seed word entry / passphrase entry / coin-flip / dice / numeric-entry keyboards | Data entry / keyboard | Very High | **none** | Reusable keyboard framework, alternate layouts, cursor model, text editing, side soft-buttons | Biggest missing interaction family after simple menus/scan shell. |
 | Transaction review family (`PSBTOverviewScreen`, math/details/finalize) | Transaction review | Very High | **none** | Bitcoin formatting widgets, diagrams, address formatting, review pagination, approval UX | No meaningful parity started. |
 | Seed reveal / backup / transcription / verification custom screens | Sensitive seed management | Very High | **none** | Warning chrome, pagination, QR display, keyboard/input, custom overlays | Large domain still untouched beyond generic primitives. |
-| Settings entry update selection / locale selection | Settings / structured lists | Medium | **partial** via `SettingsSelectionScreen` | Need true multi-select semantics, checkbox variants, route-specific payload schema, help/footer chrome beyond subtitle/section framing | A first real settings route now exists with title/subtitle/section framing, richer rows, single-select focus/selection events, and checkmark/chevron accessory support. It is still a narrow slice rather than full settings-flow parity. |
+| Settings entry update selection / locale selection | Settings / structured lists | Medium | **partial** via `SettingsSelectionScreen` | Still needs global SeedSigner chrome, per-setting widgets beyond lists, and downstream route wiring into real settings definitions | The settings route now supports explicit `single` vs `multi` select semantics, auto checkbox rendering for multi-select rows, host-friendly `current_value` / `current_values` route args, richer action payload strings describing focused/current values, and optional help/footer copy regions. It remains a narrow routed slice rather than full settings-flow parity. |
 | Address explorer lists / address detail export | Tools / structured data views | High | **none** | Fixed-width address rows, pagination, QR display, derivation/fingerprint widgets | Blocked on formatted data components and QR display. |
 
 ## What is genuinely covered now
@@ -67,7 +67,11 @@ Implemented in `main` today:
    - title + subtitle framing
    - optional section heading
    - richer rows with current-value/accessory semantics
-   - single-select `setting_selected` outbound action
+   - explicit `single` vs `multi` selection modes
+   - `current_value` / `current_values` route args for current state
+   - checkbox rendering for multi-select rows
+   - optional help/footer copy regions
+   - single-select and multi-select `setting_selected` outbound action payloads
 
 3. **Host-driven result/info shell**
    - title/body rendering
@@ -130,13 +134,12 @@ Why this next:
 1. Add a **top-nav + standard screen chrome** wrapper
 2. Finish the list-family shell with:
    - optional icon support
-   - explicit single/multi-select semantics
-   - help/footer copy regions
-3. Add **scroll cues / pagination behavior**
-4. Add at least 2 real route implementations using the family:
+   - scroll cues / pagination behavior
+   - tighter SeedSigner visual treatment around the already-landed selection semantics
+3. Add at least 2 real route implementations using the family:
    - main menu
    - settings menu or seed/signer selector
-5. Keep event contracts external-controller-friendly
+4. Keep event contracts external-controller-friendly
 
 ## Planning takeaway
 
