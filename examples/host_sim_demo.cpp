@@ -28,11 +28,16 @@ int main() {
     runtime.screen_registry().register_route(RouteId{"demo.scan"}, []() -> std::unique_ptr<Screen> { return std::make_unique<CameraPreviewScreen>(); });
     runtime.screen_registry().register_route(RouteId{"demo.result"}, []() -> std::unique_ptr<Screen> { return std::make_unique<ResultScreen>(); });
 
-    runtime.activate({.route_id = RouteId{"demo.menu"}, .args = {{"title", "SeedSigner Demo"}, {"items", "scan|Scan QR\nback|Back"}}});
+    runtime.activate({.route_id = RouteId{"demo.menu"}, .args = {{"title", "Settings"}, {"items", "network|Network|Configure host bridge|chevron\ndisplay|Persistent display|Keep screen awake while plugged in|check\nscan|Scan QR demo|Open the camera preview shell|chevron"}}});
     runtime.send_input(InputEvent{.key = InputKey::Press});
     const auto menu_action = next_matching(runtime, EventType::ActionInvoked);
-    if (!menu_action || !menu_action->meta || menu_action->meta->key != "scan") return 2;
+    if (!menu_action || !menu_action->meta || menu_action->meta->key != "network") return 2;
     std::cout << "menu selected=" << menu_action->meta->key << "\n";
+
+    runtime.send_input(InputEvent{.key = InputKey::Down});
+    const auto focus = next_matching(runtime, EventType::ActionInvoked);
+    if (!focus || !focus->meta || focus->meta->key != "display") return 5;
+    std::cout << "menu focus=" << focus->meta->key << "\n";
 
     runtime.activate({.route_id = RouteId{"demo.scan"}, .args = {{"title", "Camera Preview"}, {"status", "Controller waiting for capture"}}});
     runtime.push_frame(CameraFrame{.width = 96, .height = 96, .stride = 96, .sequence = 1, .pixels = std::vector<std::uint8_t>(96 * 96, 0x7f)});
