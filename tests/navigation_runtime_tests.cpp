@@ -14,6 +14,7 @@
 namespace tests {
 void test_headless_runtime_bootstrap();
 void test_settings_selection_route_demo();
+void test_settings_selection_multi_select_demo();
 void test_external_scan_flow_demo();
 }
 
@@ -135,6 +136,7 @@ int main() {
     test_event_queue_overflow_keeps_fifo_order();
     tests::test_headless_runtime_bootstrap();
     tests::test_settings_selection_route_demo();
+    tests::test_settings_selection_multi_select_demo();
     tests::test_external_scan_flow_demo();
     return 0;
 }

@@ -2,6 +2,7 @@
 
 #include <cstddef>
 #include <string>
+#include <unordered_set>
 #include <vector>
 
 #include "seedsigner_lvgl/screen/Screen.hpp"
@@ -29,13 +30,28 @@ public:
     const std::string& section_title() const noexcept { return section_title_; }
 
 private:
+    enum class SelectionMode {
+        Single,
+        Multi,
+    };
+
     static std::vector<Item> parse_items(const PropertyMap& args);
     static std::size_t parse_selected_index(const PropertyMap& args);
     static std::string value_or(const PropertyMap& values, const char* key, const char* fallback = "");
+    static SelectionMode parse_selection_mode(const PropertyMap& args);
+    static std::vector<std::string> parse_id_list(std::string_view raw);
+    static std::string join_ids(const std::vector<std::string>& ids);
 
     void apply_selection(std::size_t index);
     void emit_focus_changed(const ScreenContext& context, std::size_t index) const;
     void emit_item_selected(const ScreenContext& context, std::size_t index) const;
+    void apply_current_values_from_route(const PropertyMap& args);
+    void toggle_current_value(std::size_t index);
+    bool is_current_value(std::string_view id) const noexcept;
+    std::vector<std::string> current_value_ids() const;
+    std::string payload_for_item(std::size_t index, std::string_view event_name) const;
+    void refresh_item_accessories();
+    const char* accessory_text_for_item(const Item& item) const;
     const Item* find_item(const lv_obj_t* button, std::size_t* index = nullptr) const noexcept;
     static void on_item_event(lv_event_t* event);
 
@@ -43,14 +59,22 @@ private:
     lv_obj_t* container_{nullptr};
     lv_obj_t* list_{nullptr};
     lv_obj_t* empty_state_{nullptr};
+    lv_obj_t* help_label_{nullptr};
+    lv_obj_t* footer_label_{nullptr};
     lv_style_t selected_row_style_{};
     lv_style_t row_style_{};
     bool styles_initialized_{false};
     std::string title_;
     std::string subtitle_;
     std::string section_title_;
+    std::string help_text_;
+    std::string footer_text_;
+    SelectionMode selection_mode_{SelectionMode::Single};
+    std::string current_value_id_;
+    std::unordered_set<std::string> current_value_ids_set_{};
     std::vector<Item> items_{};
     std::vector<lv_obj_t*> item_buttons_{};
+    std::vector<lv_obj_t*> item_accessory_labels_{};
     std::size_t selected_index_{0};
 };
 

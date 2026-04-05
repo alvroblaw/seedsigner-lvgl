@@ -29,22 +29,40 @@ int main() {
     runtime.screen_registry().register_route(RouteId{"demo.scan"}, []() -> std::unique_ptr<Screen> { return std::make_unique<CameraPreviewScreen>(); });
     runtime.screen_registry().register_route(RouteId{"demo.result"}, []() -> std::unique_ptr<Screen> { return std::make_unique<ResultScreen>(); });
     runtime.screen_registry().register_route(RouteId{"settings.locale"}, []() -> std::unique_ptr<Screen> { return std::make_unique<SettingsSelectionScreen>(); });
+    runtime.screen_registry().register_route(RouteId{"settings.features"}, []() -> std::unique_ptr<Screen> { return std::make_unique<SettingsSelectionScreen>(); });
 
     runtime.activate({.route_id = RouteId{"settings.locale"},
                       .args = {{"title", "Settings"},
                                {"subtitle", "Language"},
                                {"section_title", "Display language"},
+                               {"help_text", "Choose one language for the active UI session."},
+                               {"footer_text", "Press to apply. Back to cancel."},
+                               {"selection_mode", "single"},
+                               {"current_value", "es"},
                                {"selected_index", "1"},
-                               {"items", "en|English|Use the default Latin font stack\nes|Español|Use accented glyphs in the UI|check\nfr|Français|Preview wider Latin text coverage"}}});
+                               {"items", "en|English|Use the default Latin font stack\nes|Español|Use accented glyphs in the UI\nfr|Français|Preview wider Latin text coverage"}}});
     runtime.send_input(InputEvent{.key = InputKey::Up});
     const auto focus = next_matching(runtime, EventType::ActionInvoked);
     if (!focus || !focus->meta || focus->meta->key != "en") return 5;
-    std::cout << "settings focus=" << focus->meta->key << "\n";
+    std::cout << "settings focus=" << focus->meta->key << " payload=" << std::get<std::string>(focus->meta->value) << "\n";
 
     runtime.send_input(InputEvent{.key = InputKey::Press});
     const auto setting = next_matching(runtime, EventType::ActionInvoked);
     if (!setting || setting->action_id != std::optional<std::string>{"setting_selected"} || !setting->meta || setting->meta->key != "en") return 2;
-    std::cout << "settings selected=" << setting->meta->key << "\n";
+    std::cout << "settings selected=" << setting->meta->key << " payload=" << std::get<std::string>(setting->meta->value) << "\n";
+
+    runtime.activate({.route_id = RouteId{"settings.features"},
+                      .args = {{"title", "Settings"},
+                               {"subtitle", "Advanced features"},
+                               {"section_title", "Enabled features"},
+                               {"selection_mode", "multi"},
+                               {"current_values", "dire_warnings,compact_seedqr"},
+                               {"selected_index", "1"},
+                               {"items", "dire_warnings|Dire warnings|Require explicit confirm on dangerous flows\ncompact_seedqr|Compact SeedQR|Prefer compact QR exports when possible\npassphrase|Passphrase support|Enable passphrase entry flows"}}});
+    runtime.send_input(InputEvent{.key = InputKey::Press});
+    const auto feature_toggle = next_matching(runtime, EventType::ActionInvoked);
+    if (!feature_toggle || !feature_toggle->meta || feature_toggle->meta->key != "compact_seedqr") return 7;
+    std::cout << "feature toggled=" << feature_toggle->meta->key << " payload=" << std::get<std::string>(feature_toggle->meta->value) << "\n";
 
     runtime.activate({.route_id = RouteId{"demo.menu"}, .args = {{"title", "Settings"}, {"items", "network|Network|Configure host bridge|chevron\ndisplay|Persistent display|Keep screen awake while plugged in|check\nscan|Scan QR demo|Open the camera preview shell|chevron"}}});
     runtime.send_input(InputEvent{.key = InputKey::Press});
