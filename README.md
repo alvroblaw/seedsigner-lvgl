@@ -10,7 +10,8 @@ Current implementation scope:
 - CMake-based C++/LVGL build bootstrap
 - headless host display integration for smoke validation
 - `UiRuntime` top-level owner with screen registry and outbound event queue scaffolding
-- placeholder screen demo route and smoke test
+- structured SeedSigner-style menu/list screen with simple top-nav chrome and event-driven input handling
+- host demo route and smoke tests for placeholder and menu flows
 
 Still intentionally out of scope:
 - embedded bring-up
@@ -42,7 +43,9 @@ ctest --test-dir build --output-on-failure
 ./build/host_sim_demo
 ```
 
-The initial simulator target is deliberately headless. It uses LVGL with a dummy host display so the runtime, screen lifecycle, and draw/flush path can be exercised in CI and on developer machines without committing yet to SDL or embedded platform glue.
+The initial simulator target is deliberately headless. It uses LVGL with a dummy host display so the runtime, screen lifecycle, draw/flush path, and menu input/event behavior can be exercised in CI and on developer machines without committing yet to SDL or embedded platform glue.
+
+For Linux/macOS requirements and host-run caveats, see [`docs/development/HOST_BUILD.md`](docs/development/HOST_BUILD.md).
 
 ## Expected deliverables in this repo
 

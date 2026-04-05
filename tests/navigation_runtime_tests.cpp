@@ -11,6 +11,7 @@
 
 namespace tests {
 void test_headless_runtime_bootstrap();
+void test_menu_screen_navigation_events();
 }
 
 namespace {
@@ -153,5 +154,6 @@ int main() {
     test_unknown_route_does_not_install_screen();
     test_failed_replace_keeps_existing_screen();
     tests::test_headless_runtime_bootstrap();
+    tests::test_menu_screen_navigation_events();
     return 0;
 }

@@ -4,6 +4,7 @@
 #include <optional>
 
 #include "seedsigner_lvgl/contracts/RouteDescriptor.hpp"
+#include "seedsigner_lvgl/runtime/InputEvent.hpp"
 #include "seedsigner_lvgl/screen/ScreenRegistry.hpp"
 
 namespace seedsigner::lvgl {
@@ -15,6 +16,7 @@ public:
     std::optional<ActiveRoute> activate(const RouteDescriptor& route, const ScreenContext& context);
     std::optional<ActiveRoute> replace(const RouteDescriptor& route, const ScreenContext& context);
     std::optional<ActiveRoute> get_active_route() const noexcept;
+    bool send_input(const InputEvent& input);
 
 private:
     void teardown_active();
