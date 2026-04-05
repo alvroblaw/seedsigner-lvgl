@@ -8,6 +8,7 @@
 #include "seedsigner_lvgl/screens/CameraPreviewScreen.hpp"
 #include "seedsigner_lvgl/screens/MenuListScreen.hpp"
 #include "seedsigner_lvgl/screens/ResultScreen.hpp"
+#include "seedsigner_lvgl/screens/SettingsSelectionScreen.hpp"
 
 namespace {
 using namespace seedsigner::lvgl;
@@ -27,17 +28,29 @@ int main() {
     runtime.screen_registry().register_route(RouteId{"demo.menu"}, []() -> std::unique_ptr<Screen> { return std::make_unique<MenuListScreen>(); });
     runtime.screen_registry().register_route(RouteId{"demo.scan"}, []() -> std::unique_ptr<Screen> { return std::make_unique<CameraPreviewScreen>(); });
     runtime.screen_registry().register_route(RouteId{"demo.result"}, []() -> std::unique_ptr<Screen> { return std::make_unique<ResultScreen>(); });
+    runtime.screen_registry().register_route(RouteId{"settings.locale"}, []() -> std::unique_ptr<Screen> { return std::make_unique<SettingsSelectionScreen>(); });
+
+    runtime.activate({.route_id = RouteId{"settings.locale"},
+                      .args = {{"title", "Settings"},
+                               {"subtitle", "Language"},
+                               {"section_title", "Display language"},
+                               {"selected_index", "1"},
+                               {"items", "en|English|Use the default Latin font stack\nes|Español|Use accented glyphs in the UI|check\nfr|Français|Preview wider Latin text coverage"}}});
+    runtime.send_input(InputEvent{.key = InputKey::Up});
+    const auto focus = next_matching(runtime, EventType::ActionInvoked);
+    if (!focus || !focus->meta || focus->meta->key != "en") return 5;
+    std::cout << "settings focus=" << focus->meta->key << "\n";
+
+    runtime.send_input(InputEvent{.key = InputKey::Press});
+    const auto setting = next_matching(runtime, EventType::ActionInvoked);
+    if (!setting || setting->action_id != std::optional<std::string>{"setting_selected"} || !setting->meta || setting->meta->key != "en") return 2;
+    std::cout << "settings selected=" << setting->meta->key << "\n";
 
     runtime.activate({.route_id = RouteId{"demo.menu"}, .args = {{"title", "Settings"}, {"items", "network|Network|Configure host bridge|chevron\ndisplay|Persistent display|Keep screen awake while plugged in|check\nscan|Scan QR demo|Open the camera preview shell|chevron"}}});
     runtime.send_input(InputEvent{.key = InputKey::Press});
     const auto menu_action = next_matching(runtime, EventType::ActionInvoked);
-    if (!menu_action || !menu_action->meta || menu_action->meta->key != "network") return 2;
+    if (!menu_action || !menu_action->meta || menu_action->meta->key != "network") return 6;
     std::cout << "menu selected=" << menu_action->meta->key << "\n";
-
-    runtime.send_input(InputEvent{.key = InputKey::Down});
-    const auto focus = next_matching(runtime, EventType::ActionInvoked);
-    if (!focus || !focus->meta || focus->meta->key != "display") return 5;
-    std::cout << "menu focus=" << focus->meta->key << "\n";
 
     runtime.activate({.route_id = RouteId{"demo.scan"}, .args = {{"title", "Camera Preview"}, {"status", "Controller waiting for capture"}}});
     std::vector<std::uint8_t> preview_pixels(96 * 96, 0x18);

@@ -11,6 +11,7 @@
 #include "seedsigner_lvgl/screens/MenuListScreen.hpp"
 #include "seedsigner_lvgl/screens/PlaceholderScreen.hpp"
 #include "seedsigner_lvgl/screens/ResultScreen.hpp"
+#include "seedsigner_lvgl/screens/SettingsSelectionScreen.hpp"
 
 namespace tests {
 
@@ -34,6 +35,26 @@ std::optional<UiEvent> next_matching(UiRuntime& runtime, EventType type) {
 
 std::unique_ptr<Screen> make_placeholder() {
     return std::make_unique<seedsigner::lvgl::PlaceholderScreen>();
+}
+
+bool label_tree_contains(lv_obj_t* root, const std::string& text) {
+    if (root == nullptr) {
+        return false;
+    }
+    if (lv_obj_check_type(root, &lv_label_class)) {
+        const char* current = lv_label_get_text(root);
+        if (current != nullptr && text == current) {
+            return true;
+        }
+    }
+
+    const auto child_count = lv_obj_get_child_cnt(root);
+    for (std::uint32_t i = 0; i < child_count; ++i) {
+        if (label_tree_contains(lv_obj_get_child(root, i), text)) {
+            return true;
+        }
+    }
+    return false;
 }
 
 lv_obj_t* find_first_canvas(lv_obj_t* root) {
@@ -68,14 +89,61 @@ void test_headless_runtime_bootstrap() {
     assert(runtime.next_event()->type == EventType::ScreenReady);
 }
 
+void test_settings_selection_route_demo() {
+    UiRuntime runtime;
+    assert(runtime.init());
+    assert(runtime.screen_registry().register_route(RouteId{"settings.locale"}, []() -> std::unique_ptr<Screen> { return std::make_unique<seedsigner::lvgl::SettingsSelectionScreen>(); }));
+
+    const auto active = runtime.activate(RouteDescriptor{.route_id = RouteId{"settings.locale"},
+                                                         .args = {{"title", "Settings"},
+                                                                  {"subtitle", "Language"},
+                                                                  {"section_title", "Display language"},
+                                                                  {"selected_index", "1"},
+                                                                  {"items", "en|English|Use the default Latin font stack\nes|Español|Use accented glyphs in the UI|check\nfr|Français|Preview wider Latin text coverage"}}});
+    assert(active.has_value());
+    runtime.tick(16);
+    runtime.refresh_now();
+
+    assert(label_tree_contains(lv_scr_act(), "Settings"));
+    assert(label_tree_contains(lv_scr_act(), "Language"));
+    assert(label_tree_contains(lv_scr_act(), "Display language"));
+
+    runtime.next_event();
+    runtime.next_event();
+    assert(runtime.send_input(InputEvent{.key = InputKey::Up}));
+    auto focus_event = next_matching(runtime, EventType::ActionInvoked);
+    assert(focus_event.has_value() && focus_event->action_id == std::optional<std::string>{"focus_changed"});
+    assert(focus_event->meta.has_value());
+    assert(focus_event->meta->key == "en");
+
+    assert(runtime.send_input(InputEvent{.key = InputKey::Press}));
+    auto select_event = next_matching(runtime, EventType::ActionInvoked);
+    assert(select_event.has_value() && select_event->action_id == std::optional<std::string>{"setting_selected"});
+    assert(select_event->component_id == std::optional<std::string>{"settings_selection"});
+    assert(select_event->meta.has_value());
+    assert(select_event->meta->key == "en");
+
+    assert(runtime.display()->flush_count() > 0);
+}
+
 void test_external_scan_flow_demo() {
     UiRuntime runtime;
     assert(runtime.init());
     assert(runtime.screen_registry().register_route(RouteId{"demo.menu"}, []() -> std::unique_ptr<Screen> { return std::make_unique<seedsigner::lvgl::MenuListScreen>(); }));
     assert(runtime.screen_registry().register_route(RouteId{"demo.scan"}, []() -> std::unique_ptr<Screen> { return std::make_unique<seedsigner::lvgl::CameraPreviewScreen>(); }));
     assert(runtime.screen_registry().register_route(RouteId{"demo.result"}, []() -> std::unique_ptr<Screen> { return std::make_unique<seedsigner::lvgl::ResultScreen>(); }));
+    assert(runtime.screen_registry().register_route(RouteId{"settings.locale"}, []() -> std::unique_ptr<Screen> { return std::make_unique<seedsigner::lvgl::SettingsSelectionScreen>(); }));
 
-    auto active = runtime.activate(RouteDescriptor{.route_id = RouteId{"demo.menu"}, .args = {{"title", "Settings"}, {"items", "network|Network|Configure host bridge|chevron\ndisplay|Persistent display|Keep screen awake while plugged in|check\nback|Back"}}});
+    auto active = runtime.activate(RouteDescriptor{.route_id = RouteId{"settings.locale"}, .args = {{"title", "Settings"}, {"subtitle", "Language"}, {"section_title", "Display language"}, {"selected_index", "1"}, {"items", "en|English|Use the default Latin font stack\nes|Español|Use accented glyphs in the UI|check\nfr|Français|Preview wider Latin text coverage"}}});
+    assert(active.has_value());
+    assert(runtime.send_input(InputEvent{.key = InputKey::Press}));
+    auto locale_action = next_matching(runtime, EventType::ActionInvoked);
+    assert(locale_action.has_value() && locale_action->action_id == std::optional<std::string>{"setting_selected"});
+    assert(locale_action->meta.has_value());
+    assert(locale_action->meta->key == "es");
+
+
+    active = runtime.activate(RouteDescriptor{.route_id = RouteId{"demo.menu"}, .args = {{"title", "Settings"}, {"items", "network|Network|Configure host bridge|chevron\ndisplay|Persistent display|Keep screen awake while plugged in|check\nback|Back"}}});
     assert(active.has_value());
     assert(runtime.send_input(InputEvent{.key = InputKey::Press}));
     auto menu_action = next_matching(runtime, EventType::ActionInvoked);

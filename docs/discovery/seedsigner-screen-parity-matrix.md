@@ -15,6 +15,7 @@ Implemented in `main` today:
 - `ResultScreen`
 - `CameraPreviewScreen`
 - `PlaceholderScreen` (development stub, not a parity target)
+- `SettingsSelectionScreen` (first real settings-route slice)
 - runtime hooks for input events, outbound screen events, full/patch screen data, and external frame injection
 
 ## Status scale
@@ -49,7 +50,7 @@ Implemented in `main` today:
 | Seed word entry / passphrase entry / coin-flip / dice / numeric-entry keyboards | Data entry / keyboard | Very High | **none** | Reusable keyboard framework, alternate layouts, cursor model, text editing, side soft-buttons | Biggest missing interaction family after simple menus/scan shell. |
 | Transaction review family (`PSBTOverviewScreen`, math/details/finalize) | Transaction review | Very High | **none** | Bitcoin formatting widgets, diagrams, address formatting, review pagination, approval UX | No meaningful parity started. |
 | Seed reveal / backup / transcription / verification custom screens | Sensitive seed management | Very High | **none** | Warning chrome, pagination, QR display, keyboard/input, custom overlays | Large domain still untouched beyond generic primitives. |
-| Settings entry update selection / locale selection | Settings / structured lists | Medium | **partial** via richer `MenuListScreen` rows | Need true single/multi-select semantics, route-specific payload schema, help/footer chrome | Secondary text plus checkmark/chevron accessories now cover the first realistic settings-list shell, but not full settings flow behavior yet. |
+| Settings entry update selection / locale selection | Settings / structured lists | Medium | **partial** via `SettingsSelectionScreen` | Need true multi-select semantics, checkbox variants, route-specific payload schema, help/footer chrome beyond subtitle/section framing | A first real settings route now exists with title/subtitle/section framing, richer rows, single-select focus/selection events, and checkmark/chevron accessory support. It is still a narrow slice rather than full settings-flow parity. |
 | Address explorer lists / address detail export | Tools / structured data views | High | **none** | Fixed-width address rows, pagination, QR display, derivation/fingerprint widgets | Blocked on formatted data components and QR display. |
 
 ## What is genuinely covered now
@@ -62,18 +63,24 @@ Implemented in `main` today:
    - up/down/press/back input handling
    - outbound events for focus change and selection
 
-2. **Host-driven result/info shell**
+2. **First real settings-selection route**
+   - title + subtitle framing
+   - optional section heading
+   - richer rows with current-value/accessory semantics
+   - single-select `setting_selected` outbound action
+
+3. **Host-driven result/info shell**
    - title/body rendering
    - full replace + patch update paths
    - confirm/cancel style event emission
 
-3. **Host-driven camera preview shell**
+4. **Host-driven camera preview shell**
    - external frame ingestion
    - preview metadata updates
    - explicit `needs_data(camera.frame)` handshake
    - capture/cancel event emission
 
-4. **Runtime control surface that matches the external-control architecture**
+5. **Runtime control surface that matches the external-control architecture**
    - `send_input(...)`
    - `set_screen_data(...)`
    - `patch_screen_data(...)`

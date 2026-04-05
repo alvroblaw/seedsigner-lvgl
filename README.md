@@ -11,7 +11,8 @@ Current implementation scope:
 - headless host display integration for smoke validation
 - `UiRuntime` top-level owner with screen registry and outbound event queue scaffolding
 - structured SeedSigner-style menu/list screen with simple top-nav chrome, two-line rows, and accessory/checkmark support for settings-style screens
-- host demo route and smoke tests for placeholder and menu flows
+- first real settings-selection route with title/subtitle/section framing and single-select outbound events
+- host demo route and smoke tests for placeholder, settings, menu, scan, and result flows
 
 Still intentionally out of scope:
 - embedded bring-up
@@ -46,6 +47,8 @@ ctest --test-dir build --output-on-failure
 The initial simulator target is deliberately headless. It uses LVGL with a dummy host display so the runtime, screen lifecycle, draw/flush path, and menu input/event behavior can be exercised in CI and on developer machines without committing yet to SDL or embedded platform glue.
 
 `MenuListScreen` now accepts either simple rows (`id|Label`) or richer structured rows (`id|Label|Secondary text|accessory`). The current accessory shortcuts are `check` and `chevron`, which are enough to start building settings-family and selector-family screens without inventing a new payload format yet.
+
+`SettingsSelectionScreen` is the first concrete consumer of that list model. It adds route-level framing (`title`, `subtitle`, `section_title`) on top of the same row payload and emits `focus_changed` / `setting_selected` events from the `settings_selection` component.
 
 The repo now carries its own LVGL configuration in [`config/lv_conf.h`](config/lv_conf.h), so host builds do not require contributors to copy `lv_conf_template.h` or maintain a machine-local `lv_conf.h`.
 
