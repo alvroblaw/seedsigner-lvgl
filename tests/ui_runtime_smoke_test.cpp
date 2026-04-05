@@ -5,7 +5,6 @@
 #include <vector>
 
 #include "seedsigner_lvgl/runtime/UiRuntime.hpp"
-#include "seedsigner_lvgl/screens/CameraPreviewScreen.hpp"
 #include "seedsigner_lvgl/screens/MenuListScreen.hpp"
 #include "seedsigner_lvgl/screens/PlaceholderScreen.hpp"
 #include "seedsigner_lvgl/screens/ResultScreen.hpp"
@@ -13,7 +12,6 @@
 namespace tests {
 
 namespace {
-using seedsigner::lvgl::CameraFrame;
 using seedsigner::lvgl::EventType;
 using seedsigner::lvgl::InputEvent;
 using seedsigner::lvgl::InputKey;
@@ -53,29 +51,20 @@ void test_external_scan_flow_demo() {
     UiRuntime runtime;
     assert(runtime.init());
     assert(runtime.screen_registry().register_route(RouteId{"demo.menu"}, []() -> std::unique_ptr<Screen> { return std::make_unique<seedsigner::lvgl::MenuListScreen>(); }));
-    assert(runtime.screen_registry().register_route(RouteId{"demo.scan"}, []() -> std::unique_ptr<Screen> { return std::make_unique<seedsigner::lvgl::CameraPreviewScreen>(); }));
     assert(runtime.screen_registry().register_route(RouteId{"demo.result"}, []() -> std::unique_ptr<Screen> { return std::make_unique<seedsigner::lvgl::ResultScreen>(); }));
 
-    auto active = runtime.activate(RouteDescriptor{.route_id = RouteId{"demo.menu"}, .args = {{"title", "Main Menu"}, {"items", "scan:Scan QR|back:Back"}}});
+    auto active = runtime.activate(RouteDescriptor{.route_id = RouteId{"demo.menu"}, .args = {{"title", "Main Menu"}, {"items", "scan|Scan QR\nback|Back"}}});
     assert(active.has_value());
     assert(runtime.send_input(InputEvent{.key = InputKey::Press}));
     auto menu_action = next_matching(runtime, EventType::ActionInvoked);
-    assert(menu_action.has_value() && menu_action->action_id == std::optional<std::string>{"scan"});
+    assert(menu_action.has_value() && menu_action->action_id == std::optional<std::string>{"item_selected"});
+    assert(menu_action->meta.has_value() && menu_action->meta->key == "scan");
 
-    active = runtime.activate(RouteDescriptor{.route_id = RouteId{"demo.scan"}, .args = {{"title", "Scan QR"}, {"status", "Waiting for host capture command"}}});
-    assert(active.has_value());
-    assert(runtime.push_frame(CameraFrame{.width = 64, .height = 64, .stride = 64, .sequence = 3, .pixels = std::vector<std::uint8_t>(64 * 64, 0xaa)}));
-    assert(runtime.patch_screen_data({{"status", "Frame 3 ready for capture"}}));
-    assert(runtime.send_input(InputEvent{.key = InputKey::Press}));
-    auto capture_action = next_matching(runtime, EventType::ActionInvoked);
-    assert(capture_action.has_value() && capture_action->action_id == std::optional<std::string>{"capture"});
-    assert(std::get<std::int64_t>(*capture_action->value) == 3);
-
-    active = runtime.activate(RouteDescriptor{.route_id = RouteId{"demo.result"}, .args = {{"title", "Capture Result"}, {"body", "Mock frame #3 captured. No QR decode in this slice."}}});
+    active = runtime.activate(RouteDescriptor{.route_id = RouteId{"demo.result"}, .args = {{"title", "Menu Result"}, {"body", "Selected Scan QR from reusable menu."}, {"continue_action", "done"}}});
     assert(active.has_value());
     assert(runtime.send_input(InputEvent{.key = InputKey::Press}));
     auto result_action = next_matching(runtime, EventType::ActionInvoked);
-    assert(result_action.has_value() && result_action->action_id == std::optional<std::string>{"continue"});
+    assert(result_action.has_value() && result_action->action_id == std::optional<std::string>{"done"});
 
     runtime.tick(16);
     runtime.refresh_now();
