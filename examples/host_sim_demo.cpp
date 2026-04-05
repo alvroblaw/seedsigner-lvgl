@@ -2,12 +2,12 @@
 #include <memory>
 
 #include "seedsigner_lvgl/runtime/UiRuntime.hpp"
-#include "seedsigner_lvgl/screens/PlaceholderScreen.hpp"
+#include "seedsigner_lvgl/screens/MenuListScreen.hpp"
 
 namespace {
 
-std::unique_ptr<seedsigner::lvgl::Screen> make_placeholder() {
-    return std::make_unique<seedsigner::lvgl::PlaceholderScreen>();
+std::unique_ptr<seedsigner::lvgl::Screen> make_menu() {
+    return std::make_unique<seedsigner::lvgl::MenuListScreen>();
 }
 
 }  // namespace
@@ -19,14 +19,16 @@ int main() {
         return 1;
     }
 
-    runtime.screen_registry().register_route(seedsigner::lvgl::RouteId{"demo.placeholder"}, make_placeholder);
+    runtime.screen_registry().register_route(seedsigner::lvgl::RouteId{"demo.menu"}, make_menu);
     const auto active = runtime.activate({
-        .route_id = seedsigner::lvgl::RouteId{"demo.placeholder"},
-        .args = {{"title", "SeedSigner LVGL"}, {"body", "Headless host demo rendered through LVGL."}},
+        .route_id = seedsigner::lvgl::RouteId{"demo.menu"},
+        .args = {{"title", "SeedSigner LVGL"},
+                 {"items", "scan|Scan QR\nsettings|Settings\npower|Power Off"},
+                 {"selected_index", "0"}},
     });
 
     if (!active) {
-        std::cerr << "failed to activate placeholder route\n";
+        std::cerr << "failed to activate menu route\n";
         return 1;
     }
 

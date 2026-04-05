@@ -32,7 +32,13 @@ std::optional<ActiveRoute> UiRuntime::activate(const RouteDescriptor& route) {
         return std::nullopt;
     }
 
-    const auto active = navigation_controller_.activate(route, ScreenContext{.root = lv_scr_act()});
+    ScreenContext context{
+        .root = lv_scr_act(),
+        .emit_event = [this](UiEvent event) { return emit(std::move(event)); },
+        .now_ms = [this]() { return now_ms_; },
+    };
+
+    const auto active = navigation_controller_.activate(route, context);
     if (!active) {
         emit(UiEvent{
             .type = EventType::Error,
@@ -60,6 +66,22 @@ std::optional<ActiveRoute> UiRuntime::replace(const RouteDescriptor& route) {
 
 std::optional<ActiveRoute> UiRuntime::get_active_route() const noexcept {
     return navigation_controller_.get_active_route();
+}
+
+bool UiRuntime::send_input(const InputEvent& input) {
+    return initialized_ && navigation_controller_.send_input(input);
+}
+
+bool UiRuntime::set_screen_data(const PropertyMap& data) {
+    return initialized_ && navigation_controller_.set_active_screen_data(data);
+}
+
+bool UiRuntime::patch_screen_data(const PropertyMap& patch) {
+    return initialized_ && navigation_controller_.patch_active_screen_data(patch);
+}
+
+bool UiRuntime::push_frame(const CameraFrame& frame) {
+    return initialized_ && navigation_controller_.push_frame_to_active_screen(frame);
 }
 
 bool UiRuntime::emit(UiEvent event) {

@@ -33,6 +33,11 @@ public:
     std::optional<ActiveRoute> replace(const RouteDescriptor& route);
     std::optional<ActiveRoute> get_active_route() const noexcept;
 
+    bool send_input(const InputEvent& input);
+    bool set_screen_data(const PropertyMap& data);
+    bool patch_screen_data(const PropertyMap& patch);
+    bool push_frame(const CameraFrame& frame);
+
     bool emit(UiEvent event);
     std::optional<UiEvent> next_event();
 
