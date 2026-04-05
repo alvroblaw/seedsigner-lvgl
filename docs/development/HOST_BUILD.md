@@ -4,8 +4,16 @@ This repo currently supports a **headless host build** for development and smoke
 
 ## What has actually been validated
 
-- **Linux**: configured, built, tested, and ran `host_sim_demo`
+- **Linux**: configured from a clean build directory, built, tested, and ran `host_sim_demo`
 - **macOS**: requirements and commands are documented below, but runtime execution has **not** been validated in this change set
+
+## LVGL configuration
+
+This project ships a repo-owned [`config/lv_conf.h`](../../config/lv_conf.h).
+
+That matters for host contributors because LVGL's default expectation is often a developer-provided `lv_conf.h` next to the library checkout or copied manually from `lv_conf_template.h`. This repo does **not** require that extra manual step.
+
+CMake wires the project config directory into both the fetched LVGL target and the local `seedsigner_lvgl` target, so a normal configure/build should find `lv_conf.h` on both Linux and macOS.
 
 ## Requirements
 
@@ -39,11 +47,23 @@ xcode-select --install
 brew install cmake ninja git
 ```
 
+Notes:
+- the current host path is still headless; no Cocoa/SDL window is expected
+- a clean configure should succeed without manually copying `lv_conf_template.h`
+
 ## Configure and build
 
 Using Ninja:
 
 ```bash
+cmake -S . -B build -G Ninja
+cmake --build build
+```
+
+If you want to verify the LVGL config path from scratch, remove any previous host build directory first:
+
+```bash
+rm -rf build
 cmake -S . -B build -G Ninja
 cmake --build build
 ```
