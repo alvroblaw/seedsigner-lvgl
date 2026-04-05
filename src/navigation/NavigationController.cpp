@@ -23,7 +23,11 @@ std::optional<ActiveRoute> NavigationController::replace(const RouteDescriptor& 
         .stack_depth = 1,
     };
 
-    next_screen->create(context, route);
+    auto screen_context = context;
+    screen_context.route_id = active_route.route_id;
+    screen_context.screen_token = active_route.screen_token;
+
+    next_screen->create(screen_context, route);
     next_screen->on_activate();
     active_screen_ = ScreenSlot{.route = active_route, .screen = std::move(next_screen)};
     return active_route;
