@@ -72,6 +72,18 @@ bool UiRuntime::send_input(const InputEvent& input) {
     return initialized_ && navigation_controller_.send_input(input);
 }
 
+bool UiRuntime::set_screen_data(const PropertyMap& data) {
+    return initialized_ && navigation_controller_.set_active_screen_data(data);
+}
+
+bool UiRuntime::patch_screen_data(const PropertyMap& patch) {
+    return initialized_ && navigation_controller_.patch_active_screen_data(patch);
+}
+
+bool UiRuntime::push_frame(const CameraFrame& frame) {
+    return initialized_ && navigation_controller_.push_frame_to_active_screen(frame);
+}
+
 bool UiRuntime::emit(UiEvent event) {
     return event_queue_.push(std::move(event));
 }
