@@ -40,7 +40,16 @@ int main() {
     std::cout << "menu focus=" << focus->meta->key << "\n";
 
     runtime.activate({.route_id = RouteId{"demo.scan"}, .args = {{"title", "Camera Preview"}, {"status", "Controller waiting for capture"}}});
-    runtime.push_frame(CameraFrame{.width = 96, .height = 96, .stride = 96, .sequence = 1, .pixels = std::vector<std::uint8_t>(96 * 96, 0x7f)});
+    std::vector<std::uint8_t> preview_pixels(96 * 96, 0x18);
+    for (std::uint32_t y = 0; y < 96; ++y) {
+        for (std::uint32_t x = 32; x < 64; ++x) {
+            preview_pixels[static_cast<std::size_t>(y) * 96 + x] = 0x88;
+        }
+        for (std::uint32_t x = 64; x < 96; ++x) {
+            preview_pixels[static_cast<std::size_t>(y) * 96 + x] = 0xf0;
+        }
+    }
+    runtime.push_frame(CameraFrame{.width = 96, .height = 96, .stride = 96, .sequence = 1, .pixels = std::move(preview_pixels)});
     runtime.send_input(InputEvent{.key = InputKey::Press});
     const auto capture = next_matching(runtime, EventType::ActionInvoked);
     if (!capture || capture->action_id != std::optional<std::string>{"capture"}) return 3;
