@@ -157,6 +157,11 @@ After the call returns:
 
 This single rule removes most binding and driver lifetime ambiguity.
 
+Current host implementation note:
+- `CameraPreviewScreen::push_frame(...)` immediately copies the caller-provided grayscale bytes into screen-owned storage before any LVGL redraw happens
+- the screen then rescales that retained frame into its own LVGL canvas buffer for presentation
+- tests validate the rendered canvas output directly, not just metadata labels
+
 ## 5.2 Internal ownership
 The UI module owns:
 - the staging buffer or buffers used for active camera surfaces

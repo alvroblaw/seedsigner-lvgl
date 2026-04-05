@@ -4,6 +4,8 @@
 #include <string>
 #include <vector>
 
+#include <lvgl.h>
+
 #include "seedsigner_lvgl/runtime/UiRuntime.hpp"
 #include "seedsigner_lvgl/screens/CameraPreviewScreen.hpp"
 #include "seedsigner_lvgl/screens/MenuListScreen.hpp"
@@ -32,6 +34,23 @@ std::optional<UiEvent> next_matching(UiRuntime& runtime, EventType type) {
 
 std::unique_ptr<Screen> make_placeholder() {
     return std::make_unique<seedsigner::lvgl::PlaceholderScreen>();
+}
+
+lv_obj_t* find_first_canvas(lv_obj_t* root) {
+    if (root == nullptr) {
+        return nullptr;
+    }
+    if (lv_obj_check_type(root, &lv_canvas_class)) {
+        return root;
+    }
+
+    const auto child_count = lv_obj_get_child_cnt(root);
+    for (std::uint32_t i = 0; i < child_count; ++i) {
+        if (auto* found = find_first_canvas(lv_obj_get_child(root, i)); found != nullptr) {
+            return found;
+        }
+    }
+    return nullptr;
 }
 }  // namespace
 
@@ -72,7 +91,25 @@ void test_external_scan_flow_demo() {
 
     active = runtime.activate(RouteDescriptor{.route_id = RouteId{"demo.scan"}, .args = {{"title", "Scan QR"}, {"status", "Waiting for host capture command"}}});
     assert(active.has_value());
-    assert(runtime.push_frame(CameraFrame{.width = 64, .height = 64, .stride = 64, .sequence = 3, .pixels = std::vector<std::uint8_t>(64 * 64, 0xaa)}));
+
+    std::vector<std::uint8_t> pixels(8 * 8, 0x10);
+    for (std::uint32_t y = 0; y < 8; ++y) {
+        for (std::uint32_t x = 4; x < 8; ++x) {
+            pixels[static_cast<std::size_t>(y) * 8 + x] = 0xf0;
+        }
+    }
+
+    assert(runtime.push_frame(CameraFrame{.width = 8, .height = 8, .stride = 8, .sequence = 3, .pixels = pixels}));
+    runtime.refresh_now();
+
+    auto* canvas = find_first_canvas(lv_scr_act());
+    assert(canvas != nullptr);
+    const auto left_px = lv_canvas_get_px(canvas, 40, 72);
+    const auto right_px = lv_canvas_get_px(canvas, 176, 72);
+    assert(left_px.ch.red < right_px.ch.red);
+    assert(left_px.ch.green < right_px.ch.green);
+    assert(left_px.ch.blue < right_px.ch.blue);
+
     assert(runtime.patch_screen_data({{"status", "Frame 3 ready for capture"}}));
     assert(runtime.send_input(InputEvent{.key = InputKey::Press}));
     auto capture_action = next_matching(runtime, EventType::ActionInvoked);
