@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 
+#include "seedsigner_lvgl/contracts/SettingsContract.hpp"
 #include "seedsigner_lvgl/runtime/UiRuntime.hpp"
 #include "seedsigner_lvgl/screens/CameraPreviewScreen.hpp"
 #include "seedsigner_lvgl/screens/MenuListScreen.hpp"
@@ -31,16 +32,20 @@ int main() {
     runtime.screen_registry().register_route(RouteId{"settings.locale"}, []() -> std::unique_ptr<Screen> { return std::make_unique<SettingsSelectionScreen>(); });
     runtime.screen_registry().register_route(RouteId{"settings.features"}, []() -> std::unique_ptr<Screen> { return std::make_unique<SettingsSelectionScreen>(); });
 
-    runtime.activate({.route_id = RouteId{"settings.locale"},
-                      .args = {{"title", "Settings"},
-                               {"subtitle", "Language"},
-                               {"section_title", "Display language"},
-                               {"help_text", "Choose one language for the active UI session."},
-                               {"footer_text", "Press to apply. Back to cancel."},
-                               {"selection_mode", "single"},
-                               {"current_value", "es"},
-                               {"selected_index", "1"},
-                               {"items", "en|English|Use the default Latin font stack\nes|Español|Use accented glyphs in the UI\nfr|Français|Preview wider Latin text coverage"}}});
+    auto locale_args = make_settings_route_args(SettingDefinition{.id = "locale",
+                                                                  .title = "Settings",
+                                                                  .subtitle = "Language",
+                                                                  .section_title = "Display language",
+                                                                  .help_text = "Choose one language for the active UI session.",
+                                                                  .footer_text = "Press to apply. Back to cancel.",
+                                                                  .value_type = SettingValueType::SingleChoice,
+                                                                  .default_values = {"en"},
+                                                                  .current_values = {"es"},
+                                                                  .items = {{.id = "en", .label = "English", .secondary_text = "Use the default Latin font stack"},
+                                                                            {.id = "es", .label = "Español", .secondary_text = "Use accented glyphs in the UI"},
+                                                                            {.id = "fr", .label = "Français", .secondary_text = "Preview wider Latin text coverage"}}});
+    locale_args["selected_index"] = "1";
+    runtime.activate({.route_id = RouteId{"settings.locale"}, .args = locale_args});
     runtime.send_input(InputEvent{.key = InputKey::Up});
     const auto focus = next_matching(runtime, EventType::ActionInvoked);
     if (!focus || !focus->meta || focus->meta->key != "en") return 5;
@@ -51,14 +56,18 @@ int main() {
     if (!setting || setting->action_id != std::optional<std::string>{"setting_selected"} || !setting->meta || setting->meta->key != "en") return 2;
     std::cout << "settings selected=" << setting->meta->key << " payload=" << std::get<std::string>(setting->meta->value) << "\n";
 
-    runtime.activate({.route_id = RouteId{"settings.features"},
-                      .args = {{"title", "Settings"},
-                               {"subtitle", "Advanced features"},
-                               {"section_title", "Enabled features"},
-                               {"selection_mode", "multi"},
-                               {"current_values", "dire_warnings,compact_seedqr"},
-                               {"selected_index", "1"},
-                               {"items", "dire_warnings|Dire warnings|Require explicit confirm on dangerous flows\ncompact_seedqr|Compact SeedQR|Prefer compact QR exports when possible\npassphrase|Passphrase support|Enable passphrase entry flows"}}});
+    auto features_args = make_settings_route_args(SettingDefinition{.id = "features",
+                                                                    .title = "Settings",
+                                                                    .subtitle = "Advanced features",
+                                                                    .section_title = "Enabled features",
+                                                                    .value_type = SettingValueType::MultiChoice,
+                                                                    .default_values = {"dire_warnings"},
+                                                                    .current_values = {"dire_warnings", "compact_seedqr"},
+                                                                    .items = {{.id = "dire_warnings", .label = "Dire warnings", .secondary_text = "Require explicit confirm on dangerous flows", .item_type = SettingItemType::Toggle},
+                                                                              {.id = "compact_seedqr", .label = "Compact SeedQR", .secondary_text = "Prefer compact QR exports when possible", .item_type = SettingItemType::Toggle},
+                                                                              {.id = "passphrase", .label = "Passphrase support", .secondary_text = "Enable passphrase entry flows", .item_type = SettingItemType::Toggle}}});
+    features_args["selected_index"] = "1";
+    runtime.activate({.route_id = RouteId{"settings.features"}, .args = features_args});
     runtime.send_input(InputEvent{.key = InputKey::Press});
     const auto feature_toggle = next_matching(runtime, EventType::ActionInvoked);
     if (!feature_toggle || !feature_toggle->meta || feature_toggle->meta->key != "compact_seedqr") return 7;

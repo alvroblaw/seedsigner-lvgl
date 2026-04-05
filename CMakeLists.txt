@@ -23,6 +23,7 @@ target_include_directories(lvgl PUBLIC ${SEEDSIGNER_LV_CONF_DIR})
 target_compile_definitions(lvgl PUBLIC LV_CONF_INCLUDE_SIMPLE)
 
 add_library(seedsigner_lvgl
+  src/contracts/SettingsContract.cpp
   src/navigation/NavigationController.cpp
   src/platform/HeadlessDisplay.cpp
   src/runtime/EventQueue.cpp
