@@ -49,7 +49,7 @@ Implemented in `main` today:
 | Seed word entry / passphrase entry / coin-flip / dice / numeric-entry keyboards | Data entry / keyboard | Very High | **none** | Reusable keyboard framework, alternate layouts, cursor model, text editing, side soft-buttons | Biggest missing interaction family after simple menus/scan shell. |
 | Transaction review family (`PSBTOverviewScreen`, math/details/finalize) | Transaction review | Very High | **none** | Bitcoin formatting widgets, diagrams, address formatting, review pagination, approval UX | No meaningful parity started. |
 | Seed reveal / backup / transcription / verification custom screens | Sensitive seed management | Very High | **none** | Warning chrome, pagination, QR display, keyboard/input, custom overlays | Large domain still untouched beyond generic primitives. |
-| Settings entry update selection / locale selection | Settings / structured lists | Medium | **primitive-adjacent only** | Need checkbox/checkmark rows, help text, multiselect/singleselect behavior | Natural next consumer once list-row richness improves. |
+| Settings entry update selection / locale selection | Settings / structured lists | Medium | **partial** via richer `MenuListScreen` rows | Need true single/multi-select semantics, route-specific payload schema, help/footer chrome | Secondary text plus checkmark/chevron accessories now cover the first realistic settings-list shell, but not full settings flow behavior yet. |
 | Address explorer lists / address detail export | Tools / structured data views | High | **none** | Fixed-width address rows, pagination, QR display, derivation/fingerprint widgets | Blocked on formatted data components and QR display. |
 
 ## What is genuinely covered now
@@ -121,11 +121,10 @@ Why this next:
 ### Concrete scope for that block
 
 1. Add a **top-nav + standard screen chrome** wrapper
-2. Extend menu rows to support:
-   - primary label
-   - secondary text
-   - optional icon
-   - optional checkmark / accessory
+2. Finish the list-family shell with:
+   - optional icon support
+   - explicit single/multi-select semantics
+   - help/footer copy regions
 3. Add **scroll cues / pagination behavior**
 4. Add at least 2 real route implementations using the family:
    - main menu

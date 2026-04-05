@@ -13,6 +13,8 @@ public:
     struct Item {
         std::string id;
         std::string label;
+        std::string secondary_text;
+        std::string accessory;
     };
 
     void create(const ScreenContext& context, const RouteDescriptor& route) override;
@@ -40,9 +42,15 @@ private:
     lv_obj_t* container_{nullptr};
     lv_obj_t* list_{nullptr};
     lv_obj_t* empty_state_{nullptr};
+    lv_style_t selected_row_style_{};
+    lv_style_t row_style_{};
+    bool styles_initialized_{false};
     std::string title_;
     std::vector<Item> items_{};
     std::vector<lv_obj_t*> item_buttons_{};
+    std::vector<lv_obj_t*> item_primary_labels_{};
+    std::vector<lv_obj_t*> item_secondary_labels_{};
+    std::vector<lv_obj_t*> item_accessory_labels_{};
     std::size_t selected_index_{0};
 };
 
