@@ -61,6 +61,7 @@ SettingValueType parse_setting_value_type(std::string_view raw);
 SettingItemType parse_setting_item_type(std::string_view raw);
 
 PropertyMap make_settings_route_args(const SettingDefinition& definition);
+PropertyMap make_settings_menu_route_args(const std::vector<SettingDefinition>& definitions);
 SettingDefinition parse_setting_definition(const PropertyMap& args);
 std::string encode_setting_event_payload(const SettingEventPayload& payload);
 

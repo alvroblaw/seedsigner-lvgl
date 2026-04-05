@@ -162,6 +162,20 @@ PropertyMap make_settings_route_args(const SettingDefinition& definition) {
     return args;
 }
 
+PropertyMap make_settings_menu_route_args(const std::vector<SettingDefinition>& definitions) {
+    PropertyMap args;
+    args["setting_count"] = std::to_string(definitions.size());
+    for (std::size_t i = 0; i < definitions.size(); ++i) {
+        const auto& def = definitions[i];
+        std::string prefix = "setting_" + std::to_string(i) + "_";
+        PropertyMap def_args = make_settings_route_args(def);
+        for (const auto& [key, value] : def_args) {
+            args[prefix + key] = value;
+        }
+    }
+    return args;
+}
+
 SettingDefinition parse_setting_definition(const PropertyMap& args) {
     SettingDefinition definition;
     definition.id = value_or(args, kSettingIdArg);
