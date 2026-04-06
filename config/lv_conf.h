@@ -20,4 +20,7 @@
 /* Keep logging disabled in the bootstrap phase unless a target opts in later. */
 #define LV_USE_LOG 0
 
+/* Enable QR code library */
+#define LV_USE_QRCODE 1
+
 #endif /* LV_CONF_H */

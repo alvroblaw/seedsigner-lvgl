@@ -24,6 +24,7 @@ target_compile_definitions(lvgl PUBLIC LV_CONF_INCLUDE_SIMPLE)
 
 add_library(seedsigner_lvgl
   src/contracts/SettingsContract.cpp
+  src/contracts/QRDisplayContract.cpp
   src/navigation/NavigationController.cpp
   src/platform/HeadlessDisplay.cpp
   src/runtime/EventQueue.cpp
@@ -38,6 +39,7 @@ add_library(seedsigner_lvgl
   src/screens/WarningScreen.cpp
   src/screens/ErrorScreen.cpp
   src/screens/DireWarningScreen.cpp
+  src/screens/QRDisplayScreen.cpp
 )
 
 target_include_directories(seedsigner_lvgl
@@ -45,6 +47,7 @@ target_include_directories(seedsigner_lvgl
     ${CMAKE_CURRENT_SOURCE_DIR}/include
     ${SEEDSIGNER_LV_CONF_DIR}
     ${lvgl_SOURCE_DIR}
+    ${lvgl_SOURCE_DIR}/src/extra/libs/qrcode
 )
 
 target_compile_definitions(seedsigner_lvgl PUBLIC LV_CONF_INCLUDE_SIMPLE)
