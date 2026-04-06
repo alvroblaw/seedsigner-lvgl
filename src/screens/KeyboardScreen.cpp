@@ -246,11 +246,23 @@ void KeyboardScreen::build_layout_map() {
     for (char c : chars) {
         layout_strings_.push_back(std::string(1, c));
     }
-    // Fill layout_map_ with pointers to strings' c_str
-    for (const auto& s : layout_strings_) {
-        layout_map_.push_back(s.c_str());
-    }
     btn_count_ = static_cast<int>(layout_strings_.size());
+    int cols = get_grid_cols();
+    int rows = get_grid_rows();
+    // Build layout_map_ with row separators (empty strings) for LVGL btnmatrix
+    for (int r = 0; r < rows; ++r) {
+        for (int c = 0; c < cols; ++c) {
+            int index = r * cols + c;
+            if (index < btn_count_) {
+                layout_map_.push_back(layout_strings_[index].c_str());
+            } else {
+                // Pad with empty strings for incomplete last row
+                layout_map_.push_back("");
+            }
+        }
+        // Add row separator (empty string)
+        layout_map_.push_back("");
+    }
 }
 
 int KeyboardScreen::get_grid_rows() const {
