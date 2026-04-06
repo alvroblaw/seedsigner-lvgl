@@ -14,10 +14,14 @@
 #include "seedsigner_lvgl/screens/ResultScreen.hpp"
 #include "seedsigner_lvgl/screens/SettingsSelectionScreen.hpp"
 #include "seedsigner_lvgl/screens/SettingsMenuScreen.hpp"
+#include "seedsigner_lvgl/screens/WarningScreen.hpp"
+#include "seedsigner_lvgl/screens/ErrorScreen.hpp"
+#include "seedsigner_lvgl/screens/DireWarningScreen.hpp"
 
 namespace tests {
 
 void test_settings_menu_route_demo();
+void test_warning_screen_family();
 
 namespace {
 using seedsigner::lvgl::CameraFrame;
@@ -352,6 +356,106 @@ void test_settings_menu_route_demo() {
     runtime.tick(16);
     runtime.refresh_now();
     assert(runtime.display()->flush_count() > 0);
+}
+
+void test_warning_screen_family() {
+    using seedsigner::lvgl::UiRuntime;
+    using seedsigner::lvgl::RouteId;
+    using seedsigner::lvgl::RouteDescriptor;
+    using seedsigner::lvgl::InputEvent;
+    using seedsigner::lvgl::InputKey;
+    using seedsigner::lvgl::EventType;
+
+    // Test WarningScreen with default severity
+    {
+        UiRuntime runtime;
+        assert(runtime.init());
+        assert(runtime.screen_registry().register_route(
+            RouteId{"warning.test"},
+            []() -> std::unique_ptr<seedsigner::lvgl::Screen> {
+                return std::make_unique<seedsigner::lvgl::WarningScreen>();
+            }));
+        const auto active = runtime.activate({
+            .route_id = RouteId{"warning.test"},
+            .args = {{"title", "Test Warning"},
+                     {"body", "This is a warning message."},
+                     {"button_text", "Continue"}}}
+        );
+        assert(active.has_value());
+        // Consume route activated and screen ready events
+        assert(next_matching(runtime, EventType::RouteActivated).has_value());
+        assert(next_matching(runtime, EventType::ScreenReady).has_value());
+        runtime.tick(16);
+        runtime.refresh_now();
+        // Verify title and body appear in the label tree
+        assert(label_tree_contains(lv_scr_act(), "Test Warning"));
+        assert(label_tree_contains(lv_scr_act(), "This is a warning message."));
+        // Press hardware OK button
+        assert(runtime.send_input(InputEvent{.key = InputKey::Press}));
+        auto button_event = next_matching(runtime, EventType::ActionInvoked);
+        assert(button_event.has_value());
+        assert(button_event->action_id == std::optional<std::string>{"button_pressed"});
+        // Press hardware back button
+        assert(runtime.send_input(InputEvent{.key = InputKey::Back}));
+        auto back_event = next_matching(runtime, EventType::ActionInvoked);
+        assert(back_event.has_value());
+        assert(back_event->action_id == std::optional<std::string>{"back"});
+    }
+
+    // Test ErrorScreen severity
+    {
+        UiRuntime runtime;
+        assert(runtime.init());
+        assert(runtime.screen_registry().register_route(
+            RouteId{"error.test"},
+            []() -> std::unique_ptr<seedsigner::lvgl::Screen> {
+                return std::make_unique<seedsigner::lvgl::ErrorScreen>();
+            }));
+        const auto active = runtime.activate({
+            .route_id = RouteId{"error.test"},
+            .args = {{"title", "Fatal Error"},
+                     {"body", "Something went wrong."}}}
+        );
+        assert(active.has_value());
+        assert(next_matching(runtime, EventType::RouteActivated).has_value());
+        assert(next_matching(runtime, EventType::ScreenReady).has_value());
+        runtime.tick(16);
+        runtime.refresh_now();
+        // Title should be red (can't test color easily, just ensure screen created)
+        assert(label_tree_contains(lv_scr_act(), "Fatal Error"));
+        assert(label_tree_contains(lv_scr_act(), "Something went wrong."));
+        // Button press emits button_pressed
+        assert(runtime.send_input(InputEvent{.key = InputKey::Press}));
+        auto event = next_matching(runtime, EventType::ActionInvoked);
+        assert(event.has_value() && event->action_id == std::optional<std::string>{"button_pressed"});
+    }
+
+    // Test DireWarningScreen severity
+    {
+        UiRuntime runtime;
+        assert(runtime.init());
+        assert(runtime.screen_registry().register_route(
+            RouteId{"dire.test"},
+            []() -> std::unique_ptr<seedsigner::lvgl::Screen> {
+                return std::make_unique<seedsigner::lvgl::DireWarningScreen>();
+            }));
+        const auto active = runtime.activate({
+            .route_id = RouteId{"dire.test"},
+            .args = {{"title", "Critical Warning"},
+                     {"body", "Proceed with extreme caution."}}}
+        );
+        assert(active.has_value());
+        assert(next_matching(runtime, EventType::RouteActivated).has_value());
+        assert(next_matching(runtime, EventType::ScreenReady).has_value());
+        runtime.tick(16);
+        runtime.refresh_now();
+        assert(label_tree_contains(lv_scr_act(), "Critical Warning"));
+        assert(label_tree_contains(lv_scr_act(), "Proceed with extreme caution."));
+        // Back button works
+        assert(runtime.send_input(InputEvent{.key = InputKey::Back}));
+        auto event = next_matching(runtime, EventType::ActionInvoked);
+        assert(event.has_value() && event->action_id == std::optional<std::string>{"back"});
+    }
 }
 
 }  // namespace tests
