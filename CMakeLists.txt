@@ -47,6 +47,7 @@ target_include_directories(seedsigner_lvgl
     ${CMAKE_CURRENT_SOURCE_DIR}/include
     ${SEEDSIGNER_LV_CONF_DIR}
     ${lvgl_SOURCE_DIR}
+    ${lvgl_SOURCE_DIR}/src/extra/libs/qrcode
 )
 
 target_compile_definitions(seedsigner_lvgl PUBLIC LV_CONF_INCLUDE_SIMPLE)
