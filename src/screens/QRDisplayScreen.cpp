@@ -65,7 +65,7 @@ void QRDisplayScreen::create(const ScreenContext& context, const RouteDescriptor
     lv_obj_set_style_bg_opa(brightness_overlay_, LV_OPA_TRANSP, 0); // updated by update_brightness_overlay
     lv_obj_set_style_border_width(brightness_overlay_, 0, 0);
     lv_obj_set_style_radius(brightness_overlay_, 0, 0);
-    lv_obj_set_clickable(brightness_overlay_, false);
+    lv_obj_clear_flag(brightness_overlay_, LV_OBJ_FLAG_CLICKABLE);
     update_brightness_overlay();
 }
 
