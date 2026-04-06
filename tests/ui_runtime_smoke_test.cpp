@@ -17,11 +17,14 @@
 #include "seedsigner_lvgl/screens/WarningScreen.hpp"
 #include "seedsigner_lvgl/screens/ErrorScreen.hpp"
 #include "seedsigner_lvgl/screens/DireWarningScreen.hpp"
+#include "seedsigner_lvgl/screens/QRDisplayScreen.hpp"
+#include "seedsigner_lvgl/contracts/QRDisplayContract.hpp"
 
 namespace tests {
 
 void test_settings_menu_route_demo();
 void test_warning_screen_family();
+void test_qr_display_screen();
 
 namespace {
 using seedsigner::lvgl::CameraFrame;
