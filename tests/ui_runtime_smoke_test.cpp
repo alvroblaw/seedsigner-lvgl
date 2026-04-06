@@ -19,12 +19,15 @@
 #include "seedsigner_lvgl/screens/DireWarningScreen.hpp"
 #include "seedsigner_lvgl/screens/QRDisplayScreen.hpp"
 #include "seedsigner_lvgl/contracts/QRDisplayContract.hpp"
+#include "seedsigner_lvgl/screens/KeyboardScreen.hpp"
+#include "seedsigner_lvgl/contracts/KeyboardContract.hpp"
 
 namespace tests {
 
 void test_settings_menu_route_demo();
 void test_warning_screen_family();
 void test_qr_display_screen();
+void test_keyboard_screen();
 
 namespace {
 using seedsigner::lvgl::CameraFrame;
@@ -492,6 +495,37 @@ void test_qr_display_screen() {
     auto brightness_event = next_matching(runtime, EventType::ActionInvoked);
     // brightness_changed event should be emitted
     // assert(brightness_event.has_value() && brightness_event->action_id == std::optional<std::string>{"brightness_changed"});
+    // Test back
+    assert(runtime.send_input(InputEvent{.key = InputKey::Back}));
+    auto back_event = next_matching(runtime, EventType::ActionInvoked);
+    assert(back_event.has_value() && back_event->action_id == std::optional<std::string>{"back"});
+}
+
+void test_keyboard_screen() {
+    // Minimal smoke test: ensure screen can be created and doesn't crash
+    UiRuntime runtime;
+    assert(runtime.init());
+    assert(runtime.screen_registry().register_route(
+        RouteId{"keyboard.test"},
+        []() -> std::unique_ptr<seedsigner::lvgl::Screen> {
+            return std::make_unique<seedsigner::lvgl::KeyboardScreen>();
+        }));
+    using seedsigner::lvgl::make_keyboard_route_args;
+    const auto active = runtime.activate({
+        .route_id = RouteId{"keyboard.test"},
+        .args = make_keyboard_route_args({
+            .layout = seedsigner::lvgl::KeyboardLayout::Lowercase,
+            .placeholder = "Enter passphrase",
+            .max_length = 64
+        })
+    });
+    assert(active.has_value());
+    assert(next_matching(runtime, EventType::RouteActivated).has_value());
+    assert(next_matching(runtime, EventType::ScreenReady).has_value());
+    runtime.tick(16);
+    runtime.refresh_now();
+    // Check placeholder appears
+    assert(label_tree_contains(lv_scr_act(), "Enter passphrase"));
     // Test back
     assert(runtime.send_input(InputEvent{.key = InputKey::Back}));
     auto back_event = next_matching(runtime, EventType::ActionInvoked);
