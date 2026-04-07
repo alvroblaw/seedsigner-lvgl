@@ -1,8 +1,6 @@
 #include "seedsigner_lvgl/screens/StartupSplashScreen.hpp"
 
 #include <lvgl.h>
-#include <lvgl/src/widgets/lv_img.h>
-#include <lvgl/src/widgets/lv_label.h>
 
 namespace seedsigner::lvgl {
 
@@ -50,7 +48,7 @@ void StartupSplashScreen::create(const ScreenContext& context, const RouteDescri
     // Version label
     version_label_ = lv_label_create(container_);
     lv_label_set_text(version_label_, params_.version.c_str());
-    lv_obj_set_style_text_font(version_label_, &lv_font_montserrat_24, 0);
+    lv_obj_set_style_text_font(version_label_, &lv_font_montserrat_14, 0);
     lv_obj_set_style_pad_bottom(version_label_, 32, 0);
 
     // Timer for auto‑completion (if timeout > 0)
@@ -81,8 +79,8 @@ bool StartupSplashScreen::handle_input(const InputEvent& input) {
     if (completed_) {
         return false;
     }
-    if (params_.skip_on_input && (input.type == InputEvent::Type::Touch ||
-                                  input.type == InputEvent::Type::Button)) {
+    if (params_.skip_on_input && (input.key == InputKey::Press ||
+                                  input.key == InputKey::Back)) {
         emit_completed(true); // skipped
         return true;
     }

@@ -1,9 +1,6 @@
 #include "seedsigner_lvgl/screens/ScreensaverScreen.hpp"
 
 #include <lvgl.h>
-#include <lvgl/src/widgets/lv_img.h>
-#include <lvgl/src/widgets/lv_label.h>
-#include <lvgl/src/widgets/lv_canvas.h>
 
 namespace seedsigner::lvgl {
 
@@ -63,7 +60,7 @@ void ScreensaverScreen::create(const ScreenContext& context, const RouteDescript
 
         lv_obj_t* label = lv_label_create(wakeup_overlay_);
         lv_label_set_text(label, "Touch to continue");
-        lv_obj_set_style_text_font(label, &lv_font_montserrat_20, 0);
+        lv_obj_set_style_text_font(label, &lv_font_montserrat_14, 0);
         lv_obj_set_style_text_color(label, lv_color_white(), 0);
         lv_obj_center(label);
     }
@@ -94,8 +91,8 @@ bool ScreensaverScreen::handle_input(const InputEvent& input) {
     if (dismissed_) {
         return false;
     }
-    if (input.type == InputEvent::Type::Touch ||
-        input.type == InputEvent::Type::Button) {
+    if (input.key == InputKey::Press ||
+        input.key == InputKey::Back) {
         dismiss();
         return true;
     }
