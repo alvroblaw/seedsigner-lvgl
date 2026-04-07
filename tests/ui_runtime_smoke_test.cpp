@@ -21,6 +21,7 @@
 #include "seedsigner_lvgl/contracts/QRDisplayContract.hpp"
 #include "seedsigner_lvgl/screens/KeyboardScreen.hpp"
 #include "seedsigner_lvgl/contracts/KeyboardContract.hpp"
+#include "seedsigner_lvgl/contracts/CameraContract.hpp"
 
 namespace tests {
 
@@ -28,6 +29,7 @@ void test_settings_menu_route_demo();
 void test_warning_screen_family();
 void test_qr_display_screen();
 void test_keyboard_screen();
+void test_camera_contract();
 
 namespace {
 using seedsigner::lvgl::CameraFrame;
@@ -530,6 +532,79 @@ void test_keyboard_screen() {
     assert(runtime.send_input(InputEvent{.key = InputKey::Back}));
     auto back_event = next_matching(runtime, EventType::ActionInvoked);
     assert(back_event.has_value() && back_event->action_id == std::optional<std::string>{"back"});
+}
+
+void test_camera_contract() {
+    // Test enum conversions
+    assert(seedsigner::lvgl::to_string(seedsigner::lvgl::CameraFormat::RGB565) == "rgb565");
+    assert(seedsigner::lvgl::to_string(seedsigner::lvgl::CameraFormat::Grayscale) == "grayscale");
+    assert(seedsigner::lvgl::to_string(seedsigner::lvgl::CameraFormat::JPEG) == "jpeg");
+    assert(seedsigner::lvgl::parse_camera_format("rgb565") == seedsigner::lvgl::CameraFormat::RGB565);
+    assert(seedsigner::lvgl::parse_camera_format("RGB565") == seedsigner::lvgl::CameraFormat::RGB565);
+    assert(seedsigner::lvgl::parse_camera_format("grayscale") == seedsigner::lvgl::CameraFormat::Grayscale);
+    assert(seedsigner::lvgl::parse_camera_format("jpeg") == seedsigner::lvgl::CameraFormat::JPEG);
+    assert(seedsigner::lvgl::parse_camera_format("unknown") == seedsigner::lvgl::CameraFormat::Grayscale); // default
+
+    // Test roundtrip with default params
+    {
+        seedsigner::lvgl::CameraParams params;
+        seedsigner::lvgl::PropertyMap args = seedsigner::lvgl::make_camera_route_args(params);
+        seedsigner::lvgl::CameraParams parsed = seedsigner::lvgl::parse_camera_params(args);
+        assert(parsed.desired_format == seedsigner::lvgl::CameraFormat::Grayscale);
+        assert(parsed.desired_width == 0);
+        assert(parsed.desired_height == 0);
+        assert(parsed.max_fps == 0);
+        assert(parsed.buffer_count == 1);
+    }
+
+    // Test with explicit values
+    {
+        seedsigner::lvgl::CameraParams params;
+        params.desired_format = seedsigner::lvgl::CameraFormat::RGB565;
+        params.desired_width = 320;
+        params.desired_height = 240;
+        params.max_fps = 30;
+        params.buffer_count = 2;
+        seedsigner::lvgl::PropertyMap args = seedsigner::lvgl::make_camera_route_args(params);
+        assert(args.at("format") == "rgb565");
+        assert(args.at("width") == "320");
+        assert(args.at("height") == "240");
+        assert(args.at("fps") == "30");
+        assert(args.at("buffer_count") == "2");
+
+        seedsigner::lvgl::CameraParams parsed = seedsigner::lvgl::parse_camera_params(args);
+        assert(parsed.desired_format == seedsigner::lvgl::CameraFormat::RGB565);
+        assert(parsed.desired_width == 320);
+        assert(parsed.desired_height == 240);
+        assert(parsed.max_fps == 30);
+        assert(parsed.buffer_count == 2);
+    }
+
+    // Test missing args (should use defaults)
+    {
+        seedsigner::lvgl::PropertyMap args;
+        args["format"] = "jpeg";
+        // width, height omitted -> 0
+        // fps omitted -> 0
+        // buffer_count omitted -> 1
+        seedsigner::lvgl::CameraParams parsed = seedsigner::lvgl::parse_camera_params(args);
+        assert(parsed.desired_format == seedsigner::lvgl::CameraFormat::JPEG);
+        assert(parsed.desired_width == 0);
+        assert(parsed.desired_height == 0);
+        assert(parsed.max_fps == 0);
+        assert(parsed.buffer_count == 1);
+    }
+
+    // Test clamping buffer_count
+    {
+        seedsigner::lvgl::PropertyMap args;
+        args["buffer_count"] = "0";
+        seedsigner::lvgl::CameraParams parsed = seedsigner::lvgl::parse_camera_params(args);
+        assert(parsed.buffer_count == 1);
+        args["buffer_count"] = "15";
+        parsed = seedsigner::lvgl::parse_camera_params(args);
+        assert(parsed.buffer_count == 10); // clamped to 10
+    }
 }
 
 }  // namespace tests
