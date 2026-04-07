@@ -20,6 +20,8 @@ void test_settings_menu_route_demo();
 void test_warning_screen_family();
 void test_camera_contract();
 void test_psbt_overview_screen();
+void test_psbt_math_screen();
+void test_psbt_detail_screen();
 }
 
 namespace {
@@ -146,5 +148,7 @@ int main() {
     tests::test_warning_screen_family();
     tests::test_camera_contract();
     tests::test_psbt_overview_screen();
+    tests::test_psbt_math_screen();
+    tests::test_psbt_detail_screen();
     return 0;
 }
