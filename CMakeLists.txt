@@ -46,6 +46,8 @@ add_library(seedsigner_lvgl
   src/screens/ScanScreen.cpp
   src/contracts/SeedWordsContract.cpp
   src/screens/SeedWordsScreen.cpp
+  src/contracts/PSBTOverviewContract.cpp
+  src/screens/PSBTOverviewScreen.cpp
 )
 
 target_include_directories(seedsigner_lvgl

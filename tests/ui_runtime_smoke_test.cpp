@@ -25,6 +25,8 @@
 #include "seedsigner_lvgl/contracts/CameraContract.hpp"
 #include "seedsigner_lvgl/screens/SeedWordsScreen.hpp"
 #include "seedsigner_lvgl/contracts/SeedWordsContract.hpp"
+#include "seedsigner_lvgl/screens/PSBTOverviewScreen.hpp"
+#include "seedsigner_lvgl/contracts/PSBTOverviewContract.hpp"
 
 namespace tests {
 
@@ -676,6 +678,65 @@ void test_seed_words_screen() {
     assert(page_event->action_id == std::optional<std::string>{"page_changed"});
     
     // Press Back to emit back_requested
+    assert(runtime.send_input(InputEvent{.key = InputKey::Back}));
+    auto back_event = next_matching(runtime, EventType::ActionInvoked);
+    assert(back_event.has_value());
+    assert(back_event->action_id == std::optional<std::string>{"back_requested"});
+}
+
+void test_psbt_overview_screen() {
+    using seedsigner::lvgl::UiRuntime;
+    using seedsigner::lvgl::RouteId;
+    using seedsigner::lvgl::RouteDescriptor;
+    using seedsigner::lvgl::InputEvent;
+    using seedsigner::lvgl::InputKey;
+    using seedsigner::lvgl::EventType;
+    using seedsigner::lvgl::make_psbt_overview_route_args;
+    using seedsigner::lvgl::PSBTOverviewParams;
+
+    UiRuntime runtime;
+    assert(runtime.init());
+    assert(runtime.screen_registry().register_route(
+        RouteId{"psbt.overview"},
+        []() -> std::unique_ptr<seedsigner::lvgl::Screen> {
+            return std::make_unique<seedsigner::lvgl::PSBTOverviewScreen>();
+        }));
+
+    PSBTOverviewParams params;
+    params.total_amount = "0.005 BTC";
+    params.fee_amount = "0.0001 BTC";
+    params.change_amount = "0.001 BTC";
+    params.inputs_count = 2;
+    params.outputs_count = 3;
+    params.network = "mainnet";
+    params.has_op_return = false;
+    params.self_transfer = false;
+
+    auto args = make_psbt_overview_route_args(params);
+    RouteDescriptor descriptor{RouteId{"psbt.overview"}, args};
+    const auto active = runtime.activate(descriptor);
+    assert(active.has_value());
+    // Consume route activated and screen ready events
+    assert(next_matching(runtime, EventType::RouteActivated).has_value());
+    assert(next_matching(runtime, EventType::ScreenReady).has_value());
+    runtime.tick(16);
+    runtime.refresh_now();
+
+    // Verify title and amount appear
+    assert(label_tree_contains(lv_scr_act(), "Review Transaction"));
+    assert(label_tree_contains(lv_scr_act(), "0.005 BTC"));
+    assert(label_tree_contains(lv_scr_act(), "2 inputs"));
+    assert(label_tree_contains(lv_scr_act(), "3 outputs"));
+    assert(label_tree_contains(lv_scr_act(), "0.0001 BTC")); // fee
+    assert(label_tree_contains(lv_scr_act(), "0.001 BTC")); // change
+
+    // Test navigation: Press -> next_requested
+    assert(runtime.send_input(InputEvent{.key = InputKey::Press}));
+    auto next_event = next_matching(runtime, EventType::ActionInvoked);
+    assert(next_event.has_value());
+    assert(next_event->action_id == std::optional<std::string>{"next_requested"});
+
+    // Test back: Back -> back_requested
     assert(runtime.send_input(InputEvent{.key = InputKey::Back}));
     auto back_event = next_matching(runtime, EventType::ActionInvoked);
     assert(back_event.has_value());

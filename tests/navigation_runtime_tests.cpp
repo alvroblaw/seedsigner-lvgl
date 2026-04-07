@@ -19,6 +19,7 @@ void test_external_scan_flow_demo();
 void test_settings_menu_route_demo();
 void test_warning_screen_family();
 void test_camera_contract();
+void test_psbt_overview_screen();
 }
 
 namespace {
@@ -144,5 +145,6 @@ int main() {
     tests::test_settings_menu_route_demo();
     tests::test_warning_screen_family();
     tests::test_camera_contract();
+    tests::test_psbt_overview_screen();
     return 0;
 }
