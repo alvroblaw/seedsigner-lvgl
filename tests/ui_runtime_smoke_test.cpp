@@ -9,6 +9,7 @@
 #include "seedsigner_lvgl/contracts/SettingsContract.hpp"
 #include "seedsigner_lvgl/runtime/UiRuntime.hpp"
 #include "seedsigner_lvgl/screens/CameraPreviewScreen.hpp"
+#include "seedsigner_lvgl/screens/ScanScreen.hpp"
 #include "seedsigner_lvgl/screens/MenuListScreen.hpp"
 #include "seedsigner_lvgl/screens/PlaceholderScreen.hpp"
 #include "seedsigner_lvgl/screens/ResultScreen.hpp"
@@ -216,6 +217,7 @@ void test_external_scan_flow_demo() {
     assert(runtime.init());
     assert(runtime.screen_registry().register_route(RouteId{"demo.menu"}, []() -> std::unique_ptr<Screen> { return std::make_unique<seedsigner::lvgl::MenuListScreen>(); }));
     assert(runtime.screen_registry().register_route(RouteId{"demo.scan"}, []() -> std::unique_ptr<Screen> { return std::make_unique<seedsigner::lvgl::CameraPreviewScreen>(); }));
+    assert(runtime.screen_registry().register_route(RouteId{"scan.qr"}, []() -> std::unique_ptr<Screen> { return std::make_unique<seedsigner::lvgl::ScanScreen>(); }));
     assert(runtime.screen_registry().register_route(RouteId{"demo.result"}, []() -> std::unique_ptr<Screen> { return std::make_unique<seedsigner::lvgl::ResultScreen>(); }));
     assert(runtime.screen_registry().register_route(RouteId{"settings.locale"}, []() -> std::unique_ptr<Screen> { return std::make_unique<seedsigner::lvgl::SettingsSelectionScreen>(); }));
 
@@ -605,6 +607,20 @@ void test_camera_contract() {
         parsed = seedsigner::lvgl::parse_camera_params(args);
         assert(parsed.buffer_count == 10); // clamped to 10
     }
+}
+
+void test_scan_screen_mock() {
+    UiRuntime runtime;
+    assert(runtime.init());
+    assert(runtime.screen_registry().register_route(RouteId{"scan.qr"}, []() -> std::unique_ptr<Screen> { return std::make_unique<seedsigner::lvgl::ScanScreen>(); }));
+    auto active = runtime.activate(RouteDescriptor{.route_id = RouteId{"scan.qr"}, .args = {{ "instruction_text", "Scan QR code" }, { "scan_mode", "any" }}});
+    assert(active.has_value());
+    // Simulate camera frames
+    std::vector<uint8_t> dummy_pixels(96 * 96, 0x80);
+    runtime.push_frame(CameraFrame{.width = 96, .height = 96, .stride = 96, .sequence = 1, .pixels = dummy_pixels});
+    // Wait for events (mock detection should emit after some frames)
+    // We'll just verify screen created successfully.
+    // For now, just ensure no crash.
 }
 
 }  // namespace tests
