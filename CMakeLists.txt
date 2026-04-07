@@ -25,6 +25,8 @@ target_compile_definitions(lvgl PUBLIC LV_CONF_INCLUDE_SIMPLE)
 add_library(seedsigner_lvgl
   src/contracts/SettingsContract.cpp
   src/contracts/QRDisplayContract.cpp
+  src/contracts/KeyboardContract.cpp
+  src/contracts/CameraContract.cpp
   src/navigation/NavigationController.cpp
   src/platform/HeadlessDisplay.cpp
   src/runtime/EventQueue.cpp
@@ -40,6 +42,7 @@ add_library(seedsigner_lvgl
   src/screens/ErrorScreen.cpp
   src/screens/DireWarningScreen.cpp
   src/screens/QRDisplayScreen.cpp
+  src/screens/KeyboardScreen.cpp
 )
 
 target_include_directories(seedsigner_lvgl
