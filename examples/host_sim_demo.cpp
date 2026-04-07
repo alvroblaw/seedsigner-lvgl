@@ -7,6 +7,7 @@
 #include "seedsigner_lvgl/contracts/SettingsContract.hpp"
 #include "seedsigner_lvgl/runtime/UiRuntime.hpp"
 #include "seedsigner_lvgl/screens/CameraPreviewScreen.hpp"
+#include "seedsigner_lvgl/screens/ScanScreen.hpp"
 #include "seedsigner_lvgl/screens/MenuListScreen.hpp"
 #include "seedsigner_lvgl/screens/ResultScreen.hpp"
 #include "seedsigner_lvgl/screens/SettingsSelectionScreen.hpp"
@@ -28,6 +29,7 @@ int main() {
 
     runtime.screen_registry().register_route(RouteId{"demo.menu"}, []() -> std::unique_ptr<Screen> { return std::make_unique<MenuListScreen>(); });
     runtime.screen_registry().register_route(RouteId{"demo.scan"}, []() -> std::unique_ptr<Screen> { return std::make_unique<CameraPreviewScreen>(); });
+    runtime.screen_registry().register_route(RouteId{"scan.qr"}, []() -> std::unique_ptr<Screen> { return std::make_unique<ScanScreen>(); });
     runtime.screen_registry().register_route(RouteId{"demo.result"}, []() -> std::unique_ptr<Screen> { return std::make_unique<ResultScreen>(); });
     runtime.screen_registry().register_route(RouteId{"settings.locale"}, []() -> std::unique_ptr<Screen> { return std::make_unique<SettingsSelectionScreen>(); });
     runtime.screen_registry().register_route(RouteId{"settings.features"}, []() -> std::unique_ptr<Screen> { return std::make_unique<SettingsSelectionScreen>(); });

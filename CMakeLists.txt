@@ -43,6 +43,7 @@ add_library(seedsigner_lvgl
   src/screens/DireWarningScreen.cpp
   src/screens/QRDisplayScreen.cpp
   src/screens/KeyboardScreen.cpp
+  src/screens/ScanScreen.cpp
 )
 
 target_include_directories(seedsigner_lvgl
