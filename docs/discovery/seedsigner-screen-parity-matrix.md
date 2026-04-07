@@ -38,19 +38,20 @@ Implemented in `main` today:
 | Main menu / generic button-list family (`MainMenuScreen`, Seeds/Tools/Settings menus, signer pickers, simple selectors) | Reusable list / navigation | Medium | **partial** via `MenuListScreen` primitive | Need top nav, icons, scroll affordances, long-label handling, per-item metadata, consistent focus visuals | **Functional:** partial for simple lists. **Interaction:** partial; up/down/press/back exist. **Visual:** low; current screen is a plain LVGL list, not SeedSigner-styled. |
 | Power options / other simple 2-item action lists | Reusable list / navigation | Low | **partial** via `MenuListScreen` primitive | Need large-button variant and top-nav affordances | Likely easy consumers of the current primitive, but not implemented as real app routes yet. |
 | Generic result / success / informational status screens | Status / result | Low-Medium | **partial** via `ResultScreen` primitive | Need warning/error variants, icons, richer layout states, action button styling | **Functional:** partial; title/body/continue action works. **Interaction:** partial; press/back events work. **Visual:** low. |
-| Generic warning / dire warning / error family | Status / warning | Medium | **primitive-adjacent only** | Need severity-specific layouts, warning chrome, iconography, sensitive-state styling | `ResultScreen` is a base, but current main does not yet represent SeedSigner warning screens faithfully. |
-| QR scan live preview (`ScanScreen`) | Camera-backed scan | High | **partial** via `CameraPreviewScreen` | Need real preview rendering path, scan progress overlay, multipart decode feedback, back overlay, scanner/decoder integration | **Functional:** partial only as an externally driven preview/capture shell. **Interaction:** partial; press emits `capture`, back cancels. **Visual:** very low relative to SeedSigner. |
-| Settings QR ingest / SeedQR rescan confirmation / any flow that reuses `ScanScreen` | Camera-backed routed flow | High | **depends on partial scan primitive** | Need host routing contracts and decode/result plumbing | Current support is only the shared preview primitive, not the actual routed product flows. |
+| Generic warning / dire warning / error family | Status / warning | Medium | **implemented** via `WarningScreen`/`ErrorScreen`/`DireWarningScreen` family (PR #40) | Need SeedSigner visual styling and iconography | **Functional:** complete; title, body, severity levels, action buttons. **Interaction:** press/back events work. **Visual:** low; uses generic result styling. |
+| QR scan live preview (`ScanScreen`) | Camera-backed scan | High | **implemented** via `ScanScreen` with mock detection (PR #44) | Need real QR decoder integration, progress overlays | **Functional:** mock detection works; frame injection, capture/cancel events. **Interaction:** press captures, back cancels. **Visual:** low relative to SeedSigner. |
+| Settings QR ingest / SeedQR rescan confirmation / any flow that reuses `ScanScreen` | Camera-backed routed flow | High | **depends on implemented scan primitive** | Need host routing contracts and decode/result plumbing | Current support is the scan primitive, not yet full product flows. |
 | Tools image entropy live preview | Camera-backed capture | High | **primitive-adjacent only** | Needs capture/review flow, full-bleed preview, instruction overlays, entropy-specific UX | `CameraPreviewScreen` proves frame injection and capture events, but not the entropy workflow. |
 | I/O test with optional camera background | Hardware test / camera-adjacent | Medium-High | **none** | Need hardware-state rendering, key visualizations, optional preview background | No dedicated implementation yet. |
 | Seed selector / signer selector screens with mixed loaded-seed + action entries | Structured list / hybrid selection | Medium | **primitive-adjacent only** | Need richer row models, fingerprints, secondary text, possibly icons and sectioning | Basic list mechanics exist, but real SeedSigner selector density is not covered yet. |
 | Startup splash / screensaver | App shell / system | Medium | **none** | Assets, timing/animation, app-shell lifecycle | No parity work started. |
 | Main shell top nav / global escape affordances | App shell / navigation chrome | High | **none** | Shared shell layout, icon assets, nav model, focus rules | This is a broad dependency for many screens feeling like SeedSigner. |
-| QR display family (`QRDisplayScreen`, signed PSBT QR, xpub QR, SeedQR whole QR) | QR presentation | High | **none** | QR renderer, animated/static QR handling, sizing/brightness policy, page controls | Major parity block for PSBT/export flows. |
-| Seed word entry / passphrase entry / coin-flip / dice / numeric-entry keyboards | Data entry / keyboard | Very High | **none** | Reusable keyboard framework, alternate layouts, cursor model, text editing, side soft-buttons | Biggest missing interaction family after simple menus/scan shell. |
+| QR display family (`QRDisplayScreen`, signed PSBT QR, xpub QR, SeedQR whole QR) | QR presentation | High | **implemented** via `QRDisplayScreen` with brightness controls (PR #41) | Need QR renderer integration, page controls, animated QR support | **Functional:** brightness controls, QR display area, title/body. **Interaction:** button events for brightness, close. **Visual:** low; basic rectangle. |
+| Seed word entry / passphrase entry / coin-flip / dice / numeric-entry keyboards | Data entry / keyboard | Very High | **implemented** via `KeyboardScreen` generic text entry (PR #42) | Need specialized layouts (coin-flip, dice), custom validation, side soft-buttons | **Functional:** generic text entry with cursor, backspace, submit. **Interaction:** up/down/left/right/press input. **Visual:** low; basic keyboard grid. |
 | Transaction review family (`PSBTOverviewScreen`, math/details/finalize) | Transaction review | Very High | **none** | Bitcoin formatting widgets, diagrams, address formatting, review pagination, approval UX | No meaningful parity started. |
 | Seed reveal / backup / transcription / verification custom screens | Sensitive seed management | Very High | **none** | Warning chrome, pagination, QR display, keyboard/input, custom overlays | Large domain still untouched beyond generic primitives. |
-| Settings entry update selection / locale selection | Settings / structured lists | Medium | **partial** via `SettingsSelectionScreen` | Still needs global SeedSigner chrome, per-setting widgets beyond lists, and downstream route wiring into real settings definitions | The settings route now has an explicit host-side definition bridge (`SettingDefinition` / `SettingItemDefinition`), stable `setting_id` / `setting_type` / defaults/current-value route args, per-item `item_type` metadata, auto checkbox rendering for multi/toggle rows, and richer action payload strings derived from the same schema. It remains a narrow routed slice rather than full settings-flow parity. |
+| Settings menu screen (`SettingsMenuScreen`) | Settings / structured lists | Medium | **implemented** via `SettingsMenuScreen` (PR #33) | Need SeedSigner visual styling, per-setting widgets beyond lists | **Functional:** grouped settings menu with sections, selection events. **Interaction:** up/down/press/back. **Visual:** low; uses generic list styling. |
+| Settings entry update selection / locale selection | Settings / structured lists | Medium | **implemented** via `SettingsMenuScreen` and `SettingsSelectionScreen` | Still needs global SeedSigner chrome, per-setting widgets beyond lists, and downstream route wiring into real settings definitions | The settings route now has an explicit host-side definition bridge (`SettingDefinition` / `SettingItemDefinition`), stable `setting_id` / `setting_type` / defaults/current-value route args, per-item `item_type` metadata, auto checkbox rendering for multi/toggle rows, and richer action payload strings derived from the same schema. It remains a narrow routed slice rather than full settings-flow parity. |
 | Address explorer lists / address detail export | Tools / structured data views | High | **none** | Fixed-width address rows, pagination, QR display, derivation/fingerprint widgets | Blocked on formatted data components and QR display. |
 
 ## What is genuinely covered now
@@ -63,33 +64,52 @@ Implemented in `main` today:
    - up/down/press/back input handling
    - outbound events for focus change and selection
 
-2. **First real settings-selection route**
-   - title + subtitle framing
-   - optional section heading
-   - richer rows with current-value/accessory semantics
-   - explicit `single` vs `multi` selection modes
-   - `current_value` / `current_values` route args for current state
-   - checkbox rendering for multi-select rows
-   - optional help/footer copy regions
-   - single-select and multi-select `setting_selected` outbound action payloads
+2. **Settings menu screen family (`SettingsMenuScreen`)**
+   - grouped settings menu with sections
+   - selection events for settings navigation
+   - up/down/press/back interaction
+   - contract: `SettingsMenuContract`
 
-3. **Host-driven result/info shell**
-   - title/body rendering
-   - full replace + patch update paths
-   - confirm/cancel style event emission
+3. **Warning/Error/DireWarning screen family (`WarningScreen`, `ErrorScreen`, `DireWarningScreen`)**
+   - severity-specific layouts (warning, error, dire warning)
+   - title, body, action buttons
+   - press/back events
+   - contract: `WarningContract`
 
-4. **Host-driven camera preview shell**
+4. **QR display screen (`QRDisplayScreen`)**
+   - QR display area with brightness controls
+   - title, body, button events for brightness and close
+   - contract: `QRDisplayContract`
+
+5. **Keyboard input subsystem (`KeyboardScreen`)**
+   - generic text entry with cursor navigation
+   - backspace, submit, cancel
+   - up/down/left/right/press input handling
+   - contract: `KeyboardContract`
+
+6. **Camera preview shell (`ScanScreen` with mock detection)**
    - external frame ingestion
    - preview metadata updates
    - explicit `needs_data(camera.frame)` handshake
    - capture/cancel event emission
+   - mock QR detection for testing
+   - contract: `CameraContract`
 
-5. **Runtime control surface that matches the external-control architecture**
+7. **Runtime control surface that matches the external-control architecture**
    - `send_input(...)`
    - `set_screen_data(...)`
    - `patch_screen_data(...)`
    - `push_frame(...)`
+   - event queue and route activation
 
+### New contracts added to the external API
+- `SettingsMenuContract`: for settings menu navigation and selection
+- `WarningContract`: for warning/error/dire warning screens
+- `QRDisplayContract`: for QR display with brightness controls
+- `KeyboardContract`: for generic text entry
+- `CameraContract`: for camera‑backed screens and frame ingestion
+
+These contracts define the structured payloads and events for each screen family, keeping the external API small and stable while enabling rich screen‑specific behavior.
 ## What is still missing before "real SeedSigner feel"
 
 ### Visual parity gaps
