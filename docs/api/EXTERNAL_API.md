@@ -1,7 +1,16 @@
 # External Control API
 
 ## Status
-Phase 0 design proposal.
+Phase 0–4 implemented. Core external API stable, with screen‑specific contracts added for implemented screen families.
+
+### Implemented contracts
+- `SettingsMenuContract` – settings menu navigation and selection
+- `WarningContract` – warning/error/dire warning screens
+- `QRDisplayContract` – QR display with brightness controls
+- `KeyboardContract` – generic text entry
+- `CameraContract` – camera‑backed screens and frame ingestion
+
+Each contract defines route IDs, payload schemas, and event shapes for its screen family.
 
 ## Purpose
 Define the external API boundary for driving the LVGL UI module from a higher-level controller, with MicroPython on ESP32-P4 / ESP32-S3 as the primary future caller and native C++ as a secondary caller.
