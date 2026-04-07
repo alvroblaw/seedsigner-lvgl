@@ -23,6 +23,8 @@
 #include "seedsigner_lvgl/screens/KeyboardScreen.hpp"
 #include "seedsigner_lvgl/contracts/KeyboardContract.hpp"
 #include "seedsigner_lvgl/contracts/CameraContract.hpp"
+#include "seedsigner_lvgl/screens/SeedWordsScreen.hpp"
+#include "seedsigner_lvgl/contracts/SeedWordsContract.hpp"
 
 namespace tests {
 
@@ -31,6 +33,7 @@ void test_warning_screen_family();
 void test_qr_display_screen();
 void test_keyboard_screen();
 void test_camera_contract();
+void test_seed_words_screen();
 
 namespace {
 using seedsigner::lvgl::CameraFrame;
@@ -621,6 +624,62 @@ void test_scan_screen_mock() {
     // Wait for events (mock detection should emit after some frames)
     // We'll just verify screen created successfully.
     // For now, just ensure no crash.
+}
+
+void test_seed_words_screen() {
+    using seedsigner::lvgl::UiRuntime;
+    using seedsigner::lvgl::RouteId;
+    using seedsigner::lvgl::RouteDescriptor;
+    using seedsigner::lvgl::InputEvent;
+    using seedsigner::lvgl::InputKey;
+    using seedsigner::lvgl::EventType;
+    using seedsigner::lvgl::make_seed_words_route_args;
+    using seedsigner::lvgl::SeedWordsParams;
+
+    UiRuntime runtime;
+    assert(runtime.init());
+    assert(runtime.screen_registry().register_route(
+        RouteId{"seed.words"},
+        []() -> std::unique_ptr<seedsigner::lvgl::Screen> {
+            return std::make_unique<seedsigner::lvgl::SeedWordsScreen>();
+        }));
+    
+    SeedWordsParams params;
+    params.words = {"abandon", "ability", "able", "about", "above", "absent",
+                    "absorb", "abstract", "absurd", "academy", "account", "acid"};
+    params.words_per_page = 6;
+    params.title = "Test Seed";
+    params.warning_text = "Never digitize these words.";
+    
+    auto args = make_seed_words_route_args(params);
+    const auto active = runtime.activate({
+        .route_id = RouteId{"seed.words"},
+        .args = args
+    });
+    assert(active.has_value());
+    // Consume route activated and screen ready events
+    assert(next_matching(runtime, EventType::RouteActivated).has_value());
+    assert(next_matching(runtime, EventType::ScreenReady).has_value());
+    runtime.tick(16);
+    runtime.refresh_now();
+    
+    // Verify title and warning text appear
+    assert(label_tree_contains(lv_scr_act(), "Test Seed"));
+    assert(label_tree_contains(lv_scr_act(), "Never digitize these words."));
+    
+    // Test page navigation via input
+    // Initial page should be 1/2
+    // Press Right to go to page 2
+    assert(runtime.send_input(InputEvent{.key = InputKey::Right}));
+    auto page_event = next_matching(runtime, EventType::ActionInvoked);
+    assert(page_event.has_value());
+    assert(page_event->action_id == std::optional<std::string>{"page_changed"});
+    
+    // Press Back to emit back_requested
+    assert(runtime.send_input(InputEvent{.key = InputKey::Back}));
+    auto back_event = next_matching(runtime, EventType::ActionInvoked);
+    assert(back_event.has_value());
+    assert(back_event->action_id == std::optional<std::string>{"back_requested"});
 }
 
 }  // namespace tests
