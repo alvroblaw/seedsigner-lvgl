@@ -48,6 +48,10 @@ add_library(seedsigner_lvgl
   src/screens/SeedWordsScreen.cpp
   src/contracts/PSBTOverviewContract.cpp
   src/screens/PSBTOverviewScreen.cpp
+  src/contracts/PSBTMathContract.cpp
+  src/contracts/PSBTDetailContract.cpp
+  src/screens/PSBTMathScreen.cpp
+  src/screens/PSBTDetailScreen.cpp
   src/contracts/StartupSplashContract.cpp
   src/contracts/ScreensaverContract.cpp
   src/screens/StartupSplashScreen.cpp
