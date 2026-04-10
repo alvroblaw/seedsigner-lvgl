@@ -1,4 +1,5 @@
 #include "seedsigner_lvgl/screens/ScanScreen.hpp"
+#include "seedsigner_lvgl/visual/SeedSignerTheme.hpp"
 
 #include <lvgl.h>
 #include <algorithm>
@@ -44,7 +45,7 @@ void ScanScreen::create(const ScreenContext& context, const RouteDescriptor& rou
     // Create root container
     container_ = lv_obj_create(context.root);
     lv_obj_set_size(container_, lv_pct(100), lv_pct(100));
-    lv_obj_set_style_bg_color(container_, lv_color_black(), 0);
+    lv_obj_set_style_bg_color(container_, seedsigner::lvgl::theme::colors::SURFACE_DARK, 0);
     lv_obj_set_style_border_width(container_, 0, 0);
     lv_obj_set_flex_flow(container_, LV_FLEX_FLOW_COLUMN);
     lv_obj_set_flex_align(container_, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
@@ -64,7 +65,7 @@ void ScanScreen::create(const ScreenContext& context, const RouteDescriptor& rou
     // Content container (everything below the nav bar)
     content_container_ = lv_obj_create(container_);
     lv_obj_set_size(content_container_, lv_pct(100), lv_pct(100));
-    lv_obj_set_style_bg_color(content_container_, lv_color_black(), 0);
+    lv_obj_set_style_bg_color(content_container_, seedsigner::lvgl::theme::colors::SURFACE_DARK, 0);
     lv_obj_set_style_border_width(content_container_, 0, 0);
     lv_obj_set_style_pad_all(content_container_, 0, 0);
     lv_obj_set_flex_grow(content_container_, 1); // Take remaining height
@@ -73,7 +74,7 @@ void ScanScreen::create(const ScreenContext& context, const RouteDescriptor& rou
     preview_img_ = lv_canvas_create(content_container_);
     lv_obj_set_size(preview_img_, kPreviewWidth, kPreviewHeight);
     lv_obj_align(preview_img_, LV_ALIGN_CENTER, 0, 0);
-    lv_canvas_fill_bg(preview_img_, lv_color_black(), LV_OPA_COVER);
+    lv_canvas_fill_bg(preview_img_, seedsigner::lvgl::theme::colors::BLACK, LV_OPA_COVER);
     
     // Instruction label removed – title is shown in TopNavBar
     instruction_label_ = nullptr;
@@ -84,9 +85,9 @@ void ScanScreen::create(const ScreenContext& context, const RouteDescriptor& rou
     lv_obj_align(progress_bar_, LV_ALIGN_BOTTOM_MID, 0, -40);
     lv_bar_set_range(progress_bar_, 0, 100);
     lv_bar_set_value(progress_bar_, 0, LV_ANIM_OFF);
-    lv_obj_set_style_bg_color(progress_bar_, lv_color_hex(0x333333), 0);
+    lv_obj_set_style_bg_color(progress_bar_, seedsigner::lvgl::theme::colors::SURFACE_MEDIUM, 0);
     lv_obj_set_style_bg_opa(progress_bar_, LV_OPA_COVER, 0);
-    lv_obj_set_style_bg_color(progress_bar_, lv_color_hex(0x00AA00), LV_PART_INDICATOR);
+    lv_obj_set_style_bg_color(progress_bar_, seedsigner::lvgl::theme::colors::SUCCESS, LV_PART_INDICATOR);
     lv_obj_set_style_bg_opa(progress_bar_, LV_OPA_COVER, LV_PART_INDICATOR);
     lv_obj_add_flag(progress_bar_, LV_OBJ_FLAG_HIDDEN);
     
@@ -94,7 +95,7 @@ void ScanScreen::create(const ScreenContext& context, const RouteDescriptor& rou
     progress_label_ = lv_label_create(content_container_);
     lv_label_set_text(progress_label_, "0%");
     lv_obj_align_to(progress_label_, progress_bar_, LV_ALIGN_OUT_BOTTOM_MID, 0, 5);
-    lv_obj_set_style_text_color(progress_label_, lv_color_white(), 0);
+    lv_obj_set_style_text_color(progress_label_, seedsigner::lvgl::theme::colors::TEXT_PRIMARY, 0);
     lv_obj_set_style_text_font(progress_label_, &lv_font_montserrat_14, 0);
     lv_obj_add_flag(progress_label_, LV_OBJ_FLAG_HIDDEN);
     
@@ -103,7 +104,7 @@ void ScanScreen::create(const ScreenContext& context, const RouteDescriptor& rou
     lv_obj_set_size(frame_status_dot_, kDotSize, kDotSize);
     lv_obj_align(frame_status_dot_, LV_ALIGN_BOTTOM_RIGHT, -kDotMargin, -kDotMargin);
     lv_obj_set_style_radius(frame_status_dot_, LV_RADIUS_CIRCLE, 0);
-    lv_obj_set_style_bg_color(frame_status_dot_, lv_color_hex(0xFF0000), 0); // red initially
+    lv_obj_set_style_bg_color(frame_status_dot_, seedsigner::lvgl::theme::colors::ERROR, 0); // red initially
     lv_obj_set_style_bg_opa(frame_status_dot_, LV_OPA_COVER, 0);
     lv_obj_set_style_border_width(frame_status_dot_, 0, 0);
     lv_obj_clear_flag(frame_status_dot_, LV_OBJ_FLAG_CLICKABLE);
@@ -179,7 +180,7 @@ bool ScanScreen::push_frame(const CameraFrame& frame) {
         const std::uint32_t y_offset = (target_height - scaled_height) / 2;
         
         // Fill background black
-        lv_canvas_fill_bg(preview_img_, lv_color_black(), LV_OPA_COVER);
+        lv_canvas_fill_bg(preview_img_, seedsigner::lvgl::theme::colors::BLACK, LV_OPA_COVER);
         
         // Draw scaled grayscale pixels
         for (std::uint32_t y = 0; y < scaled_height; ++y) {
@@ -232,7 +233,7 @@ void ScanScreen::update_progress(unsigned int percent) {
 
 void ScanScreen::update_frame_status(bool valid) {
     frame_valid_ = valid;
-    lv_obj_set_style_bg_color(frame_status_dot_, valid ? lv_color_hex(0x00FF00) : lv_color_hex(0xFF0000), 0);
+    lv_obj_set_style_bg_color(frame_status_dot_, valid ? seedsigner::lvgl::theme::colors::SUCCESS : seedsigner::lvgl::theme::colors::ERROR, 0);
     // Optionally emit event
     context_.emit_action(kFrameStatusUpdatedAction, kScanScreenComponent, EventValue{valid});
 }

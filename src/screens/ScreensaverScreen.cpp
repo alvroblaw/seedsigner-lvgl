@@ -1,4 +1,5 @@
 #include "seedsigner_lvgl/screens/ScreensaverScreen.hpp"
+#include "seedsigner_lvgl/visual/SeedSignerTheme.hpp"
 
 #include <lvgl.h>
 
@@ -25,7 +26,7 @@ lv_obj_t* create_animation_object(lv_obj_t* parent, const ScreensaverParams& par
         obj = lv_obj_create(parent);
         lv_obj_set_size(obj, kDefaultLogoSize, kDefaultLogoSize);
         lv_obj_set_style_radius(obj, LV_RADIUS_CIRCLE, 0);
-        lv_obj_set_style_bg_color(obj, lv_color_hex(0x0080FF), 0);
+        lv_obj_set_style_bg_color(obj, seedsigner::lvgl::theme::colors::PRIMARY, 0);
         lv_obj_set_style_bg_opa(obj, LV_OPA_COVER, 0);
         lv_obj_set_style_border_width(obj, 0, 0);
     }

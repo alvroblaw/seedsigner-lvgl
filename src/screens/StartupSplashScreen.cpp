@@ -1,4 +1,5 @@
 #include "seedsigner_lvgl/screens/StartupSplashScreen.hpp"
+#include "seedsigner_lvgl/visual/SeedSignerTheme.hpp"
 
 #include <lvgl.h>
 
@@ -14,11 +15,11 @@ lv_obj_t* create_logo(lv_obj_t* parent, const std::optional<std::string>& logo_p
     // Placeholder: a simple rectangle with "Logo" text
     lv_obj_t* cont = lv_obj_create(parent);
     lv_obj_set_size(cont, 120, 120);
-    lv_obj_set_style_bg_color(cont, lv_color_hex(0x606060), 0);
+    lv_obj_set_style_bg_color(cont, seedsigner::lvgl::theme::colors::SURFACE_MEDIUM, 0);
     lv_obj_set_style_bg_opa(cont, LV_OPA_COVER, 0);
     lv_obj_set_style_radius(cont, 20, 0);
     lv_obj_set_style_border_width(cont, 2, 0);
-    lv_obj_set_style_border_color(cont, lv_color_hex(0x808080), 0);
+    lv_obj_set_style_border_color(cont, seedsigner::lvgl::theme::colors::BORDER, 0);
 
     lv_obj_t* label = lv_label_create(cont);
     lv_label_set_text(label, "Logo");
