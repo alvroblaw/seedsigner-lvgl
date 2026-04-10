@@ -1,4 +1,5 @@
 #include "seedsigner_lvgl/screens/WarningScreen.hpp"
+#include "seedsigner_lvgl/components/TopNavBar.hpp"
 
 #include <lvgl.h>
 
@@ -38,33 +39,58 @@ void WarningScreen::create(const ScreenContext& context, const RouteDescriptor& 
     const std::string custom_icon = value_or(route.args, kIconArg, "");
     const char* icon_text = custom_icon.empty() ? severity_to_icon(severity_) : custom_icon.c_str();
 
+    // Determine TopNavBar title: use custom title if provided, else default based on severity
+    std::string nav_title = title_;
+    if (nav_title.empty()) {
+        switch (severity_) {
+            case WarningSeverity::Error:
+                nav_title = "Error";
+                break;
+            case WarningSeverity::DireWarning:
+                nav_title = "Warning";
+                break;
+            case WarningSeverity::Warning:
+            default:
+                nav_title = "Warning";
+                break;
+        }
+    }
+
     container_ = lv_obj_create(context.root);
     lv_obj_set_size(container_, lv_pct(100), lv_pct(100));
-    lv_obj_set_style_pad_all(container_, 16, 0);
     lv_obj_set_flex_flow(container_, LV_FLEX_FLOW_COLUMN);
-    lv_obj_set_flex_align(container_, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+    lv_obj_set_flex_align(container_, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+    // No padding on root container; TopNavBar and content container manage their own spacing.
+
+    // Top navigation bar
+    top_nav_bar_ = std::make_unique<TopNavBar>(context_);
+    TopNavBarConfig nav_config;
+    nav_config.title = nav_title;
+    nav_config.show_back = true;
+    nav_config.show_home = false;
+    nav_config.show_cancel = false;
+    // No custom actions
+    top_nav_bar_->set_config(nav_config);
+    top_nav_bar_->attach(container_);
+
+    // Content container (everything below the nav bar)
+    content_container_ = lv_obj_create(container_);
+    lv_obj_set_size(content_container_, lv_pct(100), lv_pct(100));
+    lv_obj_set_style_pad_all(content_container_, 16, 0);
+    lv_obj_set_flex_flow(content_container_, LV_FLEX_FLOW_COLUMN);
+    lv_obj_set_flex_align(content_container_, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+    lv_obj_set_flex_grow(content_container_, 1); // Take remaining height
 
     // Icon
-    icon_label_ = lv_label_create(container_);
+    icon_label_ = lv_label_create(content_container_);
     lv_label_set_text(icon_label_, icon_text);
     // icon uses default font
     lv_obj_set_style_text_color(icon_label_, severity_to_title_color(severity_), 0);
     lv_obj_set_style_pad_bottom(icon_label_, 16, 0);
 
-    // Title
-    if (!title_.empty()) {
-        title_label_ = lv_label_create(container_);
-        lv_obj_set_width(title_label_, lv_pct(100));
-        lv_label_set_text(title_label_, title_.c_str());
-        // title uses default font
-        lv_obj_set_style_text_color(title_label_, severity_to_title_color(severity_), 0);
-        lv_obj_set_style_text_align(title_label_, LV_TEXT_ALIGN_CENTER, 0);
-        lv_obj_set_style_pad_bottom(title_label_, 8, 0);
-    }
-
     // Body
     if (!body_.empty()) {
-        body_label_ = lv_label_create(container_);
+        body_label_ = lv_label_create(content_container_);
         lv_obj_set_width(body_label_, lv_pct(100));
         lv_label_set_long_mode(body_label_, LV_LABEL_LONG_WRAP);
         lv_label_set_text(body_label_, body_.c_str());
@@ -74,7 +100,7 @@ void WarningScreen::create(const ScreenContext& context, const RouteDescriptor& 
     }
 
     // Button
-    button_ = lv_btn_create(container_);
+    button_ = lv_btn_create(content_container_);
     lv_obj_set_width(button_, lv_pct(80));
     lv_obj_set_height(button_, 48);
     lv_obj_set_style_radius(button_, 8, 0);
@@ -91,19 +117,25 @@ void WarningScreen::create(const ScreenContext& context, const RouteDescriptor& 
 }
 
 void WarningScreen::destroy() {
+    // TopNavBar must be cleared before its parent container is deleted.
+    top_nav_bar_.reset();
     if (container_ != nullptr) {
         lv_obj_del(container_);
         container_ = nullptr;
+        content_container_ = nullptr;
+        icon_label_ = nullptr;
+        body_label_ = nullptr;
+        button_ = nullptr;
+        button_label_ = nullptr;
     }
-    icon_label_ = nullptr;
-    title_label_ = nullptr;
-    body_label_ = nullptr;
-    button_ = nullptr;
-    button_label_ = nullptr;
     context_ = {};
 }
 
 bool WarningScreen::handle_input(const InputEvent& input) {
+    // First give the top nav bar a chance to handle the input (e.g., hardware back)
+    if (top_nav_bar_ && top_nav_bar_->handle_input(input)) {
+        return true;
+    }
     switch (input.key) {
     case InputKey::Press:
         // Treat hardware OK button as pressing the on-screen button.

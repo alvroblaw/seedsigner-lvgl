@@ -1,7 +1,9 @@
 #pragma once
 
+#include <memory>
 #include <string>
 
+#include "seedsigner_lvgl/components/TopNavBar.hpp"
 #include "seedsigner_lvgl/contracts/PSBTMathContract.hpp"
 #include "seedsigner_lvgl/screen/Screen.hpp"
 
@@ -22,10 +24,11 @@ private:
 
     ScreenContext context_{};
     lv_obj_t* container_{nullptr};
-    lv_obj_t* title_label_{nullptr};
+    lv_obj_t* content_container_{nullptr};
     lv_obj_t* table_{nullptr};
     lv_obj_t* footer_label_{nullptr};
     PSBTMathParams params_{};
+    std::unique_ptr<TopNavBar> top_nav_bar_{};
 };
 
 }  // namespace seedsigner::lvgl

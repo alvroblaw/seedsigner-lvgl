@@ -1,5 +1,6 @@
 #include "seedsigner_lvgl/components/TopNavBar.hpp"
 
+#include <cstdio>
 #include <lvgl.h>
 #include <algorithm>
 
@@ -32,6 +33,7 @@ TopNavBar::TopNavBar(ScreenContext context)
     : context_(std::move(context)) {}
 
 TopNavBar::~TopNavBar() {
+    fprintf(stderr, "[TopNavBar] destructor container_=%p\n", container_); fflush(stderr);
     detach();
 }
 
@@ -54,11 +56,11 @@ void TopNavBar::attach(lv_obj_t* parent) {
 }
 
 void TopNavBar::detach() {
+    fprintf(stderr, "[TopNavBar] detach container_=%p parent=%p\n", container_, container_ ? lv_obj_get_parent(container_) : nullptr); fflush(stderr);
     destroy_widgets();
-    if (container_ != nullptr) {
-        lv_obj_del(container_);
-        container_ = nullptr;
-    }
+    // Do NOT delete container_ here; the parent (screen root container) will delete it.
+    // Simply clear the pointer to avoid dangling reference.
+    container_ = nullptr;
 }
 
 void TopNavBar::set_config(const TopNavBarConfig& config) {

@@ -65,9 +65,28 @@ void KeyboardScreen::create(const ScreenContext& context, const RouteDescriptor&
 
     container_ = lv_obj_create(context.root);
     lv_obj_set_size(container_, lv_pct(100), lv_pct(100));
-    lv_obj_set_style_pad_all(container_, 8, 0);
     lv_obj_set_flex_flow(container_, LV_FLEX_FLOW_COLUMN);
     lv_obj_set_flex_align(container_, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+    // No padding on root container; TopNavBar and content container manage their own spacing.
+
+    // Top navigation bar
+    top_nav_bar_ = std::make_unique<TopNavBar>(context_);
+    TopNavBarConfig nav_config;
+    nav_config.title = "Enter Text";
+    nav_config.show_back = true;
+    nav_config.show_home = false;
+    nav_config.show_cancel = false;
+    // No custom actions
+    top_nav_bar_->set_config(nav_config);
+    top_nav_bar_->attach(container_);
+
+    // Content container (everything below the nav bar)
+    content_container_ = lv_obj_create(container_);
+    lv_obj_set_size(content_container_, lv_pct(100), lv_pct(100));
+    lv_obj_set_style_pad_all(content_container_, 8, 0);
+    lv_obj_set_flex_flow(content_container_, LV_FLEX_FLOW_COLUMN);
+    lv_obj_set_flex_align(content_container_, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+    lv_obj_set_flex_grow(content_container_, 1); // Take remaining height
 
     create_text_display();
     create_keyboard_grid();
@@ -75,10 +94,13 @@ void KeyboardScreen::create(const ScreenContext& context, const RouteDescriptor&
 }
 
 void KeyboardScreen::destroy() {
+    // TopNavBar must be cleared before its parent container is deleted.
+    top_nav_bar_.reset();
     if (container_ != nullptr) {
         lv_obj_del(container_);
         container_ = nullptr;
     }
+    content_container_ = nullptr;
     text_display_ = nullptr;
     keyboard_grid_ = nullptr;
     soft_container_ = nullptr;
@@ -94,6 +116,10 @@ void KeyboardScreen::destroy() {
 }
 
 bool KeyboardScreen::handle_input(const InputEvent& input) {
+    // First give the top nav bar a chance to handle the input (e.g., hardware back)
+    if (top_nav_bar_ && top_nav_bar_->handle_input(input)) {
+        return true;
+    }
     switch (input.key) {
         case InputKey::Up:
             move_selection(0, -1);
@@ -126,7 +152,7 @@ bool KeyboardScreen::handle_input(const InputEvent& input) {
 void KeyboardScreen::create_text_display() {
     std::cout << "KeyboardScreen::create_text_display" << std::endl;
     // Create a text area for display and editing
-    text_display_ = lv_textarea_create(container_);
+    text_display_ = lv_textarea_create(content_container_);
     lv_obj_set_width(text_display_, lv_pct(100));
     lv_obj_set_height(text_display_, LV_SIZE_CONTENT);
     lv_textarea_set_text(text_display_, current_text_.c_str());
@@ -141,7 +167,7 @@ void KeyboardScreen::create_text_display() {
 
 void KeyboardScreen::create_keyboard_grid() {
     std::cout << "KeyboardScreen::create_keyboard_grid" << std::endl;
-    keyboard_grid_ = lv_btnmatrix_create(container_);
+    keyboard_grid_ = lv_btnmatrix_create(content_container_);
     lv_obj_set_width(keyboard_grid_, lv_pct(100));
     lv_obj_set_height(keyboard_grid_, LV_SIZE_CONTENT);
     // Build layout map
@@ -164,7 +190,7 @@ void KeyboardScreen::create_keyboard_grid() {
 
 void KeyboardScreen::create_soft_buttons() {
     // Container for soft buttons in a horizontal row
-    soft_container_ = lv_obj_create(container_);
+    soft_container_ = lv_obj_create(content_container_);
     lv_obj_set_size(soft_container_, lv_pct(100), LV_SIZE_CONTENT);
     lv_obj_set_flex_flow(soft_container_, LV_FLEX_FLOW_ROW);
     lv_obj_set_flex_align(soft_container_, LV_FLEX_ALIGN_SPACE_EVENLY, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);

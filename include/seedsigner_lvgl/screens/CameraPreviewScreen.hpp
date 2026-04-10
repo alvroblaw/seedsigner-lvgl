@@ -1,8 +1,10 @@
 #pragma once
 
+#include <memory>
 #include <string>
 #include <vector>
 
+#include "seedsigner_lvgl/components/TopNavBar.hpp"
 #include "seedsigner_lvgl/screen/Screen.hpp"
 
 namespace seedsigner::lvgl {
@@ -23,11 +25,12 @@ private:
 
     ScreenContext context_{};
     lv_obj_t* container_{nullptr};
-    lv_obj_t* title_label_{nullptr};
+    lv_obj_t* content_container_{nullptr};
     lv_obj_t* preview_panel_{nullptr};
     lv_obj_t* preview_canvas_{nullptr};
     lv_obj_t* frame_label_{nullptr};
     lv_obj_t* status_label_{nullptr};
+    std::unique_ptr<TopNavBar> top_nav_bar_{};
     std::vector<lv_color_t> preview_canvas_buffer_{};
     std::vector<std::uint8_t> latest_frame_{};
     std::string title_{"Scan QR"};

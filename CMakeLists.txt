@@ -32,6 +32,7 @@ add_library(seedsigner_lvgl
   src/runtime/EventQueue.cpp
   src/runtime/UiRuntime.cpp
   src/screen/ScreenRegistry.cpp
+  src/components/TopNavBar.cpp
   src/screens/CameraPreviewScreen.cpp
   src/screens/MenuListScreen.cpp
   src/screens/PlaceholderScreen.cpp

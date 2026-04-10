@@ -1,8 +1,10 @@
 #pragma once
 
+#include <memory>
 #include <string>
 #include <vector>
 
+#include "seedsigner_lvgl/components/TopNavBar.hpp"
 #include "seedsigner_lvgl/contracts/SeedWordsContract.hpp"
 #include "seedsigner_lvgl/screen/Screen.hpp"
 
@@ -24,6 +26,7 @@ private:
 
     ScreenContext context_{};
     lv_obj_t* container_{nullptr};
+    lv_obj_t* content_container_{nullptr};
     lv_obj_t* title_label_{nullptr};
     lv_obj_t* page_label_{nullptr};
     lv_obj_t* warning_label_{nullptr};
@@ -33,6 +36,7 @@ private:
     lv_style_t chip_style_{};
     lv_style_t warning_chip_style_{};
     bool styles_initialized_{false};
+    std::unique_ptr<TopNavBar> top_nav_bar_{};
 
     SeedWordsParams params_{};
     int current_page_{0};

@@ -1,5 +1,7 @@
 #include "seedsigner_lvgl/screens/PSBTOverviewScreen.hpp"
 
+#include "seedsigner_lvgl/components/TopNavBar.hpp"
+
 #include <lvgl.h>
 
 #include "seedsigner_lvgl/contracts/PSBTOverviewContract.hpp"
@@ -74,19 +76,31 @@ void PSBTOverviewScreen::create(const ScreenContext& context, const RouteDescrip
 
     container_ = lv_obj_create(context.root);
     lv_obj_set_size(container_, lv_pct(100), lv_pct(100));
-    lv_obj_set_style_pad_all(container_, 16, 0);
     lv_obj_set_flex_flow(container_, LV_FLEX_FLOW_COLUMN);
     lv_obj_set_flex_align(container_, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+    // No padding on root container; TopNavBar and content container manage their own spacing.
 
-    // Title
-    title_label_ = lv_label_create(container_);
-    lv_label_set_text(title_label_, "Review Transaction");
-    lv_obj_set_style_text_align(title_label_, LV_TEXT_ALIGN_CENTER, 0);
-    lv_obj_set_width(title_label_, lv_pct(100));
-    lv_obj_set_style_pad_bottom(title_label_, 16, 0);
+    // Top navigation bar
+    top_nav_bar_ = std::make_unique<TopNavBar>(context_);
+    TopNavBarConfig nav_config;
+    nav_config.title = "Review Transaction";
+    nav_config.show_back = true;
+    nav_config.show_home = false;
+    nav_config.show_cancel = false;
+    // No custom actions
+    top_nav_bar_->set_config(nav_config);
+    top_nav_bar_->attach(container_);
 
-    // Total amount
-    amount_label_ = lv_label_create(container_);
+    // Content container (everything below the nav bar)
+    content_container_ = lv_obj_create(container_);
+    lv_obj_set_size(content_container_, lv_pct(100), lv_pct(100));
+    lv_obj_set_style_pad_all(content_container_, 16, 0);
+    lv_obj_set_flex_flow(content_container_, LV_FLEX_FLOW_COLUMN);
+    lv_obj_set_flex_align(content_container_, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+    lv_obj_set_flex_grow(content_container_, 1); // Take remaining height
+
+    // Total amount (center prominent)
+    amount_label_ = lv_label_create(content_container_);
     lv_label_set_text(amount_label_, params_.total_amount.c_str());
     lv_obj_set_style_text_color(amount_label_, lv_palette_main(LV_PALETTE_GREEN), 0);
     lv_obj_set_style_text_align(amount_label_, LV_TEXT_ALIGN_CENTER, 0);
@@ -94,7 +108,7 @@ void PSBTOverviewScreen::create(const ScreenContext& context, const RouteDescrip
     lv_obj_set_style_pad_bottom(amount_label_, 24, 0);
 
     // Diagram container
-    diagram_container_ = lv_obj_create(container_);
+    diagram_container_ = lv_obj_create(content_container_);
     lv_obj_set_size(diagram_container_, lv_pct(100), LV_SIZE_CONTENT);
     lv_obj_set_style_border_width(diagram_container_, 0, 0);
     lv_obj_set_style_pad_all(diagram_container_, 0, 0);
@@ -143,7 +157,7 @@ void PSBTOverviewScreen::create(const ScreenContext& context, const RouteDescrip
     }
 
     // Footer hint
-    footer_label_ = lv_label_create(container_);
+    footer_label_ = lv_label_create(content_container_);
     lv_label_set_text(footer_label_, "Press OK to continue, BACK to cancel");
     lv_obj_set_style_text_color(footer_label_, lv_color_hex(0x888888), 0);
     lv_obj_set_style_text_align(footer_label_, LV_TEXT_ALIGN_CENTER, 0);
@@ -152,11 +166,13 @@ void PSBTOverviewScreen::create(const ScreenContext& context, const RouteDescrip
 }
 
 void PSBTOverviewScreen::destroy() {
+    // TopNavBar must be cleared before its parent container is deleted.
+    top_nav_bar_.reset();
     if (container_ != nullptr) {
         lv_obj_del(container_);
         container_ = nullptr;
     }
-    title_label_ = nullptr;
+    content_container_ = nullptr;
     amount_label_ = nullptr;
     diagram_container_ = nullptr;
     inputs_row_ = nullptr;
@@ -169,6 +185,10 @@ void PSBTOverviewScreen::destroy() {
 }
 
 bool PSBTOverviewScreen::handle_input(const InputEvent& input) {
+    // First give the top nav bar a chance to handle the input (e.g., hardware back)
+    if (top_nav_bar_ && top_nav_bar_->handle_input(input)) {
+        return true;
+    }
     switch (input.key) {
     case InputKey::Press:
         emit_next();

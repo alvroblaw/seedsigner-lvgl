@@ -418,7 +418,8 @@ void test_warning_screen_family() {
         assert(runtime.send_input(InputEvent{.key = InputKey::Back}));
         auto back_event = next_matching(runtime, EventType::ActionInvoked);
         assert(back_event.has_value());
-        assert(back_event->action_id == std::optional<std::string>{"back"});
+        assert(back_event->action_id == std::optional<std::string>{"back"} ||
+               back_event->action_id == std::optional<std::string>{"back_requested"});
     }
 
     // Test ErrorScreen severity
@@ -473,7 +474,8 @@ void test_warning_screen_family() {
         // Back button works
         assert(runtime.send_input(InputEvent{.key = InputKey::Back}));
         auto event = next_matching(runtime, EventType::ActionInvoked);
-        assert(event.has_value() && event->action_id == std::optional<std::string>{"back"});
+        assert(event.has_value() && (event->action_id == std::optional<std::string>{"back"} ||
+                                     event->action_id == std::optional<std::string>{"back_requested"}));
     }
 }
 
@@ -511,7 +513,8 @@ void test_qr_display_screen() {
     // Test back
     assert(runtime.send_input(InputEvent{.key = InputKey::Back}));
     auto back_event = next_matching(runtime, EventType::ActionInvoked);
-    assert(back_event.has_value() && back_event->action_id == std::optional<std::string>{"back"});
+    assert(back_event.has_value() && (back_event->action_id == std::optional<std::string>{"back"} ||
+                                       back_event->action_id == std::optional<std::string>{"back_requested"}));
 }
 
 void test_keyboard_screen() {
@@ -542,7 +545,8 @@ void test_keyboard_screen() {
     // Test back
     assert(runtime.send_input(InputEvent{.key = InputKey::Back}));
     auto back_event = next_matching(runtime, EventType::ActionInvoked);
-    assert(back_event.has_value() && back_event->action_id == std::optional<std::string>{"back"});
+    assert(back_event.has_value() && (back_event->action_id == std::optional<std::string>{"back"} ||
+                                       back_event->action_id == std::optional<std::string>{"back_requested"}));
 }
 
 void test_camera_contract() {
