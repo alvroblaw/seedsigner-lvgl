@@ -1,5 +1,6 @@
 #include "seedsigner_lvgl/components/TopNavBar.hpp"
 #include "seedsigner_lvgl/visual/SeedSignerTheme.hpp"
+#include "icons.h"
 
 #include <cstdio>
 #include <lvgl.h>
@@ -109,9 +110,9 @@ void TopNavBar::create_widgets() {
         seedsigner::lvgl::theme::apply_button_style(back_btn_, false);
         lv_obj_set_style_radius(back_btn_, LV_RADIUS_CIRCLE, 0); // Keep circular shape
         lv_obj_add_event_cb(back_btn_, &TopNavBar::on_back_clicked, LV_EVENT_CLICKED, this);
-        lv_obj_t* label = lv_label_create(back_btn_);
-        lv_label_set_text(label, LV_SYMBOL_LEFT);
-        lv_obj_center(label);
+        lv_obj_t* img = lv_img_create(back_btn_);
+        lv_img_set_src(img, &img_back);
+        lv_obj_center(img);
     }
 
     if (config_.show_home) {

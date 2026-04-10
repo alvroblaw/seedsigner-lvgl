@@ -1,6 +1,7 @@
 #include "seedsigner_lvgl/screens/WarningScreen.hpp"
 #include "seedsigner_lvgl/visual/SeedSignerTheme.hpp"
 #include "seedsigner_lvgl/components/TopNavBar.hpp"
+#include "icons.h"
 
 #include <lvgl.h>
 
@@ -38,7 +39,13 @@ void WarningScreen::create(const ScreenContext& context, const RouteDescriptor& 
 
     // If custom icon is provided, use it; otherwise use severity-based icon.
     const std::string custom_icon = value_or(route.args, kIconArg, "");
-    const char* icon_text = custom_icon.empty() ? severity_to_icon(severity_) : custom_icon.c_str();
+    const lv_img_dsc_t* icon_img = nullptr;
+    const char* icon_symbol = nullptr;
+    if (custom_icon.empty()) {
+        icon_img = severity_to_icon(severity_);
+    } else {
+        icon_symbol = custom_icon.c_str();
+    }
 
     // Determine TopNavBar title: use custom title if provided, else default based on severity
     std::string nav_title = title_;
@@ -88,11 +95,15 @@ void WarningScreen::create(const ScreenContext& context, const RouteDescriptor& 
     lv_obj_set_style_pad_all(content_container_, 16, 0);
 
     // Icon
-    icon_label_ = lv_label_create(content_container_);
-    lv_label_set_text(icon_label_, icon_text);
-    // icon uses default font
-    lv_obj_set_style_text_color(icon_label_, severity_to_title_color(severity_), 0);
-    lv_obj_set_style_pad_bottom(icon_label_, 16, 0);
+    if (icon_img) {
+        icon_obj_ = lv_img_create(content_container_);
+        lv_img_set_src(icon_obj_, icon_img);
+    } else {
+        icon_obj_ = lv_label_create(content_container_);
+        lv_label_set_text(icon_obj_, icon_symbol);
+        lv_obj_set_style_text_color(icon_obj_, severity_to_title_color(severity_), 0);
+    }
+    lv_obj_set_style_pad_bottom(icon_obj_, 16, 0);
 
     // Body
     if (!body_.empty()) {
@@ -129,7 +140,7 @@ void WarningScreen::destroy() {
         lv_obj_del(container_);
         container_ = nullptr;
         content_container_ = nullptr;
-        icon_label_ = nullptr;
+        icon_obj_ = nullptr;
         body_label_ = nullptr;
         button_ = nullptr;
         button_label_ = nullptr;
@@ -171,15 +182,15 @@ WarningSeverity WarningScreen::parse_severity(const std::string& severity_str) {
     return WarningSeverity::Warning;
 }
 
-const char* WarningScreen::severity_to_icon(WarningSeverity severity) {
+const lv_img_dsc_t* WarningScreen::severity_to_icon(WarningSeverity severity) {
     switch (severity) {
     case WarningSeverity::Error:
-        return LV_SYMBOL_CLOSE;
+        return &img_warning; // Use warning icon for error (colored red via title)
     case WarningSeverity::DireWarning:
-        return LV_SYMBOL_WARNING;
+        return &img_dire_warning;
     case WarningSeverity::Warning:
     default:
-        return LV_SYMBOL_WARNING;
+        return &img_warning;
     }
 }
 

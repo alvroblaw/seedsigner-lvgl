@@ -57,11 +57,13 @@ add_library(seedsigner_lvgl
   src/contracts/ScreensaverContract.cpp
   src/screens/StartupSplashScreen.cpp
   src/screens/ScreensaverScreen.cpp
+  src/assets/icons.c
 )
 
 target_include_directories(seedsigner_lvgl
   PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/assets
     ${SEEDSIGNER_LV_CONF_DIR}
     ${lvgl_SOURCE_DIR}
     ${lvgl_SOURCE_DIR}/src/extra/libs/qrcode
