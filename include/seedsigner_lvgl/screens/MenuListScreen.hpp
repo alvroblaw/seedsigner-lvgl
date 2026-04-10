@@ -1,9 +1,11 @@
 #pragma once
 
 #include <cstddef>
+#include <memory>
 #include <string>
 #include <vector>
 
+#include "seedsigner_lvgl/components/TopNavBar.hpp"
 #include "seedsigner_lvgl/screen/Screen.hpp"
 
 namespace seedsigner::lvgl {
@@ -40,6 +42,7 @@ private:
 
     ScreenContext context_{};
     lv_obj_t* container_{nullptr};
+    lv_obj_t* content_container_{nullptr};
     lv_obj_t* list_{nullptr};
     lv_obj_t* empty_state_{nullptr};
     lv_style_t selected_row_style_{};
@@ -52,6 +55,7 @@ private:
     std::vector<lv_obj_t*> item_secondary_labels_{};
     std::vector<lv_obj_t*> item_accessory_labels_{};
     std::size_t selected_index_{0};
+    std::unique_ptr<TopNavBar> top_nav_bar_{};
 };
 
 }  // namespace seedsigner::lvgl

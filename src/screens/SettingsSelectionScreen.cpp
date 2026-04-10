@@ -1,5 +1,7 @@
 #include "seedsigner_lvgl/screens/SettingsSelectionScreen.hpp"
 
+#include "seedsigner_lvgl/components/TopNavBar.hpp"
+
 #include <algorithm>
 #include <string>
 #include <string_view>
@@ -77,19 +79,37 @@ void SettingsSelectionScreen::create(const ScreenContext& context, const RouteDe
         styles_initialized_ = true;
     }
 
+    // Root container: column with top nav bar and content area
     container_ = lv_obj_create(context.root);
     lv_obj_set_size(container_, lv_pct(100), lv_pct(100));
-    lv_obj_set_style_pad_all(container_, 12, 0);
-    lv_obj_set_style_pad_row(container_, 8, 0);
+    lv_obj_set_style_pad_all(container_, 0, 0);
+    lv_obj_set_style_pad_row(container_, 0, 0);
     lv_obj_set_flex_flow(container_, LV_FLEX_FLOW_COLUMN);
     lv_obj_set_flex_align(container_, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
 
-    auto* title = lv_label_create(container_);
-    lv_obj_set_width(title, lv_pct(100));
-    lv_label_set_text(title, title_.c_str());
+    // Top navigation bar
+    top_nav_bar_ = std::make_unique<TopNavBar>(context);
+    TopNavBarConfig nav_config;
+    nav_config.title = title_;
+    nav_config.show_back = true;
+    nav_config.show_home = false;
+    nav_config.show_cancel = false;
+    top_nav_bar_->set_config(nav_config);
+    top_nav_bar_->attach(container_);
 
+    // Content container (scrollable area below the nav bar)
+    content_container_ = lv_obj_create(container_);
+    lv_obj_set_size(content_container_, lv_pct(100), lv_pct(100));
+    lv_obj_set_flex_grow(content_container_, 1);
+    lv_obj_set_scroll_dir(content_container_, LV_DIR_VER);
+    lv_obj_set_flex_flow(content_container_, LV_FLEX_FLOW_COLUMN);
+    lv_obj_set_flex_align(content_container_, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
+    lv_obj_set_style_pad_all(content_container_, 12, 0);
+    lv_obj_set_style_pad_row(content_container_, 8, 0);
+
+    // Subtitle and section title (if any) go inside content container
     if (!subtitle_.empty()) {
-        auto* subtitle = lv_label_create(container_);
+        auto* subtitle = lv_label_create(content_container_);
         lv_obj_set_width(subtitle, lv_pct(100));
         lv_label_set_long_mode(subtitle, LV_LABEL_LONG_WRAP);
         lv_obj_set_style_text_opa(subtitle, LV_OPA_70, 0);
@@ -97,13 +117,13 @@ void SettingsSelectionScreen::create(const ScreenContext& context, const RouteDe
     }
 
     if (!section_title_.empty()) {
-        auto* section = lv_label_create(container_);
+        auto* section = lv_label_create(content_container_);
         lv_obj_set_width(section, lv_pct(100));
         lv_obj_set_style_text_opa(section, LV_OPA_70, 0);
         lv_label_set_text(section, section_title_.c_str());
     }
 
-    list_ = lv_obj_create(container_);
+    list_ = lv_obj_create(content_container_);
     lv_obj_set_size(list_, lv_pct(100), LV_SIZE_CONTENT);
     lv_obj_set_flex_grow(list_, 1);
     lv_obj_set_scroll_dir(list_, LV_DIR_VER);
@@ -186,11 +206,13 @@ void SettingsSelectionScreen::create(const ScreenContext& context, const RouteDe
 }
 
 void SettingsSelectionScreen::destroy() {
+    top_nav_bar_.reset();
     if (container_ != nullptr) {
         lv_obj_del(container_);
     }
 
     container_ = nullptr;
+    content_container_ = nullptr;
     list_ = nullptr;
     empty_state_ = nullptr;
     help_label_ = nullptr;
@@ -211,6 +233,11 @@ void SettingsSelectionScreen::destroy() {
 }
 
 bool SettingsSelectionScreen::handle_input(const InputEvent& input) {
+    // Let TopNavBar handle input first (e.g., hardware back button)
+    if (top_nav_bar_ && top_nav_bar_->handle_input(input)) {
+        return true;
+    }
+
     if (items_.empty()) {
         return false;
     }
@@ -230,6 +257,7 @@ bool SettingsSelectionScreen::handle_input(const InputEvent& input) {
         emit_item_selected(context_, selected_index_);
         return true;
     case InputKey::Back:
+        // If TopNavBar didn't consume Back (show_back false), emit cancel
         return context_.emit_cancel(kSettingsComponent);
     case InputKey::Left:
     case InputKey::Right:

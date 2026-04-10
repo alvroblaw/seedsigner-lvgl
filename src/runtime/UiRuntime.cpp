@@ -1,5 +1,6 @@
 #include "seedsigner_lvgl/runtime/UiRuntime.hpp"
 
+#include <cstdio>
 #include <utility>
 
 namespace seedsigner::lvgl {
@@ -85,6 +86,22 @@ bool UiRuntime::push_frame(const CameraFrame& frame) {
 }
 
 bool UiRuntime::emit(UiEvent event) {
+    fprintf(stderr, "[UiRuntime::emit] type=%d action_id=%s component_id=%s", 
+            static_cast<int>(event.type), 
+            event.action_id.has_value() ? event.action_id->c_str() : "null", 
+            event.component_id.has_value() ? event.component_id->c_str() : "null");
+    if (event.meta) {
+        fprintf(stderr, " meta key=%s", event.meta->key.c_str());
+        if (const std::string* s = std::get_if<std::string>(&event.meta->value)) {
+            fprintf(stderr, " value=%s", s->c_str());
+        } else if (const std::int64_t* i = std::get_if<std::int64_t>(&event.meta->value)) {
+            fprintf(stderr, " value=%ld", *i);
+        } else {
+            fprintf(stderr, " value=?");
+        }
+    }
+    fprintf(stderr, "\n");
+    fflush(stderr);
     return event_queue_.push(std::move(event));
 }
 

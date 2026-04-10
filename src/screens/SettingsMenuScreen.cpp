@@ -1,6 +1,9 @@
 #include "seedsigner_lvgl/screens/SettingsMenuScreen.hpp"
 
+#include "seedsigner_lvgl/components/TopNavBar.hpp"
+
 #include <algorithm>
+#include <cstdio>
 #include <sstream>
 #include <string>
 #include <string_view>
@@ -83,26 +86,48 @@ void SettingsMenuScreen::create(const ScreenContext& context, const RouteDescrip
         styles_initialized_ = true;
     }
 
+    fprintf(stderr, "[SettingsMenuScreen] create: root=%p\n", context.root); fflush(stderr);
+    // Root container: column with top nav bar and content area
     container_ = lv_obj_create(context.root);
+    fprintf(stderr, "[SettingsMenuScreen] container_=%p\n", container_); fflush(stderr);
     lv_obj_set_size(container_, lv_pct(100), lv_pct(100));
-    lv_obj_set_style_pad_all(container_, 12, 0);
-    lv_obj_set_style_pad_row(container_, 8, 0);
+    lv_obj_set_style_pad_all(container_, 0, 0);
+    lv_obj_set_style_pad_row(container_, 0, 0);
     lv_obj_set_flex_flow(container_, LV_FLEX_FLOW_COLUMN);
     lv_obj_set_flex_align(container_, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
 
-    auto* title = lv_label_create(container_);
-    lv_obj_set_width(title, lv_pct(100));
-    lv_label_set_text(title, title_.c_str());
+    // Top navigation bar
+    fprintf(stderr, "[SettingsMenuScreen] creating top nav bar\n"); fflush(stderr);
+    top_nav_bar_ = std::make_unique<TopNavBar>(context);
+    TopNavBarConfig nav_config;
+    nav_config.title = title_;
+    nav_config.show_back = true;
+    nav_config.show_home = false;
+    nav_config.show_cancel = false;
+    top_nav_bar_->set_config(nav_config);
+    top_nav_bar_->attach(container_);
+    fprintf(stderr, "[SettingsMenuScreen] top_nav_bar_=%p\n", top_nav_bar_.get()); fflush(stderr);
+
+    // Content container (scrollable area below the nav bar)
+    content_container_ = lv_obj_create(container_);
+    fprintf(stderr, "[SettingsMenuScreen] content_container_=%p\n", content_container_); fflush(stderr);
+    lv_obj_set_size(content_container_, lv_pct(100), lv_pct(100));
+    lv_obj_set_flex_grow(content_container_, 1);
+    lv_obj_set_scroll_dir(content_container_, LV_DIR_VER);
+    lv_obj_set_flex_flow(content_container_, LV_FLEX_FLOW_COLUMN);
+    lv_obj_set_flex_align(content_container_, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
+    lv_obj_set_style_pad_all(content_container_, 12, 0);
+    lv_obj_set_style_pad_row(content_container_, 8, 0);
 
     if (!help_text_.empty()) {
-        help_label_ = lv_label_create(container_);
+        help_label_ = lv_label_create(content_container_);
         lv_obj_set_width(help_label_, lv_pct(100));
         lv_label_set_long_mode(help_label_, LV_LABEL_LONG_WRAP);
         lv_obj_set_style_text_opa(help_label_, LV_OPA_70, 0);
         lv_label_set_text(help_label_, help_text_.c_str());
     }
 
-    list_ = lv_obj_create(container_);
+    list_ = lv_obj_create(content_container_);
     lv_obj_set_size(list_, lv_pct(100), lv_pct(100));
     lv_obj_set_flex_grow(list_, 1);
     lv_obj_set_scroll_dir(list_, LV_DIR_VER);
@@ -176,7 +201,7 @@ void SettingsMenuScreen::create(const ScreenContext& context, const RouteDescrip
     apply_selection(selected_index_);
 
     if (!footer_text_.empty()) {
-        footer_label_ = lv_label_create(container_);
+        footer_label_ = lv_label_create(content_container_);
         lv_obj_set_width(footer_label_, lv_pct(100));
         lv_label_set_long_mode(footer_label_, LV_LABEL_LONG_WRAP);
         lv_obj_set_style_text_opa(footer_label_, LV_OPA_50, 0);
@@ -185,11 +210,14 @@ void SettingsMenuScreen::create(const ScreenContext& context, const RouteDescrip
 }
 
 void SettingsMenuScreen::destroy() {
+    fprintf(stderr, "[SettingsMenuScreen] destroy container_=%p content_container_=%p\n", container_, content_container_); fflush(stderr);
+    top_nav_bar_.reset();
     if (container_ != nullptr) {
         lv_obj_del(container_);
     }
 
     container_ = nullptr;
+    content_container_ = nullptr;
     list_ = nullptr;
     empty_state_ = nullptr;
     help_label_ = nullptr;
@@ -207,6 +235,13 @@ void SettingsMenuScreen::destroy() {
 }
 
 bool SettingsMenuScreen::handle_input(const InputEvent& input) {
+    fprintf(stderr, "[SettingsMenuScreen] handle_input key=%d top_nav_bar_=%p\n", static_cast<int>(input.key), top_nav_bar_.get()); fflush(stderr);
+    // Let TopNavBar handle input first (e.g., hardware back button)
+    if (top_nav_bar_ && top_nav_bar_->handle_input(input)) {
+        fprintf(stderr, "[SettingsMenuScreen] top_nav_bar consumed input\n"); fflush(stderr);
+        return true;
+    }
+
     if (definitions_.empty()) {
         return false;
     }
@@ -224,6 +259,7 @@ bool SettingsMenuScreen::handle_input(const InputEvent& input) {
         emit_setting_selected(context_, selected_index_);
         return true;
     case InputKey::Back:
+        // If TopNavBar didn't consume Back (show_back false), emit cancel
         return context_.emit_cancel(kSettingsMenuComponent);
     case InputKey::Left:
     case InputKey::Right:
@@ -300,14 +336,17 @@ std::string SettingsMenuScreen::value_or(const PropertyMap& values, const char* 
 }
 
 void SettingsMenuScreen::apply_selection(std::size_t index) {
+    fprintf(stderr, "[SettingsMenuScreen] apply_selection index=%zu item_buttons_.size=%zu\n", index, item_buttons_.size()); fflush(stderr);
     if (item_buttons_.empty()) {
         selected_index_ = 0;
         return;
     }
 
     selected_index_ = std::min(index, item_buttons_.size() - 1);
+    fprintf(stderr, "[SettingsMenuScreen] selected_index_=%zu\n", selected_index_); fflush(stderr);
     for (std::size_t button_index = 0; button_index < item_buttons_.size(); ++button_index) {
         auto* button = item_buttons_[button_index];
+        fprintf(stderr, "[SettingsMenuScreen] button %zu = %p\n", button_index, button); fflush(stderr);
         lv_obj_remove_style(button, &selected_row_style_, LV_PART_MAIN);
         if (button_index == selected_index_) {
             lv_obj_add_style(button, &selected_row_style_, LV_PART_MAIN);
@@ -329,15 +368,23 @@ void SettingsMenuScreen::emit_focus_changed(const ScreenContext& context, std::s
 }
 
 void SettingsMenuScreen::emit_setting_selected(const ScreenContext& context, std::size_t index) const {
+    fprintf(stderr, "[SettingsMenuScreen] emit_setting_selected index=%zu definitions_.size=%zu\n", index, definitions_.size()); fflush(stderr);
     if (index >= definitions_.size()) {
         return;
     }
 
     const auto& definition = definitions_[index];
+    std::string meta_value = definition.section_title.empty() ? definition.subtitle : definition.section_title;
+    // Try default_values[0] if exists
+    if (!definition.default_values.empty()) {
+        meta_value = definition.default_values[0];
+    }
+    fprintf(stderr, "[SettingsMenuScreen] definition.id=%s meta_value=%s\n", definition.id.c_str(), meta_value.c_str()); fflush(stderr);
     context.emit_action(kSelectAction,
                         kSettingsMenuComponent,
                         EventValue{static_cast<std::int64_t>(index)},
-                        EventMeta{definition.id, std::string{definition.section_title.empty() ? definition.subtitle : definition.section_title}});
+                        EventMeta{definition.id, meta_value});
+    fprintf(stderr, "[SettingsMenuScreen] emit_action done\n"); fflush(stderr);
 }
 
 const SettingDefinition* SettingsMenuScreen::find_definition(const lv_obj_t* button, std::size_t* index) const noexcept {

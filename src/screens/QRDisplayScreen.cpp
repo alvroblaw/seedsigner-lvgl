@@ -3,6 +3,8 @@
 #include <lvgl.h>
 #include <lv_qrcode.h>
 
+#include "seedsigner_lvgl/components/TopNavBar.hpp"
+
 namespace seedsigner::lvgl {
 
 namespace {
@@ -37,21 +39,34 @@ void QRDisplayScreen::create(const ScreenContext& context, const RouteDescriptor
 
     container_ = lv_obj_create(context.root);
     lv_obj_set_size(container_, lv_pct(100), lv_pct(100));
-    lv_obj_set_style_pad_all(container_, 16, 0);
     lv_obj_set_flex_flow(container_, LV_FLEX_FLOW_COLUMN);
-    lv_obj_set_flex_align(container_, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+    lv_obj_set_flex_align(container_, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+    // No padding on root container; TopNavBar and content container manage their own spacing.
 
-    // Title
-    title_label_ = create_title_label(container_, params_.title);
-    if (title_label_) {
-        lv_obj_set_style_pad_bottom(title_label_, 24, 0);
-    }
+    // Top navigation bar
+    top_nav_bar_ = std::make_unique<TopNavBar>(context_);
+    TopNavBarConfig nav_config;
+    nav_config.title = params_.title.value_or("QR Code");
+    nav_config.show_back = true;
+    nav_config.show_home = false;
+    nav_config.show_cancel = false;
+    // No custom actions
+    top_nav_bar_->set_config(nav_config);
+    top_nav_bar_->attach(container_);
+
+    // Content container (everything below the nav bar)
+    content_container_ = lv_obj_create(container_);
+    lv_obj_set_size(content_container_, lv_pct(100), lv_pct(100));
+    lv_obj_set_style_pad_all(content_container_, 16, 0);
+    lv_obj_set_flex_flow(content_container_, LV_FLEX_FLOW_COLUMN);
+    lv_obj_set_flex_align(content_container_, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+    lv_obj_set_flex_grow(content_container_, 1); // Take remaining height
 
     // QR widget
-    qr_widget_ = lv_qrcode_create(container_, kQRSize, lv_color_black(), lv_color_white());
+    qr_widget_ = lv_qrcode_create(content_container_, kQRSize, lv_color_black(), lv_color_white());
     if (!qr_widget_) {
         // fallback: create a placeholder label
-        lv_obj_t* error = lv_label_create(container_);
+        lv_obj_t* error = lv_label_create(content_container_);
         lv_label_set_text(error, "QR error");
         return;
     }
@@ -70,11 +85,13 @@ void QRDisplayScreen::create(const ScreenContext& context, const RouteDescriptor
 }
 
 void QRDisplayScreen::destroy() {
+    // TopNavBar must be cleared before its parent container is deleted.
+    top_nav_bar_.reset();
     if (container_ != nullptr) {
         lv_obj_del(container_);
         container_ = nullptr;
     }
-    title_label_ = nullptr;
+    content_container_ = nullptr;
     qr_widget_ = nullptr;
     brightness_overlay_ = nullptr;
     context_ = {};
@@ -82,6 +99,10 @@ void QRDisplayScreen::destroy() {
 }
 
 bool QRDisplayScreen::handle_input(const InputEvent& input) {
+    // First give the top nav bar a chance to handle the input (e.g., hardware back)
+    if (top_nav_bar_ && top_nav_bar_->handle_input(input)) {
+        return true;
+    }
     switch (input.key) {
     case InputKey::Back:
         context_.emit_action(kBackAction, kQRDisplayComponent);

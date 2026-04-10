@@ -1,11 +1,13 @@
 #pragma once
 
 #include <cstddef>
+#include <memory>
 #include <string>
 #include <string_view>
 #include <unordered_set>
 #include <vector>
 
+#include "seedsigner_lvgl/components/TopNavBar.hpp"
 #include "seedsigner_lvgl/contracts/SettingsContract.hpp"
 #include "seedsigner_lvgl/screen/Screen.hpp"
 
@@ -45,6 +47,7 @@ private:
 
     ScreenContext context_{};
     lv_obj_t* container_{nullptr};
+    lv_obj_t* content_container_{nullptr};
     lv_obj_t* list_{nullptr};
     lv_obj_t* empty_state_{nullptr};
     lv_obj_t* help_label_{nullptr};
@@ -64,6 +67,7 @@ private:
     std::vector<lv_obj_t*> item_buttons_{};
     std::vector<lv_obj_t*> item_accessory_labels_{};
     std::size_t selected_index_{0};
+    std::unique_ptr<TopNavBar> top_nav_bar_{};
 };
 
 }  // namespace seedsigner::lvgl

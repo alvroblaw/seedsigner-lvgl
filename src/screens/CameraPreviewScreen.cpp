@@ -1,6 +1,7 @@
 #include "seedsigner_lvgl/screens/CameraPreviewScreen.hpp"
 
 #include <algorithm>
+#include "seedsigner_lvgl/components/TopNavBar.hpp"
 
 namespace seedsigner::lvgl {
 namespace {
@@ -17,14 +18,32 @@ void CameraPreviewScreen::create(const ScreenContext& context, const RouteDescri
     context_ = context;
     container_ = lv_obj_create(context.root);
     lv_obj_set_size(container_, lv_pct(100), lv_pct(100));
-    lv_obj_set_style_pad_all(container_, 12, 0);
     lv_obj_set_flex_flow(container_, LV_FLEX_FLOW_COLUMN);
     lv_obj_set_flex_align(container_, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
+    // No padding on root container; TopNavBar and content container manage their own spacing.
 
-    title_label_ = lv_label_create(container_);
-    lv_obj_set_width(title_label_, lv_pct(100));
+    // Top navigation bar
+    top_nav_bar_ = std::make_unique<TopNavBar>(context_);
+    TopNavBarConfig nav_config;
+    nav_config.title = title_;
+    nav_config.show_back = true;
+    nav_config.show_home = false;
+    nav_config.show_cancel = false;
+    // No custom actions
+    top_nav_bar_->set_config(nav_config);
+    top_nav_bar_->attach(container_);
 
-    preview_panel_ = lv_obj_create(container_);
+    // Content container (everything below the nav bar)
+    content_container_ = lv_obj_create(container_);
+    lv_obj_set_size(content_container_, lv_pct(100), lv_pct(100));
+    lv_obj_set_style_pad_all(content_container_, 12, 0);
+    lv_obj_set_flex_flow(content_container_, LV_FLEX_FLOW_COLUMN);
+    lv_obj_set_flex_align(content_container_, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
+    lv_obj_set_flex_grow(content_container_, 1); // Take remaining height
+
+    // Title removed – shown in TopNavBar
+
+    preview_panel_ = lv_obj_create(content_container_);
     lv_obj_set_size(preview_panel_, lv_pct(100), 180);
     lv_obj_set_style_bg_color(preview_panel_, lv_palette_darken(LV_PALETTE_GREY, 2), 0);
     lv_obj_set_style_pad_all(preview_panel_, kPreviewPadding, 0);
@@ -42,7 +61,7 @@ void CameraPreviewScreen::create(const ScreenContext& context, const RouteDescri
     lv_obj_set_style_text_color(frame_label_, lv_color_white(), 0);
     lv_obj_set_style_pad_all(frame_label_, 4, 0);
 
-    status_label_ = lv_label_create(container_);
+    status_label_ = lv_label_create(content_container_);
     lv_obj_set_width(status_label_, lv_pct(100));
     lv_label_set_long_mode(status_label_, LV_LABEL_LONG_WRAP);
 
@@ -52,11 +71,14 @@ void CameraPreviewScreen::create(const ScreenContext& context, const RouteDescri
 }
 
 void CameraPreviewScreen::destroy() {
+    // TopNavBar must be cleared before its parent container is deleted.
+    top_nav_bar_.reset();
     preview_canvas_buffer_.clear();
     if (container_ != nullptr) {
         lv_obj_del(container_);
         container_ = nullptr;
-        title_label_ = nullptr;
+        content_container_ = nullptr;
+
         preview_panel_ = nullptr;
         preview_canvas_ = nullptr;
         frame_label_ = nullptr;
@@ -65,6 +87,10 @@ void CameraPreviewScreen::destroy() {
 }
 
 bool CameraPreviewScreen::handle_input(const InputEvent& input) {
+    // First give the top nav bar a chance to handle the input (e.g., hardware back)
+    if (top_nav_bar_ && top_nav_bar_->handle_input(input)) {
+        return true;
+    }
     switch (input.key) {
     case InputKey::Press:
         return context_.emit_action("capture", "preview_surface",
@@ -167,9 +193,7 @@ void CameraPreviewScreen::refresh_preview() {
 }
 
 void CameraPreviewScreen::refresh_labels() {
-    if (title_label_ != nullptr) {
-        lv_label_set_text(title_label_, title_.c_str());
-    }
+    // Title is shown in TopNavBar, not a separate label
     if (frame_label_ != nullptr) {
         const std::string text = "#" + std::to_string(frame_sequence_) + "  " +
                                  std::to_string(frame_width_) + "x" + std::to_string(frame_height_) +

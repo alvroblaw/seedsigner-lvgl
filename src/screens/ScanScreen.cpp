@@ -5,6 +5,8 @@
 #include <cstdint>
 #include <string>
 
+#include "seedsigner_lvgl/components/TopNavBar.hpp"
+
 namespace seedsigner::lvgl {
 namespace {
 
@@ -44,25 +46,40 @@ void ScanScreen::create(const ScreenContext& context, const RouteDescriptor& rou
     lv_obj_set_size(container_, lv_pct(100), lv_pct(100));
     lv_obj_set_style_bg_color(container_, lv_color_black(), 0);
     lv_obj_set_style_border_width(container_, 0, 0);
-    lv_obj_set_style_pad_all(container_, 0, 0);
+    lv_obj_set_flex_flow(container_, LV_FLEX_FLOW_COLUMN);
+    lv_obj_set_flex_align(container_, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+    // No padding on root container; TopNavBar and content container manage their own spacing.
+
+    // Top navigation bar
+    top_nav_bar_ = std::make_unique<TopNavBar>(context_);
+    TopNavBarConfig nav_config;
+    nav_config.title = instruction_text_.empty() ? "Scan QR" : instruction_text_;
+    nav_config.show_back = true;
+    nav_config.show_home = false;
+    nav_config.show_cancel = false;
+    // No custom actions
+    top_nav_bar_->set_config(nav_config);
+    top_nav_bar_->attach(container_);
+
+    // Content container (everything below the nav bar)
+    content_container_ = lv_obj_create(container_);
+    lv_obj_set_size(content_container_, lv_pct(100), lv_pct(100));
+    lv_obj_set_style_bg_color(content_container_, lv_color_black(), 0);
+    lv_obj_set_style_border_width(content_container_, 0, 0);
+    lv_obj_set_style_pad_all(content_container_, 0, 0);
+    lv_obj_set_flex_grow(content_container_, 1); // Take remaining height
     
     // Create preview canvas (initially black)
-    preview_img_ = lv_canvas_create(container_);
+    preview_img_ = lv_canvas_create(content_container_);
     lv_obj_set_size(preview_img_, kPreviewWidth, kPreviewHeight);
     lv_obj_align(preview_img_, LV_ALIGN_CENTER, 0, 0);
     lv_canvas_fill_bg(preview_img_, lv_color_black(), LV_OPA_COVER);
     
-    // Instruction label at top
-    instruction_label_ = lv_label_create(container_);
-    lv_label_set_text(instruction_label_, instruction_text_.c_str());
-    lv_obj_set_width(instruction_label_, lv_pct(80));
-    lv_obj_align(instruction_label_, LV_ALIGN_TOP_MID, 0, 10);
-    lv_obj_set_style_text_color(instruction_label_, lv_color_white(), 0);
-    lv_obj_set_style_text_align(instruction_label_, LV_TEXT_ALIGN_CENTER, 0);
-    lv_obj_set_style_text_font(instruction_label_, &lv_font_montserrat_14, 0);
+    // Instruction label removed – title is shown in TopNavBar
+    instruction_label_ = nullptr;
     
     // Progress bar (initially hidden)
-    progress_bar_ = lv_bar_create(container_);
+    progress_bar_ = lv_bar_create(content_container_);
     lv_obj_set_size(progress_bar_, kProgressBarWidth, kProgressBarHeight);
     lv_obj_align(progress_bar_, LV_ALIGN_BOTTOM_MID, 0, -40);
     lv_bar_set_range(progress_bar_, 0, 100);
@@ -74,7 +91,7 @@ void ScanScreen::create(const ScreenContext& context, const RouteDescriptor& rou
     lv_obj_add_flag(progress_bar_, LV_OBJ_FLAG_HIDDEN);
     
     // Optional progress label
-    progress_label_ = lv_label_create(container_);
+    progress_label_ = lv_label_create(content_container_);
     lv_label_set_text(progress_label_, "0%");
     lv_obj_align_to(progress_label_, progress_bar_, LV_ALIGN_OUT_BOTTOM_MID, 0, 5);
     lv_obj_set_style_text_color(progress_label_, lv_color_white(), 0);
@@ -82,7 +99,7 @@ void ScanScreen::create(const ScreenContext& context, const RouteDescriptor& rou
     lv_obj_add_flag(progress_label_, LV_OBJ_FLAG_HIDDEN);
     
     // Frame status dot (bottom-right corner)
-    frame_status_dot_ = lv_obj_create(container_);
+    frame_status_dot_ = lv_obj_create(content_container_);
     lv_obj_set_size(frame_status_dot_, kDotSize, kDotSize);
     lv_obj_align(frame_status_dot_, LV_ALIGN_BOTTOM_RIGHT, -kDotMargin, -kDotMargin);
     lv_obj_set_style_radius(frame_status_dot_, LV_RADIUS_CIRCLE, 0);
@@ -99,10 +116,13 @@ void ScanScreen::create(const ScreenContext& context, const RouteDescriptor& rou
 }
 
 void ScanScreen::destroy() {
+    // TopNavBar must be cleared before its parent container is deleted.
+    top_nav_bar_.reset();
     if (container_ != nullptr) {
         lv_obj_del(container_);
         container_ = nullptr;
     }
+    content_container_ = nullptr;
     preview_img_ = nullptr;
     instruction_label_ = nullptr;
     progress_bar_ = nullptr;
@@ -113,6 +133,10 @@ void ScanScreen::destroy() {
 }
 
 bool ScanScreen::handle_input(const InputEvent& input) {
+    // First give the top nav bar a chance to handle the input (e.g., hardware back)
+    if (top_nav_bar_ && top_nav_bar_->handle_input(input)) {
+        return true;
+    }
     switch (input.key) {
     case InputKey::Back:
         emit_scan_cancelled();

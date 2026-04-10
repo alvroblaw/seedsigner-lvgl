@@ -1,5 +1,7 @@
 #include "seedsigner_lvgl/screens/SeedWordsScreen.hpp"
 
+#include "seedsigner_lvgl/components/TopNavBar.hpp"
+
 #include <lvgl.h>
 #include <algorithm>
 #include <string>
@@ -57,22 +59,34 @@ void SeedWordsScreen::create(const ScreenContext& context, const RouteDescriptor
     }
     
     // Create container
+    // Root container: column with top nav bar and content area
     container_ = lv_obj_create(context.root);
     lv_obj_set_size(container_, lv_pct(100), lv_pct(100));
-    lv_obj_set_style_pad_all(container_, 12, 0);
+    lv_obj_set_style_pad_all(container_, 0, 0);
     lv_obj_set_flex_flow(container_, LV_FLEX_FLOW_COLUMN);
     lv_obj_set_flex_align(container_, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
-    
-    // Title
-    const std::string title = params_.title.value_or(kDefaultTitle);
-    title_label_ = lv_label_create(container_);
-    lv_obj_set_width(title_label_, lv_pct(100));
-    lv_label_set_text(title_label_, title.c_str());
-    lv_obj_set_style_text_align(title_label_, LV_TEXT_ALIGN_CENTER, 0);
-    lv_obj_set_style_pad_bottom(title_label_, 8, 0);
+
+    // Top navigation bar
+    top_nav_bar_ = std::make_unique<TopNavBar>(context);
+    TopNavBarConfig nav_config;
+    nav_config.title = params_.title.value_or(kDefaultTitle);
+    nav_config.show_back = true;
+    nav_config.show_home = false;
+    nav_config.show_cancel = false;
+    top_nav_bar_->set_config(nav_config);
+    top_nav_bar_->attach(container_);
+
+    // Content container (scrollable area below the nav bar)
+    content_container_ = lv_obj_create(container_);
+    lv_obj_set_size(content_container_, lv_pct(100), lv_pct(100));
+    lv_obj_set_flex_grow(content_container_, 1);
+    lv_obj_set_scroll_dir(content_container_, LV_DIR_VER);
+    lv_obj_set_flex_flow(content_container_, LV_FLEX_FLOW_COLUMN);
+    lv_obj_set_flex_align(content_container_, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+    lv_obj_set_style_pad_all(content_container_, 12, 0);
     
     // Page indicator
-    page_label_ = lv_label_create(container_);
+    page_label_ = lv_label_create(content_container_);
     lv_obj_set_width(page_label_, lv_pct(100));
     lv_label_set_text_fmt(page_label_, "Page %d/%d", current_page_ + 1, total_pages_);
     lv_obj_set_style_text_align(page_label_, LV_TEXT_ALIGN_CENTER, 0);
@@ -80,7 +94,7 @@ void SeedWordsScreen::create(const ScreenContext& context, const RouteDescriptor
     
     // Warning text
     const std::string warning = params_.warning_text.value_or(kDefaultWarningText);
-    warning_label_ = lv_label_create(container_);
+    warning_label_ = lv_label_create(content_container_);
     lv_obj_set_width(warning_label_, lv_pct(100));
     lv_label_set_long_mode(warning_label_, LV_LABEL_LONG_WRAP);
     lv_label_set_text(warning_label_, warning.c_str());
@@ -89,7 +103,7 @@ void SeedWordsScreen::create(const ScreenContext& context, const RouteDescriptor
     lv_obj_set_style_pad_bottom(warning_label_, 16, 0);
     
     // Words container (grid)
-    words_container_ = lv_obj_create(container_);
+    words_container_ = lv_obj_create(content_container_);
     lv_obj_set_size(words_container_, lv_pct(100), lv_pct(60));
     lv_obj_set_flex_flow(words_container_, LV_FLEX_FLOW_ROW_WRAP);
     lv_obj_set_flex_align(words_container_, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
@@ -101,7 +115,7 @@ void SeedWordsScreen::create(const ScreenContext& context, const RouteDescriptor
     
     // Navigation buttons (prev/next) if multiple pages
     if (total_pages_ > 1) {
-        lv_obj_t* button_row = lv_obj_create(container_);
+        lv_obj_t* button_row = lv_obj_create(content_container_);
         lv_obj_set_size(button_row, lv_pct(100), 48);
         lv_obj_set_flex_flow(button_row, LV_FLEX_FLOW_ROW);
         lv_obj_set_flex_align(button_row, LV_FLEX_ALIGN_SPACE_BETWEEN, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
@@ -140,10 +154,12 @@ void SeedWordsScreen::create(const ScreenContext& context, const RouteDescriptor
 }
 
 void SeedWordsScreen::destroy() {
+    top_nav_bar_.reset();
     if (container_ != nullptr) {
         lv_obj_del(container_);
         container_ = nullptr;
     }
+    content_container_ = nullptr;
     title_label_ = nullptr;
     page_label_ = nullptr;
     warning_label_ = nullptr;
@@ -155,6 +171,11 @@ void SeedWordsScreen::destroy() {
 }
 
 bool SeedWordsScreen::handle_input(const InputEvent& input) {
+    // Let TopNavBar handle input first (e.g., hardware back button)
+    if (top_nav_bar_ && top_nav_bar_->handle_input(input)) {
+        return true;
+    }
+
     switch (input.key) {
         case InputKey::Left:
             if (current_page_ > 0) {

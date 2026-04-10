@@ -1,7 +1,9 @@
 #pragma once
 
+#include <memory>
 #include <string>
 
+#include "seedsigner_lvgl/components/TopNavBar.hpp"
 #include "seedsigner_lvgl/screen/Screen.hpp"
 
 namespace seedsigner::lvgl {
@@ -26,11 +28,12 @@ private:
 
     ScreenContext context_{};
     lv_obj_t* container_{nullptr};
+    lv_obj_t* content_container_{nullptr};
     lv_obj_t* icon_label_{nullptr};
-    lv_obj_t* title_label_{nullptr};
     lv_obj_t* body_label_{nullptr};
     lv_obj_t* button_{nullptr};
     lv_obj_t* button_label_{nullptr};
+    std::unique_ptr<TopNavBar> top_nav_bar_{};
     WarningSeverity severity_{WarningSeverity::Warning};
     std::string title_;
     std::string body_;

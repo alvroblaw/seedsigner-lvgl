@@ -71,16 +71,31 @@ void MenuListScreen::create(const ScreenContext& context, const RouteDescriptor&
 
     container_ = lv_obj_create(context.root);
     lv_obj_set_size(container_, lv_pct(100), lv_pct(100));
-    lv_obj_set_style_pad_all(container_, 12, 0);
-    lv_obj_set_style_pad_row(container_, 8, 0);
     lv_obj_set_flex_flow(container_, LV_FLEX_FLOW_COLUMN);
     lv_obj_set_flex_align(container_, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
+    // No padding on root container; TopNavBar and content container manage their own spacing.
 
-    auto* title = lv_label_create(container_);
-    lv_obj_set_width(title, lv_pct(100));
-    lv_label_set_text(title, title_.c_str());
+    // Top navigation bar
+    top_nav_bar_ = std::make_unique<TopNavBar>(context_);
+    TopNavBarConfig nav_config;
+    nav_config.title = title_;
+    nav_config.show_back = true;
+    nav_config.show_home = false;
+    nav_config.show_cancel = false;
+    // No custom actions
+    top_nav_bar_->set_config(nav_config);
+    top_nav_bar_->attach(container_);
 
-    list_ = lv_obj_create(container_);
+    // Content container (everything below the nav bar)
+    content_container_ = lv_obj_create(container_);
+    lv_obj_set_size(content_container_, lv_pct(100), lv_pct(100));
+    lv_obj_set_style_pad_all(content_container_, 12, 0);
+    lv_obj_set_style_pad_row(content_container_, 8, 0);
+    lv_obj_set_flex_flow(content_container_, LV_FLEX_FLOW_COLUMN);
+    lv_obj_set_flex_align(content_container_, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
+    lv_obj_set_flex_grow(content_container_, 1); // Take remaining height
+
+    list_ = lv_obj_create(content_container_);
     lv_obj_set_size(list_, lv_pct(100), lv_pct(100));
     lv_obj_set_flex_grow(list_, 1);
     lv_obj_set_scroll_dir(list_, LV_DIR_VER);
@@ -154,11 +169,14 @@ void MenuListScreen::create(const ScreenContext& context, const RouteDescriptor&
 }
 
 void MenuListScreen::destroy() {
+    // TopNavBar must be cleared before its parent container is deleted.
+    top_nav_bar_.reset();
     if (container_ != nullptr) {
         lv_obj_del(container_);
     }
 
     container_ = nullptr;
+    content_container_ = nullptr;
     list_ = nullptr;
     empty_state_ = nullptr;
     item_buttons_.clear();
@@ -172,6 +190,10 @@ void MenuListScreen::destroy() {
 }
 
 bool MenuListScreen::handle_input(const InputEvent& input) {
+    // First give the top nav bar a chance to handle the input (e.g., hardware back)
+    if (top_nav_bar_ && top_nav_bar_->handle_input(input)) {
+        return true;
+    }
     if (items_.empty()) {
         return false;
     }

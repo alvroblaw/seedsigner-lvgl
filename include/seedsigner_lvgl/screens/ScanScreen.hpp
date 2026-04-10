@@ -1,8 +1,10 @@
 #pragma once
 
+#include <memory>
 #include <string>
 #include <vector>
 
+#include "seedsigner_lvgl/components/TopNavBar.hpp"
 #include "seedsigner_lvgl/screen/Screen.hpp"
 
 namespace seedsigner::lvgl {
@@ -23,11 +25,13 @@ private:
 
     ScreenContext context_{};
     lv_obj_t* container_{nullptr};
+    lv_obj_t* content_container_{nullptr};
     lv_obj_t* preview_img_{nullptr};
     lv_obj_t* instruction_label_{nullptr};
     lv_obj_t* progress_bar_{nullptr};
     lv_obj_t* frame_status_dot_{nullptr};
     lv_obj_t* progress_label_{nullptr}; // optional label for percentage
+    std::unique_ptr<TopNavBar> top_nav_bar_{};
     
     std::string instruction_text_{"Scan QR code"};
     std::string scan_mode_{"any"};

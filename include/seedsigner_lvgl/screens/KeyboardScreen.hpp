@@ -1,8 +1,10 @@
 #pragma once
 
+#include <memory>
 #include <string>
 #include <vector>
 
+#include "seedsigner_lvgl/components/TopNavBar.hpp"
 #include "seedsigner_lvgl/contracts/KeyboardContract.hpp"
 #include "seedsigner_lvgl/screen/Screen.hpp"
 
@@ -48,6 +50,7 @@ private:
 
     ScreenContext context_{};
     lv_obj_t* container_{nullptr};
+    lv_obj_t* content_container_{nullptr};
     lv_obj_t* text_display_{nullptr}; // lv_textarea or lv_label
     lv_obj_t* keyboard_grid_{nullptr}; // lv_btnmatrix
     lv_obj_t* soft_container_{nullptr}; // container for soft buttons
@@ -57,6 +60,7 @@ private:
     lv_obj_t* cursor_right_btn_{nullptr};
     lv_obj_t* previous_page_btn_{nullptr};
     lv_obj_t* save_btn_{nullptr};
+    std::unique_ptr<TopNavBar> top_nav_bar_{};
 
     KeyboardParams params_{};
     std::string current_text_{};
