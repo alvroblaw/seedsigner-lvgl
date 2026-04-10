@@ -32,6 +32,7 @@ add_library(seedsigner_lvgl
   src/runtime/EventQueue.cpp
   src/runtime/UiRuntime.cpp
   src/screen/ScreenRegistry.cpp
+  src/components/TopNavBar.cpp
   src/screens/CameraPreviewScreen.cpp
   src/screens/MenuListScreen.cpp
   src/screens/PlaceholderScreen.cpp
@@ -84,4 +85,9 @@ if(BUILD_TESTING)
   target_link_libraries(seedsigner_lvgl_tests PRIVATE seedsigner_lvgl)
 
   add_test(NAME seedsigner_lvgl_tests COMMAND seedsigner_lvgl_tests)
+
+  # Lightweight smoke test for the outbound event queue (Issue #15)
+  add_executable(event_queue_smoke_test tests/event_queue_smoke_test.cpp)
+  target_link_libraries(event_queue_smoke_test PRIVATE seedsigner_lvgl)
+  add_test(NAME event_queue_smoke_test COMMAND event_queue_smoke_test)
 endif()
