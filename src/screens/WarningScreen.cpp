@@ -1,4 +1,5 @@
 #include "seedsigner_lvgl/screens/WarningScreen.hpp"
+#include "seedsigner_lvgl/visual/SeedSignerTheme.hpp"
 #include "seedsigner_lvgl/components/TopNavBar.hpp"
 
 #include <lvgl.h>
@@ -81,6 +82,11 @@ void WarningScreen::create(const ScreenContext& context, const RouteDescriptor& 
     lv_obj_set_flex_align(content_container_, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
     lv_obj_set_flex_grow(content_container_, 1); // Take remaining height
 
+    // Apply warning style with severity color
+    seedsigner::lvgl::theme::apply_warning_style(content_container_, severity_to_title_color(severity_));
+    // Reapply desired padding (overrides theme's COMPONENT_PADDING)
+    lv_obj_set_style_pad_all(content_container_, 16, 0);
+
     // Icon
     icon_label_ = lv_label_create(content_container_);
     lv_label_set_text(icon_label_, icon_text);
@@ -103,7 +109,7 @@ void WarningScreen::create(const ScreenContext& context, const RouteDescriptor& 
     button_ = lv_btn_create(content_container_);
     lv_obj_set_width(button_, lv_pct(80));
     lv_obj_set_height(button_, 48);
-    lv_obj_set_style_radius(button_, 8, 0);
+    seedsigner::lvgl::theme::apply_button_style(button_, true); // Primary button
     lv_obj_add_event_cb(button_, [](lv_event_t* e) {
         auto* screen = static_cast<WarningScreen*>(lv_event_get_user_data(e));
         if (screen != nullptr) {
@@ -180,12 +186,12 @@ const char* WarningScreen::severity_to_icon(WarningSeverity severity) {
 lv_color_t WarningScreen::severity_to_title_color(WarningSeverity severity) {
     switch (severity) {
     case WarningSeverity::Error:
-        return lv_palette_main(LV_PALETTE_RED);
+        return seedsigner::lvgl::theme::colors::ERROR;
     case WarningSeverity::DireWarning:
-        return lv_color_make(0xFF, 0x66, 0x00); // Orange-red
+        return seedsigner::lvgl::theme::colors::WARNING; // Orange-amber
     case WarningSeverity::Warning:
     default:
-        return lv_palette_main(LV_PALETTE_YELLOW);
+        return seedsigner::lvgl::theme::colors::WARNING; // Amber for both warning levels
     }
 }
 

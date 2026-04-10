@@ -1,4 +1,5 @@
 #include "seedsigner_lvgl/screens/SeedWordsScreen.hpp"
+#include "seedsigner_lvgl/visual/SeedSignerTheme.hpp"
 
 #include "seedsigner_lvgl/components/TopNavBar.hpp"
 
@@ -41,20 +42,20 @@ void SeedWordsScreen::create(const ScreenContext& context, const RouteDescriptor
         lv_style_init(&chip_style_);
         lv_style_set_radius(&chip_style_, 8);
         lv_style_set_bg_opa(&chip_style_, LV_OPA_20);
-        lv_style_set_bg_color(&chip_style_, lv_palette_main(LV_PALETTE_GREY));
+        lv_style_set_bg_color(&chip_style_, seedsigner::lvgl::theme::colors::SURFACE_MEDIUM);
         lv_style_set_border_width(&chip_style_, 1);
-        lv_style_set_border_color(&chip_style_, lv_palette_lighten(LV_PALETTE_GREY, 2));
+        lv_style_set_border_color(&chip_style_, seedsigner::lvgl::theme::colors::BORDER);
         lv_style_set_pad_all(&chip_style_, 8);
-        lv_style_set_text_color(&chip_style_, lv_color_white());
+        lv_style_set_text_color(&chip_style_, seedsigner::lvgl::theme::colors::TEXT_PRIMARY);
         
         lv_style_init(&warning_chip_style_);
         lv_style_set_radius(&warning_chip_style_, 8);
         lv_style_set_bg_opa(&warning_chip_style_, LV_OPA_20);
-        lv_style_set_bg_color(&warning_chip_style_, lv_palette_main(LV_PALETTE_ORANGE));
+        lv_style_set_bg_color(&warning_chip_style_, seedsigner::lvgl::theme::colors::PRIMARY);
         lv_style_set_border_width(&warning_chip_style_, 2);
-        lv_style_set_border_color(&warning_chip_style_, lv_palette_main(LV_PALETTE_ORANGE));
+        lv_style_set_border_color(&warning_chip_style_, seedsigner::lvgl::theme::colors::PRIMARY);
         lv_style_set_pad_all(&warning_chip_style_, 8);
-        lv_style_set_text_color(&warning_chip_style_, lv_color_white());
+        lv_style_set_text_color(&warning_chip_style_, seedsigner::lvgl::theme::colors::TEXT_PRIMARY);
         styles_initialized_ = true;
     }
     
