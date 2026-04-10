@@ -1,5 +1,6 @@
 #include "seedsigner_lvgl/screens/StartupSplashScreen.hpp"
 #include "seedsigner_lvgl/visual/SeedSignerTheme.hpp"
+#include "icons.h"
 
 #include <lvgl.h>
 
@@ -12,19 +13,13 @@ constexpr const char* kCompletedAction = "splash_completed";
 constexpr const char* kSkippedAction = "splash_skipped";
 
 lv_obj_t* create_logo(lv_obj_t* parent, const std::optional<std::string>& logo_path) {
-    // Placeholder: a simple rectangle with "Logo" text
-    lv_obj_t* cont = lv_obj_create(parent);
-    lv_obj_set_size(cont, 120, 120);
-    lv_obj_set_style_bg_color(cont, seedsigner::lvgl::theme::colors::SURFACE_MEDIUM, 0);
-    lv_obj_set_style_bg_opa(cont, LV_OPA_COVER, 0);
-    lv_obj_set_style_radius(cont, 20, 0);
-    lv_obj_set_style_border_width(cont, 2, 0);
-    lv_obj_set_style_border_color(cont, seedsigner::lvgl::theme::colors::BORDER, 0);
-
-    lv_obj_t* label = lv_label_create(cont);
-    lv_label_set_text(label, "Logo");
-    lv_obj_center(label);
-    return cont;
+    // Use actual SeedSigner logo
+    lv_obj_t* img = lv_img_create(parent);
+    lv_img_set_src(img, &img_logo_black_240);
+    // Scale down if needed (logo is 240x240)
+    lv_obj_set_size(img, 160, 160); // reasonable size
+    lv_obj_set_style_align(img, LV_ALIGN_CENTER, 0);
+    return img;
 }
 
 }  // namespace

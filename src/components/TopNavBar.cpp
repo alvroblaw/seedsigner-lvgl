@@ -113,6 +113,9 @@ void TopNavBar::create_widgets() {
         lv_obj_t* img = lv_img_create(back_btn_);
         lv_img_set_src(img, &img_back);
         lv_obj_center(img);
+        // Pressed state: recolor orange
+        lv_obj_set_style_img_recolor(img, seedsigner::lvgl::theme::colors::PRIMARY, LV_STATE_PRESSED);
+        lv_obj_set_style_img_recolor_opa(img, LV_OPA_COVER, LV_STATE_PRESSED);
     }
 
     if (config_.show_home) {
@@ -121,9 +124,12 @@ void TopNavBar::create_widgets() {
         seedsigner::lvgl::theme::apply_button_style(home_btn_, false);
         lv_obj_set_style_radius(home_btn_, LV_RADIUS_CIRCLE, 0); // Keep circular shape
         lv_obj_add_event_cb(home_btn_, &TopNavBar::on_home_clicked, LV_EVENT_CLICKED, this);
-        lv_obj_t* label = lv_label_create(home_btn_);
-        lv_label_set_text(label, LV_SYMBOL_HOME);
-        lv_obj_center(label);
+        lv_obj_t* img = lv_img_create(home_btn_);
+        lv_img_set_src(img, &img_home);
+        lv_obj_center(img);
+        // Pressed state: recolor orange
+        lv_obj_set_style_img_recolor(img, seedsigner::lvgl::theme::colors::PRIMARY, LV_STATE_PRESSED);
+        lv_obj_set_style_img_recolor_opa(img, LV_OPA_COVER, LV_STATE_PRESSED);
         // If back also exists, add spacing via pad column (flex gap already set)
     }
 
@@ -133,9 +139,12 @@ void TopNavBar::create_widgets() {
         seedsigner::lvgl::theme::apply_button_style(cancel_btn_, false);
         lv_obj_set_style_radius(cancel_btn_, LV_RADIUS_CIRCLE, 0); // Keep circular shape
         lv_obj_add_event_cb(cancel_btn_, &TopNavBar::on_cancel_clicked, LV_EVENT_CLICKED, this);
-        lv_obj_t* label = lv_label_create(cancel_btn_);
-        lv_label_set_text(label, LV_SYMBOL_CLOSE);
-        lv_obj_center(label);
+        lv_obj_t* img = lv_img_create(cancel_btn_);
+        lv_img_set_src(img, &img_close);
+        lv_obj_center(img);
+        // Pressed state: recolor orange
+        lv_obj_set_style_img_recolor(img, seedsigner::lvgl::theme::colors::PRIMARY, LV_STATE_PRESSED);
+        lv_obj_set_style_img_recolor_opa(img, LV_OPA_COVER, LV_STATE_PRESSED);
     }
 
     // Center title

@@ -1,5 +1,6 @@
 #include "seedsigner_lvgl/screens/ScreensaverScreen.hpp"
 #include "seedsigner_lvgl/visual/SeedSignerTheme.hpp"
+#include "icons.h"
 
 #include <lvgl.h>
 
@@ -22,13 +23,10 @@ lv_obj_t* create_animation_object(lv_obj_t* parent, const ScreensaverParams& par
         lv_img_set_src(obj, LV_SYMBOL_IMAGE);
         lv_obj_set_size(obj, kDefaultLogoSize, kDefaultLogoSize);
     } else {
-        // Default: a simple circle
-        obj = lv_obj_create(parent);
+        // Use Bitcoin logo (orange)
+        obj = lv_img_create(parent);
+        lv_img_set_src(obj, &img_btc_logo_60x60);
         lv_obj_set_size(obj, kDefaultLogoSize, kDefaultLogoSize);
-        lv_obj_set_style_radius(obj, LV_RADIUS_CIRCLE, 0);
-        lv_obj_set_style_bg_color(obj, seedsigner::lvgl::theme::colors::PRIMARY, 0);
-        lv_obj_set_style_bg_opa(obj, LV_OPA_COVER, 0);
-        lv_obj_set_style_border_width(obj, 0, 0);
     }
     return obj;
 }
