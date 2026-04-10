@@ -100,7 +100,7 @@ void SeedWordsScreen::create(const ScreenContext& context, const RouteDescriptor
     lv_label_set_long_mode(warning_label_, LV_LABEL_LONG_WRAP);
     lv_label_set_text(warning_label_, warning.c_str());
     lv_obj_set_style_text_align(warning_label_, LV_TEXT_ALIGN_CENTER, 0);
-    lv_obj_set_style_text_color(warning_label_, lv_palette_main(LV_PALETTE_ORANGE), 0);
+    lv_obj_set_style_text_color(warning_label_, seedsigner::lvgl::theme::colors::WARNING, 0);
     lv_obj_set_style_pad_bottom(warning_label_, 16, 0);
     
     // Words container (grid)
