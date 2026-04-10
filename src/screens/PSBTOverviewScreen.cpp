@@ -103,7 +103,7 @@ void PSBTOverviewScreen::create(const ScreenContext& context, const RouteDescrip
     // Total amount (center prominent)
     amount_label_ = lv_label_create(content_container_);
     lv_label_set_text(amount_label_, params_.total_amount.c_str());
-    lv_obj_set_style_text_color(amount_label_, lv_palette_main(LV_PALETTE_GREEN), 0);
+    lv_obj_set_style_text_color(amount_label_, seedsigner::lvgl::theme::colors::SUCCESS, 0);
     lv_obj_set_style_text_align(amount_label_, LV_TEXT_ALIGN_CENTER, 0);
     lv_obj_set_width(amount_label_, lv_pct(100));
     lv_obj_set_style_pad_bottom(amount_label_, 24, 0);

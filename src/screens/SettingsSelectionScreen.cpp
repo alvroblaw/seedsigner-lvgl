@@ -1,4 +1,5 @@
 #include "seedsigner_lvgl/screens/SettingsSelectionScreen.hpp"
+#include "seedsigner_lvgl/visual/SeedSignerTheme.hpp"
 
 #include "seedsigner_lvgl/components/TopNavBar.hpp"
 
@@ -69,13 +70,13 @@ void SettingsSelectionScreen::create(const ScreenContext& context, const RouteDe
         lv_style_set_pad_gap(&row_style_, 8);
         lv_style_set_bg_opa(&row_style_, LV_OPA_TRANSP);
         lv_style_set_border_width(&row_style_, 1);
-        lv_style_set_border_color(&row_style_, lv_palette_lighten(LV_PALETTE_GREY, 1));
+        lv_style_set_border_color(&row_style_, seedsigner::lvgl::theme::colors::BORDER);
 
         lv_style_init(&selected_row_style_);
         lv_style_set_bg_opa(&selected_row_style_, LV_OPA_20);
-        lv_style_set_bg_color(&selected_row_style_, lv_palette_main(LV_PALETTE_BLUE));
+        lv_style_set_bg_color(&selected_row_style_, seedsigner::lvgl::theme::colors::PRIMARY);
         lv_style_set_border_width(&selected_row_style_, 2);
-        lv_style_set_border_color(&selected_row_style_, lv_palette_main(LV_PALETTE_BLUE));
+        lv_style_set_border_color(&selected_row_style_, seedsigner::lvgl::theme::colors::PRIMARY);
         styles_initialized_ = true;
     }
 
