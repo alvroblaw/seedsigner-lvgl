@@ -23,4 +23,7 @@
 /* Enable QR code library */
 #define LV_USE_QRCODE 1
 
+/* Enable snapshot for screen capture / testing */
+#define LV_USE_SNAPSHOT 1
+
 #endif /* LV_CONF_H */
