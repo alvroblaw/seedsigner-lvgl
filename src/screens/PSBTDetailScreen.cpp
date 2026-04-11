@@ -148,8 +148,8 @@ bool PSBTDetailScreen::handle_input(const InputEvent& input) {
         emit_view_qr("address"); // placeholder target
         return true;
     case InputKey::Press:
-        // OK could also go back for simplicity
-        emit_back();
+        // With right_as_select profile, Press is the remapped Right key.
+        emit_view_qr("address");
         return true;
     case InputKey::Up:
     case InputKey::Down:
