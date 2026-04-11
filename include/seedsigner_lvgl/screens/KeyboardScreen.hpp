@@ -69,6 +69,8 @@ private:
     int selected_col_{0};
     // Cached layout map for btnmatrix (pointers into layout_strings_)
     std::vector<const char*> layout_map_;
+    // Null-terminated map for lv_btnmatrix (must outlive the widget)
+    std::vector<const char*> layout_map_null_;
     // Storage for button label strings
     std::vector<std::string> layout_strings_;
     // Cached btnmatrix button count
