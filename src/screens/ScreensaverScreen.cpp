@@ -1,4 +1,5 @@
 #include "seedsigner_lvgl/screens/ScreensaverScreen.hpp"
+#include "seedsigner_lvgl/visual/DisplayProfile.hpp"
 #include "seedsigner_lvgl/visual/SeedSignerTheme.hpp"
 #include "icons.h"
 
@@ -11,7 +12,7 @@ namespace {
 constexpr const char* kScreensaverComponent = "screensaver";
 constexpr const char* kDismissedAction = "screensaver_dismissed";
 
-constexpr int kDefaultLogoSize = 80;
+static int logo_size() { return profile::active().screensaver_logo_size; }
 constexpr int kSlideRange = 100; // pixels to slide
 constexpr int kFadePeriod = 3000; // ms for full fade cycle
 
@@ -21,12 +22,12 @@ lv_obj_t* create_animation_object(lv_obj_t* parent, const ScreensaverParams& par
         // Load image from file (placeholder)
         obj = lv_img_create(parent);
         lv_img_set_src(obj, LV_SYMBOL_IMAGE);
-        lv_obj_set_size(obj, kDefaultLogoSize, kDefaultLogoSize);
+        lv_obj_set_size(obj, logo_size(), logo_size());
     } else {
         // Use Bitcoin logo (orange)
         obj = lv_img_create(parent);
         lv_img_set_src(obj, &img_btc_logo_60x60);
-        lv_obj_set_size(obj, kDefaultLogoSize, kDefaultLogoSize);
+        lv_obj_set_size(obj, logo_size(), logo_size());
     }
     return obj;
 }
