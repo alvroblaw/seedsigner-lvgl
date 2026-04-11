@@ -11,3 +11,8 @@ __pycache__/
 *.bin
 *.map
 compile_commands.json
+
+# Screenshot diff generated artifacts
+screenshots/
+screenshots_diff/
+screenshot_diff_report.json

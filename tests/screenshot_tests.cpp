@@ -32,7 +32,35 @@
 
 using namespace seedsigner::lvgl;
 
-static const char* OUT_DIR = "screenshots";
+// Resolve output directory relative to repo root (where this file's parent directory lives), falling back to CWD-relative "screenshots" if unavailable.
+// This ensures correct output regardless of where the binary is invoked from.
+#include <libgen.h>
+static std::string _detect_repo_root() {
+    // Try SOURCE_ROOT define (set by CMake) first
+    #ifdef SOURCE_ROOT
+    return std::string(SOURCE_ROOT);
+    #else
+    // Walk up from /proc/self/exe to find a marker file
+    char exe[4096];
+    ssize_t len = readlink("/proc/self/exe", exe, sizeof(exe) - 1);
+    if (len > 0) {
+        exe[len] = '\0';
+        std::string path = exe;
+        for (int i = 0; i < 5; ++i) {  // walk up at most 5 levels
+            auto slash = path.rfind('/');
+            if (slash == std::string::npos) break;
+            path = path.substr(0, slash);
+            struct stat st{};
+            std::string marker = path + "/CMakeLists.txt";
+            if (stat(marker.c_str(), &st) == 0) return path;
+        }
+    }
+    return ".";  // fallback: CWD
+    #endif
+}
+static const std::string REPO_ROOT = _detect_repo_root();
+static const std::string OUT_DIR_STR = REPO_ROOT + "/screenshots";
+static const char* OUT_DIR = OUT_DIR_STR.c_str();
 
 /// Each screen capture runs in a forked child to avoid LVGL state leakage.
 static bool fork_capture(std::function<void(UiRuntime&)> setup, const std::string& name) {
