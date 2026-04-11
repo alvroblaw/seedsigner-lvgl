@@ -17,6 +17,9 @@ public:
 
     void refresh_now();
 
+public:
+    const std::vector<lv_color_t>& framebuffer() const noexcept { return framebuffer_; }
+
 private:
     static void flush_cb(lv_disp_drv_t* disp_drv, const lv_area_t* area, lv_color_t* color_p);
 

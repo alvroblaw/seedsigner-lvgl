@@ -57,12 +57,14 @@ add_library(seedsigner_lvgl
   src/contracts/ScreensaverContract.cpp
   src/screens/StartupSplashScreen.cpp
   src/screens/ScreensaverScreen.cpp
+  src/platform/FramebufferCapture.cpp
   src/assets/icons.c
 )
 
 target_include_directories(seedsigner_lvgl
   PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/seedsigner_lvgl
     ${CMAKE_CURRENT_SOURCE_DIR}/src/assets
     ${SEEDSIGNER_LV_CONF_DIR}
     ${lvgl_SOURCE_DIR}
@@ -87,4 +89,9 @@ if(BUILD_TESTING)
   target_link_libraries(seedsigner_lvgl_tests PRIVATE seedsigner_lvgl)
 
   add_test(NAME seedsigner_lvgl_tests COMMAND seedsigner_lvgl_tests)
+
+  add_executable(screenshot_tests
+    tests/screenshot_tests.cpp
+  )
+  target_link_libraries(screenshot_tests PRIVATE seedsigner_lvgl)
 endif()

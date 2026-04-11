@@ -112,6 +112,7 @@ void KeyboardScreen::destroy() {
     save_btn_ = nullptr;
     context_ = {};
     layout_map_.clear();
+    layout_map_null_.clear();
     layout_strings_.clear();
 }
 
@@ -173,10 +174,10 @@ void KeyboardScreen::create_keyboard_grid() {
     // Build layout map
     build_layout_map();
     std::cout << "btn_count_=" << btn_count_ << std::endl;
-    // Convert vector to array of const char* (last element must be NULL)
-    std::vector<const char*> map_with_null = layout_map_;
-    map_with_null.push_back(nullptr);
-    lv_btnmatrix_set_map(keyboard_grid_, map_with_null.data());
+    // Build null-terminated map as a member so it outlives the btnmatrix widget
+    layout_map_null_ = layout_map_;
+    layout_map_null_.push_back(nullptr);
+    lv_btnmatrix_set_map(keyboard_grid_, layout_map_null_.data());
     // Set button control: all buttons are checkable (so they can be highlighted), none checked initially
     for (int i = 0; i < btn_count_; ++i) {
         lv_btnmatrix_set_btn_ctrl(keyboard_grid_, i, LV_BTNMATRIX_CTRL_CHECKABLE);
