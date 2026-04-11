@@ -188,12 +188,18 @@ def main():
         default=1.0,
         help="Mean absolute pixel diff threshold (0-255) to consider a failure (default: 1.0)",
     )
+    parser.add_argument(
+        "--relaxed",
+        action="store_true",
+        help="Use relaxed threshold (5.0) for cross-platform builds with expected anti-aliasing/font differences",
+    )
     args = parser.parse_args()
 
     if args.update_baseline:
         update_baseline()
     else:
-        run_diff(threshold=args.threshold)
+        threshold = 5.0 if args.relaxed else args.threshold
+        run_diff(threshold=threshold)
 
 
 if __name__ == "__main__":

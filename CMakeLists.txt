@@ -96,6 +96,7 @@ if(BUILD_TESTING)
   add_executable(screenshot_tests
     tests/screenshot_tests.cpp
   )
+  target_compile_definitions(screenshot_tests PRIVATE SOURCE_ROOT="${CMAKE_SOURCE_DIR}")
   target_link_libraries(screenshot_tests PRIVATE seedsigner_lvgl)
 
   add_executable(input_profile_tests
