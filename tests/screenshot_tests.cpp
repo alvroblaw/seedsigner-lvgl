@@ -32,8 +32,7 @@
 
 using namespace seedsigner::lvgl;
 
-// Resolve output directory relative to repo root (where this file's parent
-directory lives), falling back to CWD-relative "screenshots" if unavailable.
+// Resolve output directory relative to repo root (where this file's parent directory lives), falling back to CWD-relative "screenshots" if unavailable.
 // This ensures correct output regardless of where the binary is invoked from.
 #include <libgen.h>
 static std::string _detect_repo_root() {
