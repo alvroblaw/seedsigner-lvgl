@@ -6,6 +6,7 @@
 #include <optional>
 
 #include "seedsigner_lvgl/contracts/RouteDescriptor.hpp"
+#include "seedsigner_lvgl/input/InputProfile.hpp"
 #include "seedsigner_lvgl/navigation/NavigationController.hpp"
 #include "seedsigner_lvgl/platform/HeadlessDisplay.hpp"
 #include "seedsigner_lvgl/runtime/EventQueue.hpp"
@@ -17,6 +18,7 @@ struct RuntimeConfig {
     std::uint32_t width{240};
     std::uint32_t height{320};
     std::size_t event_queue_capacity{16};
+    input::InputProfileId input_profile{input::InputProfileId::SeedSigner4Button};
 };
 
 class UiRuntime {

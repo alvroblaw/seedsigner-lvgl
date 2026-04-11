@@ -60,6 +60,7 @@ add_library(seedsigner_lvgl
   src/platform/FramebufferCapture.cpp
   src/visual/SeedSignerTheme.cpp
   src/visual/DisplayProfile.cpp
+  src/input/InputProfile.cpp
   src/assets/icons.c
 )
 
@@ -96,4 +97,10 @@ if(BUILD_TESTING)
     tests/screenshot_tests.cpp
   )
   target_link_libraries(screenshot_tests PRIVATE seedsigner_lvgl)
+
+  add_executable(input_profile_tests
+    tests/input_profile_tests.cpp
+  )
+  target_link_libraries(input_profile_tests PRIVATE seedsigner_lvgl)
+  add_test(NAME input_profile_tests COMMAND input_profile_tests)
 endif()

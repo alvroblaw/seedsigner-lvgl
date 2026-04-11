@@ -1,4 +1,5 @@
 #include "seedsigner_lvgl/runtime/UiRuntime.hpp"
+#include "seedsigner_lvgl/input/InputMapper.hpp"
 #include "seedsigner_lvgl/visual/DisplayProfile.hpp"
 
 #include <cstdio>
@@ -28,6 +29,7 @@ bool UiRuntime::init() {
     profile::set_profile(profile::match(
         static_cast<lv_coord_t>(config_.width),
         static_cast<lv_coord_t>(config_.height)));
+    input::set_profile(config_.input_profile);
     initialized_ = true;
     return true;
 }
@@ -74,7 +76,10 @@ std::optional<ActiveRoute> UiRuntime::get_active_route() const noexcept {
 }
 
 bool UiRuntime::send_input(const InputEvent& input) {
-    return initialized_ && navigation_controller_.send_input(input);
+    if (!initialized_) return false;
+    InputEvent remapped = input;
+    input::remap(remapped);
+    return navigation_controller_.send_input(remapped);
 }
 
 bool UiRuntime::set_screen_data(const PropertyMap& data) {
