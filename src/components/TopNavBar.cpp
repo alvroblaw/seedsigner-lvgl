@@ -1,4 +1,6 @@
 #include "seedsigner_lvgl/components/TopNavBar.hpp"
+#include "seedsigner_lvgl/visual/SeedSignerTheme.hpp"
+#include "icons.h"
 
 #include <cstdio>
 #include <lvgl.h>
@@ -14,18 +16,14 @@ constexpr const char* kHomeAction = "home_requested";
 constexpr const char* kCancelAction = "cancel_requested";
 constexpr const char* kCustomAction = "action_invoked";
 
-constexpr lv_coord_t kDefaultHeight = 48;
+constexpr lv_coord_t kDefaultHeight = theme::spacing::TOPBAR_HEIGHT;
 constexpr lv_coord_t kButtonWidth = 48;
-constexpr lv_coord_t kButtonHeight = 48;
-constexpr lv_coord_t kPadding = 8;
-constexpr lv_coord_t kTitleFontSize = 18;
+constexpr lv_coord_t kButtonHeight = theme::spacing::BUTTON_HEIGHT;
+constexpr lv_coord_t kPadding = theme::spacing::COMPONENT_PADDING;
+constexpr lv_coord_t kTitleFontSize = 18; // Overridden by theme font
 constexpr lv_coord_t kButtonFontSize = 24;
 
-lv_color_t kBackgroundColor = lv_color_hex(0x1a1a1a);
-lv_color_t kTextColor = lv_color_hex(0xffffff);
-lv_color_t kButtonColor = lv_color_hex(0x333333);
-lv_color_t kButtonPressedColor = lv_color_hex(0x555555);
-lv_color_t kBorderColor = lv_color_hex(0x444444);
+// Colors are now defined in SeedSignerTheme.hpp
 
 } // anonymous namespace
 
@@ -43,10 +41,7 @@ void TopNavBar::attach(lv_obj_t* parent) {
     }
     container_ = lv_obj_create(parent);
     lv_obj_set_size(container_, lv_pct(100), kDefaultHeight);
-    lv_obj_set_style_bg_color(container_, kBackgroundColor, 0);
-    lv_obj_set_style_bg_opa(container_, LV_OPA_COVER, 0);
-    lv_obj_set_style_border_width(container_, 0, 0);
-    lv_obj_set_style_pad_all(container_, kPadding, 0);
+    seedsigner::lvgl::theme::apply_topbar_style(container_);
     lv_obj_set_style_pad_row(container_, kPadding, 0);
     lv_obj_set_flex_flow(container_, LV_FLEX_FLOW_ROW);
     lv_obj_set_flex_align(container_, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
@@ -112,45 +107,51 @@ void TopNavBar::create_widgets() {
     if (config_.show_back) {
         back_btn_ = lv_btn_create(container_);
         lv_obj_set_size(back_btn_, kButtonWidth, kButtonHeight);
-        lv_obj_set_style_radius(back_btn_, LV_RADIUS_CIRCLE, 0);
-        lv_obj_set_style_bg_color(back_btn_, kButtonColor, 0);
-        lv_obj_set_style_bg_color(back_btn_, kButtonPressedColor, LV_STATE_PRESSED);
+        seedsigner::lvgl::theme::apply_button_style(back_btn_, false);
+        lv_obj_set_style_radius(back_btn_, LV_RADIUS_CIRCLE, 0); // Keep circular shape
         lv_obj_add_event_cb(back_btn_, &TopNavBar::on_back_clicked, LV_EVENT_CLICKED, this);
-        lv_obj_t* label = lv_label_create(back_btn_);
-        lv_label_set_text(label, LV_SYMBOL_LEFT);
-        lv_obj_center(label);
+        lv_obj_t* img = lv_img_create(back_btn_);
+        lv_img_set_src(img, &img_back);
+        lv_obj_center(img);
+        // Pressed state: recolor orange
+        lv_obj_set_style_img_recolor(img, seedsigner::lvgl::theme::colors::PRIMARY, LV_STATE_PRESSED);
+        lv_obj_set_style_img_recolor_opa(img, LV_OPA_COVER, LV_STATE_PRESSED);
     }
 
     if (config_.show_home) {
         home_btn_ = lv_btn_create(container_);
         lv_obj_set_size(home_btn_, kButtonWidth, kButtonHeight);
-        lv_obj_set_style_radius(home_btn_, LV_RADIUS_CIRCLE, 0);
-        lv_obj_set_style_bg_color(home_btn_, kButtonColor, 0);
-        lv_obj_set_style_bg_color(home_btn_, kButtonPressedColor, LV_STATE_PRESSED);
+        seedsigner::lvgl::theme::apply_button_style(home_btn_, false);
+        lv_obj_set_style_radius(home_btn_, LV_RADIUS_CIRCLE, 0); // Keep circular shape
         lv_obj_add_event_cb(home_btn_, &TopNavBar::on_home_clicked, LV_EVENT_CLICKED, this);
-        lv_obj_t* label = lv_label_create(home_btn_);
-        lv_label_set_text(label, LV_SYMBOL_HOME);
-        lv_obj_center(label);
+        lv_obj_t* img = lv_img_create(home_btn_);
+        lv_img_set_src(img, &img_home);
+        lv_obj_center(img);
+        // Pressed state: recolor orange
+        lv_obj_set_style_img_recolor(img, seedsigner::lvgl::theme::colors::PRIMARY, LV_STATE_PRESSED);
+        lv_obj_set_style_img_recolor_opa(img, LV_OPA_COVER, LV_STATE_PRESSED);
         // If back also exists, add spacing via pad column (flex gap already set)
     }
 
     if (config_.show_cancel) {
         cancel_btn_ = lv_btn_create(container_);
         lv_obj_set_size(cancel_btn_, kButtonWidth, kButtonHeight);
-        lv_obj_set_style_radius(cancel_btn_, LV_RADIUS_CIRCLE, 0);
-        lv_obj_set_style_bg_color(cancel_btn_, kButtonColor, 0);
-        lv_obj_set_style_bg_color(cancel_btn_, kButtonPressedColor, LV_STATE_PRESSED);
+        seedsigner::lvgl::theme::apply_button_style(cancel_btn_, false);
+        lv_obj_set_style_radius(cancel_btn_, LV_RADIUS_CIRCLE, 0); // Keep circular shape
         lv_obj_add_event_cb(cancel_btn_, &TopNavBar::on_cancel_clicked, LV_EVENT_CLICKED, this);
-        lv_obj_t* label = lv_label_create(cancel_btn_);
-        lv_label_set_text(label, LV_SYMBOL_CLOSE);
-        lv_obj_center(label);
+        lv_obj_t* img = lv_img_create(cancel_btn_);
+        lv_img_set_src(img, &img_close);
+        lv_obj_center(img);
+        // Pressed state: recolor orange
+        lv_obj_set_style_img_recolor(img, seedsigner::lvgl::theme::colors::PRIMARY, LV_STATE_PRESSED);
+        lv_obj_set_style_img_recolor_opa(img, LV_OPA_COVER, LV_STATE_PRESSED);
     }
 
     // Center title
     title_label_ = lv_label_create(container_);
     lv_label_set_text(title_label_, config_.title.c_str());
-    lv_obj_set_style_text_color(title_label_, kTextColor, 0);
-    lv_obj_set_style_text_font(title_label_, &lv_font_montserrat_14, 0);
+    lv_obj_set_style_text_color(title_label_, seedsigner::lvgl::theme::colors::TEXT_PRIMARY, 0);
+    lv_obj_set_style_text_font(title_label_, seedsigner::lvgl::theme::typography::TITLE, 0);
     lv_obj_set_flex_grow(title_label_, 1);
     lv_obj_set_style_text_align(title_label_, LV_TEXT_ALIGN_CENTER, 0);
 
@@ -159,9 +160,7 @@ void TopNavBar::create_widgets() {
         lv_obj_t* btn = lv_btn_create(container_);
         lv_obj_set_size(btn, LV_SIZE_CONTENT, kButtonHeight);
         lv_obj_set_style_min_width(btn, kButtonWidth, 0);
-        lv_obj_set_style_radius(btn, 8, 0);
-        lv_obj_set_style_bg_color(btn, kButtonColor, 0);
-        lv_obj_set_style_bg_color(btn, kButtonPressedColor, LV_STATE_PRESSED);
+        seedsigner::lvgl::theme::apply_button_style(btn, false);
         if (!action.enabled) {
             lv_obj_add_state(btn, LV_STATE_DISABLED);
         }

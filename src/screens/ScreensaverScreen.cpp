@@ -1,4 +1,6 @@
 #include "seedsigner_lvgl/screens/ScreensaverScreen.hpp"
+#include "seedsigner_lvgl/visual/SeedSignerTheme.hpp"
+#include "icons.h"
 
 #include <lvgl.h>
 
@@ -21,13 +23,10 @@ lv_obj_t* create_animation_object(lv_obj_t* parent, const ScreensaverParams& par
         lv_img_set_src(obj, LV_SYMBOL_IMAGE);
         lv_obj_set_size(obj, kDefaultLogoSize, kDefaultLogoSize);
     } else {
-        // Default: a simple circle
-        obj = lv_obj_create(parent);
+        // Use Bitcoin logo (orange)
+        obj = lv_img_create(parent);
+        lv_img_set_src(obj, &img_btc_logo_60x60);
         lv_obj_set_size(obj, kDefaultLogoSize, kDefaultLogoSize);
-        lv_obj_set_style_radius(obj, LV_RADIUS_CIRCLE, 0);
-        lv_obj_set_style_bg_color(obj, lv_color_hex(0x0080FF), 0);
-        lv_obj_set_style_bg_opa(obj, LV_OPA_COVER, 0);
-        lv_obj_set_style_border_width(obj, 0, 0);
     }
     return obj;
 }
@@ -41,7 +40,7 @@ void ScreensaverScreen::create(const ScreenContext& context, const RouteDescript
 
     container_ = lv_obj_create(context.root);
     lv_obj_set_size(container_, lv_pct(100), lv_pct(100));
-    lv_obj_set_style_bg_color(container_, lv_color_black(), 0);
+    lv_obj_set_style_bg_color(container_, seedsigner::lvgl::theme::colors::BLACK, 0);
     lv_obj_set_style_bg_opa(container_, LV_OPA_COVER, 0);
     lv_obj_clear_flag(container_, LV_OBJ_FLAG_SCROLLABLE);
 
@@ -53,7 +52,7 @@ void ScreensaverScreen::create(const ScreenContext& context, const RouteDescript
     if (params_.show_wakeup_overlay) {
         wakeup_overlay_ = lv_obj_create(container_);
         lv_obj_set_size(wakeup_overlay_, lv_pct(100), lv_pct(100));
-        lv_obj_set_style_bg_color(wakeup_overlay_, lv_color_black(), 0);
+        lv_obj_set_style_bg_color(wakeup_overlay_, seedsigner::lvgl::theme::colors::BLACK, 0);
         lv_obj_set_style_bg_opa(wakeup_overlay_, LV_OPA_50, 0);
         lv_obj_set_style_pad_all(wakeup_overlay_, 0, 0);
         lv_obj_add_flag(wakeup_overlay_, LV_OBJ_FLAG_HIDDEN);
@@ -61,7 +60,7 @@ void ScreensaverScreen::create(const ScreenContext& context, const RouteDescript
         lv_obj_t* label = lv_label_create(wakeup_overlay_);
         lv_label_set_text(label, "Touch to continue");
         lv_obj_set_style_text_font(label, &lv_font_montserrat_14, 0);
-        lv_obj_set_style_text_color(label, lv_color_white(), 0);
+        lv_obj_set_style_text_color(label, seedsigner::lvgl::theme::colors::TEXT_PRIMARY, 0);
         lv_obj_center(label);
     }
 

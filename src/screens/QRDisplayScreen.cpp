@@ -1,4 +1,5 @@
 #include "seedsigner_lvgl/screens/QRDisplayScreen.hpp"
+#include "seedsigner_lvgl/visual/SeedSignerTheme.hpp"
 
 #include <lvgl.h>
 #include <lv_qrcode.h>
@@ -63,7 +64,7 @@ void QRDisplayScreen::create(const ScreenContext& context, const RouteDescriptor
     lv_obj_set_flex_grow(content_container_, 1); // Take remaining height
 
     // QR widget
-    qr_widget_ = lv_qrcode_create(content_container_, kQRSize, lv_color_black(), lv_color_white());
+    qr_widget_ = lv_qrcode_create(content_container_, kQRSize, seedsigner::lvgl::theme::colors::QR_FOREGROUND, seedsigner::lvgl::theme::colors::QR_BACKGROUND);
     if (!qr_widget_) {
         // fallback: create a placeholder label
         lv_obj_t* error = lv_label_create(content_container_);
@@ -76,7 +77,7 @@ void QRDisplayScreen::create(const ScreenContext& context, const RouteDescriptor
     // Brightness overlay (black semi-transparent rectangle covering entire QR)
     brightness_overlay_ = lv_obj_create(qr_widget_);
     lv_obj_set_size(brightness_overlay_, lv_pct(100), lv_pct(100));
-    lv_obj_set_style_bg_color(brightness_overlay_, lv_color_black(), 0);
+    lv_obj_set_style_bg_color(brightness_overlay_, seedsigner::lvgl::theme::colors::BLACK, 0);
     lv_obj_set_style_bg_opa(brightness_overlay_, LV_OPA_TRANSP, 0); // updated by update_brightness_overlay
     lv_obj_set_style_border_width(brightness_overlay_, 0, 0);
     lv_obj_set_style_radius(brightness_overlay_, 0, 0);

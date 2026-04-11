@@ -1,4 +1,5 @@
 #include "seedsigner_lvgl/screens/PSBTDetailScreen.hpp"
+#include "seedsigner_lvgl/visual/SeedSignerTheme.hpp"
 
 #include <lvgl.h>
 
@@ -35,7 +36,7 @@ void create_row(lv_obj_t* parent, const char* label_text, const char* value_text
     lv_obj_t* label = lv_label_create(row);
     lv_label_set_text(label, label_text);
     lv_obj_set_width(label, kLabelWidth);
-    lv_obj_set_style_text_color(label, lv_color_hex(0x888888), 0);
+    lv_obj_set_style_text_color(label, seedsigner::lvgl::theme::colors::TEXT_SECONDARY, 0);
 
     lv_obj_t* value = lv_label_create(row);
     lv_label_set_text(value, value_text);
@@ -116,7 +117,7 @@ void PSBTDetailScreen::create(const ScreenContext& context, const RouteDescripto
     // Footer hint
     footer_label_ = lv_label_create(content_container_);
     lv_label_set_text(footer_label_, "Press RIGHT to view QR (placeholder), BACK to return");
-    lv_obj_set_style_text_color(footer_label_, lv_color_hex(0x888888), 0);
+    lv_obj_set_style_text_color(footer_label_, seedsigner::lvgl::theme::colors::TEXT_SECONDARY, 0);
     lv_obj_set_style_text_align(footer_label_, LV_TEXT_ALIGN_CENTER, 0);
     lv_obj_set_width(footer_label_, lv_pct(100));
     lv_obj_set_style_pad_top(footer_label_, 16, 0);

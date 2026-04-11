@@ -62,3 +62,5 @@ For Linux/macOS requirements and host-run caveats, see [`docs/development/HOST_B
 - milestones and phased implementation plan
 - C++ runtime skeleton, examples, and smoke tests
 - later: richer screen implementations, camera integration, bindings, and target-specific platform code
+
+<!-- Last updated: 2026-04-10 -->

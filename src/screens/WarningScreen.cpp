@@ -1,5 +1,7 @@
 #include "seedsigner_lvgl/screens/WarningScreen.hpp"
+#include "seedsigner_lvgl/visual/SeedSignerTheme.hpp"
 #include "seedsigner_lvgl/components/TopNavBar.hpp"
+#include "icons.h"
 
 #include <lvgl.h>
 
@@ -37,7 +39,13 @@ void WarningScreen::create(const ScreenContext& context, const RouteDescriptor& 
 
     // If custom icon is provided, use it; otherwise use severity-based icon.
     const std::string custom_icon = value_or(route.args, kIconArg, "");
-    const char* icon_text = custom_icon.empty() ? severity_to_icon(severity_) : custom_icon.c_str();
+    const lv_img_dsc_t* icon_img = nullptr;
+    const char* icon_symbol = nullptr;
+    if (custom_icon.empty()) {
+        icon_img = severity_to_icon(severity_);
+    } else {
+        icon_symbol = custom_icon.c_str();
+    }
 
     // Determine TopNavBar title: use custom title if provided, else default based on severity
     std::string nav_title = title_;
@@ -81,12 +89,21 @@ void WarningScreen::create(const ScreenContext& context, const RouteDescriptor& 
     lv_obj_set_flex_align(content_container_, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
     lv_obj_set_flex_grow(content_container_, 1); // Take remaining height
 
+    // Apply warning style with severity color
+    seedsigner::lvgl::theme::apply_warning_style(content_container_, severity_to_title_color(severity_));
+    // Reapply desired padding (overrides theme's COMPONENT_PADDING)
+    lv_obj_set_style_pad_all(content_container_, 16, 0);
+
     // Icon
-    icon_label_ = lv_label_create(content_container_);
-    lv_label_set_text(icon_label_, icon_text);
-    // icon uses default font
-    lv_obj_set_style_text_color(icon_label_, severity_to_title_color(severity_), 0);
-    lv_obj_set_style_pad_bottom(icon_label_, 16, 0);
+    if (icon_img) {
+        icon_obj_ = lv_img_create(content_container_);
+        lv_img_set_src(icon_obj_, icon_img);
+    } else {
+        icon_obj_ = lv_label_create(content_container_);
+        lv_label_set_text(icon_obj_, icon_symbol);
+        lv_obj_set_style_text_color(icon_obj_, severity_to_title_color(severity_), 0);
+    }
+    lv_obj_set_style_pad_bottom(icon_obj_, 16, 0);
 
     // Body
     if (!body_.empty()) {
@@ -103,7 +120,7 @@ void WarningScreen::create(const ScreenContext& context, const RouteDescriptor& 
     button_ = lv_btn_create(content_container_);
     lv_obj_set_width(button_, lv_pct(80));
     lv_obj_set_height(button_, 48);
-    lv_obj_set_style_radius(button_, 8, 0);
+    seedsigner::lvgl::theme::apply_button_style(button_, true); // Primary button
     lv_obj_add_event_cb(button_, [](lv_event_t* e) {
         auto* screen = static_cast<WarningScreen*>(lv_event_get_user_data(e));
         if (screen != nullptr) {
@@ -123,7 +140,7 @@ void WarningScreen::destroy() {
         lv_obj_del(container_);
         container_ = nullptr;
         content_container_ = nullptr;
-        icon_label_ = nullptr;
+        icon_obj_ = nullptr;
         body_label_ = nullptr;
         button_ = nullptr;
         button_label_ = nullptr;
@@ -165,27 +182,27 @@ WarningSeverity WarningScreen::parse_severity(const std::string& severity_str) {
     return WarningSeverity::Warning;
 }
 
-const char* WarningScreen::severity_to_icon(WarningSeverity severity) {
+const lv_img_dsc_t* WarningScreen::severity_to_icon(WarningSeverity severity) {
     switch (severity) {
     case WarningSeverity::Error:
-        return LV_SYMBOL_CLOSE;
+        return &img_warning; // Use warning icon for error (colored red via title)
     case WarningSeverity::DireWarning:
-        return LV_SYMBOL_WARNING;
+        return &img_dire_warning;
     case WarningSeverity::Warning:
     default:
-        return LV_SYMBOL_WARNING;
+        return &img_warning;
     }
 }
 
 lv_color_t WarningScreen::severity_to_title_color(WarningSeverity severity) {
     switch (severity) {
     case WarningSeverity::Error:
-        return lv_palette_main(LV_PALETTE_RED);
+        return seedsigner::lvgl::theme::colors::ERROR;
     case WarningSeverity::DireWarning:
-        return lv_color_make(0xFF, 0x66, 0x00); // Orange-red
+        return seedsigner::lvgl::theme::colors::WARNING; // Orange-amber
     case WarningSeverity::Warning:
     default:
-        return lv_palette_main(LV_PALETTE_YELLOW);
+        return seedsigner::lvgl::theme::colors::WARNING; // Amber for both warning levels
     }
 }
 
