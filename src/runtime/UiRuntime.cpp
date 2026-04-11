@@ -1,4 +1,5 @@
 #include "seedsigner_lvgl/runtime/UiRuntime.hpp"
+#include "seedsigner_lvgl/visual/DisplayProfile.hpp"
 
 #include <cstdio>
 #include <utility>
@@ -24,6 +25,9 @@ bool UiRuntime::init() {
 
     lv_init();
     display_ = std::make_unique<HeadlessDisplay>(config_.width, config_.height);
+    profile::set_profile(profile::match(
+        static_cast<lv_coord_t>(config_.width),
+        static_cast<lv_coord_t>(config_.height)));
     initialized_ = true;
     return true;
 }

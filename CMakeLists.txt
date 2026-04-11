@@ -59,6 +59,7 @@ add_library(seedsigner_lvgl
   src/screens/ScreensaverScreen.cpp
   src/platform/FramebufferCapture.cpp
   src/visual/SeedSignerTheme.cpp
+  src/visual/DisplayProfile.cpp
   src/assets/icons.c
 )
 

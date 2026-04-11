@@ -1,4 +1,5 @@
 #include "seedsigner_lvgl/screens/ScanScreen.hpp"
+#include "seedsigner_lvgl/visual/DisplayProfile.hpp"
 #include "seedsigner_lvgl/visual/SeedSignerTheme.hpp"
 
 #include <lvgl.h>
@@ -16,8 +17,10 @@ constexpr const char* kScanCancelledAction = "scan_cancelled";
 constexpr const char* kFrameStatusUpdatedAction = "frame_status_updated";
 constexpr const char* kScanScreenComponent = "scan_screen";
 
-constexpr lv_coord_t kPreviewWidth = 240;  // Adjust to screen size
-constexpr lv_coord_t kPreviewHeight = 240;
+// Preview dimensions sourced from the active display profile
+// (kept as constants for now; screens will read profile::active() directly)
+static lv_coord_t preview_width() { return profile::active().preview_size; }
+static lv_coord_t preview_height() { return profile::active().preview_size; }
 constexpr lv_coord_t kDotSize = 12;
 constexpr lv_coord_t kDotMargin = 8;
 constexpr lv_coord_t kProgressBarHeight = 6;
@@ -72,7 +75,7 @@ void ScanScreen::create(const ScreenContext& context, const RouteDescriptor& rou
     
     // Create preview canvas (initially black)
     preview_img_ = lv_canvas_create(content_container_);
-    lv_obj_set_size(preview_img_, kPreviewWidth, kPreviewHeight);
+    lv_obj_set_size(preview_img_, preview_width(), preview_height());
     lv_obj_align(preview_img_, LV_ALIGN_CENTER, 0, 0);
     lv_canvas_fill_bg(preview_img_, seedsigner::lvgl::theme::active_theme().BLACK, LV_OPA_COVER);
     
@@ -170,8 +173,8 @@ bool ScanScreen::push_frame(const CameraFrame& frame) {
         if (source_stride < frame_width_) return false;
         if (latest_frame_.size() < static_cast<std::size_t>(source_stride) * static_cast<std::size_t>(frame_height_)) return false;
         
-        const auto target_width = static_cast<std::uint32_t>(kPreviewWidth);
-        const auto target_height = static_cast<std::uint32_t>(kPreviewHeight);
+        const auto target_width = static_cast<std::uint32_t>(preview_width());
+        const auto target_height = static_cast<std::uint32_t>(preview_height());
         const std::uint32_t scaled_width =
             std::max<std::uint32_t>(1, std::min<std::uint32_t>(target_width, (frame_width_ * target_height) / frame_height_));
         const std::uint32_t scaled_height =

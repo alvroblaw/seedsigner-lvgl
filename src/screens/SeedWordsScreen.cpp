@@ -1,4 +1,5 @@
 #include "seedsigner_lvgl/screens/SeedWordsScreen.hpp"
+#include "seedsigner_lvgl/visual/DisplayProfile.hpp"
 #include "seedsigner_lvgl/visual/SeedSignerTheme.hpp"
 
 #include "seedsigner_lvgl/components/TopNavBar.hpp"
@@ -18,7 +19,7 @@ constexpr const char* kSeedWordsComponent = "seed_words_screen";
 constexpr const char* kDefaultWarningText = "Never digitize these words. Store this offline.";
 constexpr const char* kDefaultTitle = "Seed Words";
 
-constexpr int kChipWidth = 100;  // adjust based on screen size
+static int chip_width() { return profile::active().chip_width; }
 constexpr int kChipHeight = theme::spacing::CHIP_HEIGHT;
 constexpr int kChipMargin = theme::spacing::CHIP_MARGIN;
 
@@ -234,7 +235,7 @@ void SeedWordsScreen::update_page() {
 
 void SeedWordsScreen::create_word_chip(lv_obj_t* parent, int index, const std::string& word) {
     lv_obj_t* chip = lv_btn_create(parent);
-    lv_obj_set_size(chip, kChipWidth, kChipHeight);
+    lv_obj_set_size(chip, chip_width(), kChipHeight);
     lv_obj_add_style(chip, &chip_style_, 0);
     apply_warning_styling(chip); // Add warning styling
     
