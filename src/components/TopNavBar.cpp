@@ -113,9 +113,11 @@ void TopNavBar::create_widgets() {
         lv_obj_t* img = lv_img_create(back_btn_);
         lv_img_set_src(img, &img_back);
         lv_obj_center(img);
-        // Pressed state: recolor orange
+        lv_obj_set_style_img_recolor(img, seedsigner::lvgl::theme::colors::TEXT_PRIMARY, 0);
+        lv_obj_set_style_img_recolor_opa(img, LV_OPA_COVER, 0);
         lv_obj_set_style_img_recolor(img, seedsigner::lvgl::theme::colors::PRIMARY, LV_STATE_PRESSED);
         lv_obj_set_style_img_recolor_opa(img, LV_OPA_COVER, LV_STATE_PRESSED);
+        lv_obj_set_style_opa(img, LV_OPA_40, LV_STATE_DISABLED);
     }
 
     if (config_.show_home) {
@@ -127,9 +129,11 @@ void TopNavBar::create_widgets() {
         lv_obj_t* img = lv_img_create(home_btn_);
         lv_img_set_src(img, &img_home);
         lv_obj_center(img);
-        // Pressed state: recolor orange
+        lv_obj_set_style_img_recolor(img, seedsigner::lvgl::theme::colors::TEXT_PRIMARY, 0);
+        lv_obj_set_style_img_recolor_opa(img, LV_OPA_COVER, 0);
         lv_obj_set_style_img_recolor(img, seedsigner::lvgl::theme::colors::PRIMARY, LV_STATE_PRESSED);
         lv_obj_set_style_img_recolor_opa(img, LV_OPA_COVER, LV_STATE_PRESSED);
+        lv_obj_set_style_opa(img, LV_OPA_40, LV_STATE_DISABLED);
         // If back also exists, add spacing via pad column (flex gap already set)
     }
 
@@ -142,9 +146,11 @@ void TopNavBar::create_widgets() {
         lv_obj_t* img = lv_img_create(cancel_btn_);
         lv_img_set_src(img, &img_close);
         lv_obj_center(img);
-        // Pressed state: recolor orange
+        lv_obj_set_style_img_recolor(img, seedsigner::lvgl::theme::colors::TEXT_PRIMARY, 0);
+        lv_obj_set_style_img_recolor_opa(img, LV_OPA_COVER, 0);
         lv_obj_set_style_img_recolor(img, seedsigner::lvgl::theme::colors::PRIMARY, LV_STATE_PRESSED);
         lv_obj_set_style_img_recolor_opa(img, LV_OPA_COVER, LV_STATE_PRESSED);
+        lv_obj_set_style_opa(img, LV_OPA_40, LV_STATE_DISABLED);
     }
 
     // Center title
@@ -169,6 +175,8 @@ void TopNavBar::create_widgets() {
         lv_obj_add_event_cb(btn, &TopNavBar::on_action_clicked, LV_EVENT_CLICKED, this);
         lv_obj_t* label = lv_label_create(btn);
         lv_label_set_text(label, action.label.c_str());
+        lv_obj_set_style_text_color(label, seedsigner::lvgl::theme::colors::TEXT_PRIMARY, 0);
+        lv_obj_set_style_text_color(label, seedsigner::lvgl::theme::colors::TEXT_DISABLED, LV_STATE_DISABLED);
         lv_obj_center(label);
         action_buttons_.push_back(btn);
     }
