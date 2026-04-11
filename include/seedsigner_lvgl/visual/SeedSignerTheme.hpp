@@ -11,6 +11,7 @@ namespace colors {
     static const lv_color_t SURFACE_DARK   = lv_color_hex(0x1a1a1a);   // Main background
     static const lv_color_t SURFACE_MEDIUM = lv_color_hex(0x222222);   // Cards, buttons
     static const lv_color_t SURFACE_LIGHT  = lv_color_hex(0x2a2a2a);   // Pressed states
+    static const lv_color_t SURFACE_DISABLED = lv_color_hex(0x111111); // Disabled controls
     
     // Primary accent (Bitcoin orange)
     static const lv_color_t PRIMARY        = lv_color_hex(0xFF9900);
@@ -20,7 +21,7 @@ namespace colors {
     // Text
     static const lv_color_t TEXT_PRIMARY   = lv_color_hex(0xFFFFFF);
     static const lv_color_t TEXT_SECONDARY = lv_color_hex(0xAAAAAA);
-    static const lv_color_t TEXT_DISABLED  = lv_color_hex(0x666666);
+    static const lv_color_t TEXT_DISABLED  = lv_color_hex(0x555555); // Darker for better contrast on dark surfaces
     
     // Semantic colors
     static const lv_color_t SUCCESS        = lv_color_hex(0x00AA00);
@@ -48,11 +49,17 @@ namespace typography {
 
 // Spacing and sizing
 namespace spacing {
-    constexpr lv_coord_t SCREEN_PADDING = 12;
-    constexpr lv_coord_t COMPONENT_PADDING = 8;
-    constexpr lv_coord_t BUTTON_HEIGHT = 48;
-    constexpr lv_coord_t BUTTON_RADIUS = 8;
-    constexpr lv_coord_t TOPBAR_HEIGHT = 52;
+    constexpr lv_coord_t SCREEN_PADDING = 8;
+    constexpr lv_coord_t COMPONENT_PADDING = 6;
+    constexpr lv_coord_t BUTTON_HEIGHT = 40;
+    constexpr lv_coord_t BUTTON_RADIUS = 4;
+    constexpr lv_coord_t TOPBAR_HEIGHT = 44;
+    constexpr lv_coord_t ROW_RADIUS = 4;
+    constexpr lv_coord_t ROW_PAD = 8;
+    constexpr lv_coord_t ROW_GAP = 6;
+    constexpr lv_coord_t CHIP_RADIUS = 4;
+    constexpr lv_coord_t CHIP_MARGIN = 4;
+    constexpr lv_coord_t CHIP_HEIGHT = 36;
 }
 
 // Style helpers
@@ -65,12 +72,29 @@ inline void apply_topbar_style(lv_obj_t* obj) {
 
 inline void apply_button_style(lv_obj_t* btn, bool is_primary = false) {
     lv_obj_set_style_radius(btn, spacing::BUTTON_RADIUS, 0);
+    lv_obj_set_style_bg_opa(btn, LV_OPA_COVER, 0);
     lv_obj_set_style_bg_color(btn, is_primary ? colors::PRIMARY : colors::SURFACE_MEDIUM, 0);
-    lv_obj_set_style_bg_color(btn, is_primary ? colors::PRIMARY_LIGHT : colors::SURFACE_LIGHT, LV_STATE_PRESSED);
-    lv_obj_set_style_bg_color(btn, colors::SURFACE_DARK, LV_STATE_DISABLED);
+    lv_obj_set_style_bg_color(btn, is_primary ? colors::PRIMARY_DARK : colors::SURFACE_LIGHT, LV_STATE_PRESSED);
+    lv_obj_set_style_bg_color(btn, colors::SURFACE_DISABLED, LV_STATE_DISABLED);
     lv_obj_set_style_text_color(btn, colors::TEXT_PRIMARY, 0);
+    lv_obj_set_style_text_color(btn, colors::TEXT_PRIMARY, LV_STATE_PRESSED);
     lv_obj_set_style_text_color(btn, colors::TEXT_DISABLED, LV_STATE_DISABLED);
-    lv_obj_set_style_border_width(btn, 0, 0);
+    lv_obj_set_style_border_width(btn, 1, 0);
+    lv_obj_set_style_border_color(btn, colors::BORDER, 0);
+    lv_obj_set_style_border_color(btn, is_primary ? colors::PRIMARY_LIGHT : colors::PRIMARY, LV_STATE_PRESSED);
+    lv_obj_set_style_border_color(btn, colors::DIVIDER, LV_STATE_DISABLED);
+    lv_obj_set_style_shadow_width(btn, 0, 0);
+    // Stronger press feedback: bigger shadow + visible translate
+    lv_obj_set_style_shadow_width(btn, 16, LV_STATE_PRESSED);
+    lv_obj_set_style_shadow_spread(btn, 2, LV_STATE_PRESSED);
+    lv_obj_set_style_shadow_color(btn, is_primary ? colors::PRIMARY : colors::BLACK, LV_STATE_PRESSED);
+    lv_obj_set_style_shadow_opa(btn, LV_OPA_50, LV_STATE_PRESSED);
+    lv_obj_set_style_translate_y(btn, 2, LV_STATE_PRESSED);
+    lv_obj_set_style_opa(btn, LV_OPA_50, LV_STATE_DISABLED);
+    // Focus ring for focused (non-pressed) buttons
+    lv_obj_set_style_outline_width(btn, 2, LV_STATE_FOCUSED);
+    lv_obj_set_style_outline_pad(btn, 1, LV_STATE_FOCUSED);
+    lv_obj_set_style_outline_color(btn, colors::PRIMARY, LV_STATE_FOCUSED);
 }
 
 inline void apply_card_style(lv_obj_t* card) {

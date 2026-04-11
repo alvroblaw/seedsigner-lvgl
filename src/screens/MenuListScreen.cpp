@@ -55,18 +55,23 @@ void MenuListScreen::create(const ScreenContext& context, const RouteDescriptor&
 
     if (!styles_initialized_) {
         lv_style_init(&row_style_);
-        lv_style_set_radius(&row_style_, 8);
-        lv_style_set_pad_all(&row_style_, 10);
-        lv_style_set_pad_gap(&row_style_, 8);
-        lv_style_set_bg_opa(&row_style_, LV_OPA_TRANSP);
+        lv_style_set_radius(&row_style_, seedsigner::lvgl::theme::spacing::ROW_RADIUS);
+        lv_style_set_pad_all(&row_style_, seedsigner::lvgl::theme::spacing::ROW_PAD);
+        lv_style_set_pad_gap(&row_style_, seedsigner::lvgl::theme::spacing::ROW_GAP);
+        lv_style_set_bg_opa(&row_style_, LV_OPA_COVER);
+        lv_style_set_bg_color(&row_style_, seedsigner::lvgl::theme::colors::SURFACE_MEDIUM);
         lv_style_set_border_width(&row_style_, 1);
         lv_style_set_border_color(&row_style_, seedsigner::lvgl::theme::colors::BORDER);
+        lv_style_set_text_color(&row_style_, seedsigner::lvgl::theme::colors::TEXT_PRIMARY);
 
         lv_style_init(&selected_row_style_);
-        lv_style_set_bg_opa(&selected_row_style_, LV_OPA_20);
+        lv_style_set_bg_opa(&selected_row_style_, LV_OPA_50);
         lv_style_set_bg_color(&selected_row_style_, seedsigner::lvgl::theme::colors::PRIMARY);
         lv_style_set_border_width(&selected_row_style_, 2);
-        lv_style_set_border_color(&selected_row_style_, seedsigner::lvgl::theme::colors::PRIMARY);
+        lv_style_set_border_color(&selected_row_style_, seedsigner::lvgl::theme::colors::PRIMARY_LIGHT);
+        lv_style_set_outline_width(&selected_row_style_, 2);
+        lv_style_set_outline_pad(&selected_row_style_, 1);
+        lv_style_set_outline_color(&selected_row_style_, seedsigner::lvgl::theme::colors::PRIMARY);
         styles_initialized_ = true;
     }
 
@@ -90,8 +95,8 @@ void MenuListScreen::create(const ScreenContext& context, const RouteDescriptor&
     // Content container (everything below the nav bar)
     content_container_ = lv_obj_create(container_);
     lv_obj_set_size(content_container_, lv_pct(100), lv_pct(100));
-    lv_obj_set_style_pad_all(content_container_, 12, 0);
-    lv_obj_set_style_pad_row(content_container_, 8, 0);
+    lv_obj_set_style_pad_all(content_container_, seedsigner::lvgl::theme::spacing::SCREEN_PADDING, 0);
+    lv_obj_set_style_pad_row(content_container_, seedsigner::lvgl::theme::spacing::ROW_GAP, 0);
     lv_obj_set_flex_flow(content_container_, LV_FLEX_FLOW_COLUMN);
     lv_obj_set_flex_align(content_container_, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
     lv_obj_set_flex_grow(content_container_, 1); // Take remaining height
@@ -103,7 +108,7 @@ void MenuListScreen::create(const ScreenContext& context, const RouteDescriptor&
     lv_obj_set_flex_flow(list_, LV_FLEX_FLOW_COLUMN);
     lv_obj_set_flex_align(list_, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
     lv_obj_set_style_pad_all(list_, 0, 0);
-    lv_obj_set_style_pad_row(list_, 8, 0);
+    lv_obj_set_style_pad_row(list_, seedsigner::lvgl::theme::spacing::ROW_GAP, 0);
 
     if (items_.empty()) {
         empty_state_ = lv_label_create(list_);
@@ -121,10 +126,14 @@ void MenuListScreen::create(const ScreenContext& context, const RouteDescriptor&
         const auto& item = items_[index];
         auto* button = lv_btn_create(list_);
         lv_obj_set_width(button, lv_pct(100));
-        lv_obj_set_style_min_height(button, item.secondary_text.empty() ? 46 : 64, 0);
+        lv_obj_set_style_min_height(button, item.secondary_text.empty() ? 38 : 52, 0);
         lv_obj_set_flex_flow(button, LV_FLEX_FLOW_ROW);
         lv_obj_set_flex_align(button, LV_FLEX_ALIGN_SPACE_BETWEEN, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
         lv_obj_add_style(button, &row_style_, LV_PART_MAIN);
+        lv_obj_set_style_bg_color(button, seedsigner::lvgl::theme::colors::SURFACE_LIGHT, LV_STATE_PRESSED);
+        lv_obj_set_style_border_color(button, seedsigner::lvgl::theme::colors::PRIMARY_LIGHT, LV_STATE_PRESSED);
+        lv_obj_set_style_translate_y(button, 2, LV_STATE_PRESSED);
+        lv_obj_set_style_border_width(button, 2, LV_STATE_PRESSED);
         lv_obj_add_event_cb(button, &MenuListScreen::on_item_event, LV_EVENT_FOCUSED, this);
         lv_obj_add_event_cb(button, &MenuListScreen::on_item_event, LV_EVENT_CLICKED, this);
 

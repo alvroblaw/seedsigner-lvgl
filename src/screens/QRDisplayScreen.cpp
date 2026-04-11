@@ -58,7 +58,7 @@ void QRDisplayScreen::create(const ScreenContext& context, const RouteDescriptor
     // Content container (everything below the nav bar)
     content_container_ = lv_obj_create(container_);
     lv_obj_set_size(content_container_, lv_pct(100), lv_pct(100));
-    lv_obj_set_style_pad_all(content_container_, 16, 0);
+    lv_obj_set_style_pad_all(content_container_, 10, 0);
     lv_obj_set_flex_flow(content_container_, LV_FLEX_FLOW_COLUMN);
     lv_obj_set_flex_align(content_container_, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
     lv_obj_set_flex_grow(content_container_, 1); // Take remaining height
@@ -72,7 +72,7 @@ void QRDisplayScreen::create(const ScreenContext& context, const RouteDescriptor
         return;
     }
     lv_qrcode_update(qr_widget_, params_.qr_data.c_str(), params_.qr_data.length());
-    lv_obj_set_style_pad_bottom(qr_widget_, 24, 0);
+    lv_obj_set_style_pad_bottom(qr_widget_, 12, 0);
 
     // Brightness overlay (black semi-transparent rectangle covering entire QR)
     brightness_overlay_ = lv_obj_create(qr_widget_);
