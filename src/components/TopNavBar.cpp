@@ -113,9 +113,9 @@ void TopNavBar::create_widgets() {
         lv_obj_t* img = lv_img_create(back_btn_);
         lv_img_set_src(img, &img_back);
         lv_obj_center(img);
-        lv_obj_set_style_img_recolor(img, seedsigner::lvgl::theme::colors::TEXT_PRIMARY, 0);
+        lv_obj_set_style_img_recolor(img, seedsigner::lvgl::theme::active_theme().TEXT_PRIMARY, 0);
         lv_obj_set_style_img_recolor_opa(img, LV_OPA_COVER, 0);
-        lv_obj_set_style_img_recolor(img, seedsigner::lvgl::theme::colors::PRIMARY, LV_STATE_PRESSED);
+        lv_obj_set_style_img_recolor(img, seedsigner::lvgl::theme::active_theme().PRIMARY, LV_STATE_PRESSED);
         lv_obj_set_style_img_recolor_opa(img, LV_OPA_COVER, LV_STATE_PRESSED);
         lv_obj_set_style_opa(img, LV_OPA_40, LV_STATE_DISABLED);
     }
@@ -129,9 +129,9 @@ void TopNavBar::create_widgets() {
         lv_obj_t* img = lv_img_create(home_btn_);
         lv_img_set_src(img, &img_home);
         lv_obj_center(img);
-        lv_obj_set_style_img_recolor(img, seedsigner::lvgl::theme::colors::TEXT_PRIMARY, 0);
+        lv_obj_set_style_img_recolor(img, seedsigner::lvgl::theme::active_theme().TEXT_PRIMARY, 0);
         lv_obj_set_style_img_recolor_opa(img, LV_OPA_COVER, 0);
-        lv_obj_set_style_img_recolor(img, seedsigner::lvgl::theme::colors::PRIMARY, LV_STATE_PRESSED);
+        lv_obj_set_style_img_recolor(img, seedsigner::lvgl::theme::active_theme().PRIMARY, LV_STATE_PRESSED);
         lv_obj_set_style_img_recolor_opa(img, LV_OPA_COVER, LV_STATE_PRESSED);
         lv_obj_set_style_opa(img, LV_OPA_40, LV_STATE_DISABLED);
         // If back also exists, add spacing via pad column (flex gap already set)
@@ -146,9 +146,9 @@ void TopNavBar::create_widgets() {
         lv_obj_t* img = lv_img_create(cancel_btn_);
         lv_img_set_src(img, &img_close);
         lv_obj_center(img);
-        lv_obj_set_style_img_recolor(img, seedsigner::lvgl::theme::colors::TEXT_PRIMARY, 0);
+        lv_obj_set_style_img_recolor(img, seedsigner::lvgl::theme::active_theme().TEXT_PRIMARY, 0);
         lv_obj_set_style_img_recolor_opa(img, LV_OPA_COVER, 0);
-        lv_obj_set_style_img_recolor(img, seedsigner::lvgl::theme::colors::PRIMARY, LV_STATE_PRESSED);
+        lv_obj_set_style_img_recolor(img, seedsigner::lvgl::theme::active_theme().PRIMARY, LV_STATE_PRESSED);
         lv_obj_set_style_img_recolor_opa(img, LV_OPA_COVER, LV_STATE_PRESSED);
         lv_obj_set_style_opa(img, LV_OPA_40, LV_STATE_DISABLED);
     }
@@ -156,7 +156,7 @@ void TopNavBar::create_widgets() {
     // Center title
     title_label_ = lv_label_create(container_);
     lv_label_set_text(title_label_, config_.title.c_str());
-    lv_obj_set_style_text_color(title_label_, seedsigner::lvgl::theme::colors::TEXT_PRIMARY, 0);
+    lv_obj_set_style_text_color(title_label_, seedsigner::lvgl::theme::active_theme().TEXT_PRIMARY, 0);
     lv_obj_set_style_text_font(title_label_, seedsigner::lvgl::theme::typography::TITLE, 0);
     lv_obj_set_flex_grow(title_label_, 1);
     lv_obj_set_style_text_align(title_label_, LV_TEXT_ALIGN_CENTER, 0);
@@ -175,8 +175,8 @@ void TopNavBar::create_widgets() {
         lv_obj_add_event_cb(btn, &TopNavBar::on_action_clicked, LV_EVENT_CLICKED, this);
         lv_obj_t* label = lv_label_create(btn);
         lv_label_set_text(label, action.label.c_str());
-        lv_obj_set_style_text_color(label, seedsigner::lvgl::theme::colors::TEXT_PRIMARY, 0);
-        lv_obj_set_style_text_color(label, seedsigner::lvgl::theme::colors::TEXT_DISABLED, LV_STATE_DISABLED);
+        lv_obj_set_style_text_color(label, seedsigner::lvgl::theme::active_theme().TEXT_PRIMARY, 0);
+        lv_obj_set_style_text_color(label, seedsigner::lvgl::theme::active_theme().TEXT_DISABLED, LV_STATE_DISABLED);
         lv_obj_center(label);
         action_buttons_.push_back(btn);
     }

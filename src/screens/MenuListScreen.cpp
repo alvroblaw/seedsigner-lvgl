@@ -59,19 +59,19 @@ void MenuListScreen::create(const ScreenContext& context, const RouteDescriptor&
         lv_style_set_pad_all(&row_style_, seedsigner::lvgl::theme::spacing::ROW_PAD);
         lv_style_set_pad_gap(&row_style_, seedsigner::lvgl::theme::spacing::ROW_GAP);
         lv_style_set_bg_opa(&row_style_, LV_OPA_COVER);
-        lv_style_set_bg_color(&row_style_, seedsigner::lvgl::theme::colors::SURFACE_MEDIUM);
+        lv_style_set_bg_color(&row_style_, seedsigner::lvgl::theme::active_theme().SURFACE_MEDIUM);
         lv_style_set_border_width(&row_style_, 1);
-        lv_style_set_border_color(&row_style_, seedsigner::lvgl::theme::colors::BORDER);
-        lv_style_set_text_color(&row_style_, seedsigner::lvgl::theme::colors::TEXT_PRIMARY);
+        lv_style_set_border_color(&row_style_, seedsigner::lvgl::theme::active_theme().BORDER);
+        lv_style_set_text_color(&row_style_, seedsigner::lvgl::theme::active_theme().TEXT_PRIMARY);
 
         lv_style_init(&selected_row_style_);
         lv_style_set_bg_opa(&selected_row_style_, LV_OPA_50);
-        lv_style_set_bg_color(&selected_row_style_, seedsigner::lvgl::theme::colors::PRIMARY);
+        lv_style_set_bg_color(&selected_row_style_, seedsigner::lvgl::theme::active_theme().PRIMARY);
         lv_style_set_border_width(&selected_row_style_, 2);
-        lv_style_set_border_color(&selected_row_style_, seedsigner::lvgl::theme::colors::PRIMARY_LIGHT);
+        lv_style_set_border_color(&selected_row_style_, seedsigner::lvgl::theme::active_theme().PRIMARY_LIGHT);
         lv_style_set_outline_width(&selected_row_style_, 2);
         lv_style_set_outline_pad(&selected_row_style_, 1);
-        lv_style_set_outline_color(&selected_row_style_, seedsigner::lvgl::theme::colors::PRIMARY);
+        lv_style_set_outline_color(&selected_row_style_, seedsigner::lvgl::theme::active_theme().PRIMARY);
         styles_initialized_ = true;
     }
 
@@ -130,8 +130,8 @@ void MenuListScreen::create(const ScreenContext& context, const RouteDescriptor&
         lv_obj_set_flex_flow(button, LV_FLEX_FLOW_ROW);
         lv_obj_set_flex_align(button, LV_FLEX_ALIGN_SPACE_BETWEEN, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
         lv_obj_add_style(button, &row_style_, LV_PART_MAIN);
-        lv_obj_set_style_bg_color(button, seedsigner::lvgl::theme::colors::SURFACE_LIGHT, LV_STATE_PRESSED);
-        lv_obj_set_style_border_color(button, seedsigner::lvgl::theme::colors::PRIMARY_LIGHT, LV_STATE_PRESSED);
+        lv_obj_set_style_bg_color(button, seedsigner::lvgl::theme::active_theme().SURFACE_LIGHT, LV_STATE_PRESSED);
+        lv_obj_set_style_border_color(button, seedsigner::lvgl::theme::active_theme().PRIMARY_LIGHT, LV_STATE_PRESSED);
         lv_obj_set_style_translate_y(button, 2, LV_STATE_PRESSED);
         lv_obj_set_style_border_width(button, 2, LV_STATE_PRESSED);
         lv_obj_add_event_cb(button, &MenuListScreen::on_item_event, LV_EVENT_FOCUSED, this);

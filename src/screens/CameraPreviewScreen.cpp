@@ -58,8 +58,8 @@ void CameraPreviewScreen::create(const ScreenContext& context, const RouteDescri
     frame_label_ = lv_label_create(preview_panel_);
     lv_obj_align(frame_label_, LV_ALIGN_BOTTOM_LEFT, 2, 2);
     lv_obj_set_style_bg_opa(frame_label_, LV_OPA_60, 0);
-    lv_obj_set_style_bg_color(frame_label_, seedsigner::lvgl::theme::colors::BLACK, 0);
-    lv_obj_set_style_text_color(frame_label_, seedsigner::lvgl::theme::colors::TEXT_PRIMARY, 0);
+    lv_obj_set_style_bg_color(frame_label_, seedsigner::lvgl::theme::active_theme().BLACK, 0);
+    lv_obj_set_style_text_color(frame_label_, seedsigner::lvgl::theme::active_theme().TEXT_PRIMARY, 0);
     lv_obj_set_style_pad_all(frame_label_, 4, 0);
 
     status_label_ = lv_label_create(content_container_);
