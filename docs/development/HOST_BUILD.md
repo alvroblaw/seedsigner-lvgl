@@ -95,7 +95,7 @@ The host path is intentionally minimal right now:
 
 - no SDL window or desktop renderer yet
 - no keyboard event loop wired to the executable
-- no screenshot/golden-image testing
+- screenshot capture is available (see [SCREENSHOTS.md](SCREENSHOTS.md)); golden-image diffing not yet implemented
 - visual work is validated indirectly through LVGL object creation plus headless flushes/events
 
 That makes this mode good for:
@@ -120,3 +120,5 @@ ctest --test-dir build --output-on-failure
 ```
 
 If you change screen composition or event behavior, keep the headless test suite green and update the demo payload to reflect the latest representative screen.
+
+For visual capture of all screens to PNG, see [SCREENSHOTS.md](SCREENSHOTS.md).

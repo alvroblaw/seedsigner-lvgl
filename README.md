@@ -52,7 +52,7 @@ The initial simulator target is deliberately headless. It uses LVGL with a dummy
 
 The repo now carries its own LVGL configuration in [`config/lv_conf.h`](config/lv_conf.h), so host builds do not require contributors to copy `lv_conf_template.h` or maintain a machine-local `lv_conf.h`.
 
-For Linux/macOS requirements and host-run caveats, see [`docs/development/HOST_BUILD.md`](docs/development/HOST_BUILD.md).
+For Linux/macOS requirements and host-run caveats, see [`docs/development/HOST_BUILD.md`](docs/development/HOST_BUILD.md). For automated screen capture to PNG, see [`docs/development/SCREENSHOTS.md`](docs/development/SCREENSHOTS.md).
 
 ## Expected deliverables in this repo
 
