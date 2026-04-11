@@ -72,9 +72,9 @@ void SettingsMenuScreen::create(const ScreenContext& context, const RouteDescrip
 
     if (!styles_initialized_) {
         lv_style_init(&row_style_);
-        lv_style_set_radius(&row_style_, 8);
-        lv_style_set_pad_all(&row_style_, 10);
-        lv_style_set_pad_gap(&row_style_, 8);
+        lv_style_set_radius(&row_style_, seedsigner::lvgl::theme::spacing::ROW_RADIUS);
+        lv_style_set_pad_all(&row_style_, seedsigner::lvgl::theme::spacing::ROW_PAD);
+        lv_style_set_pad_gap(&row_style_, seedsigner::lvgl::theme::spacing::ROW_GAP);
         lv_style_set_bg_opa(&row_style_, LV_OPA_COVER);
         lv_style_set_bg_color(&row_style_, seedsigner::lvgl::theme::colors::SURFACE_MEDIUM);
         lv_style_set_border_width(&row_style_, 1);
@@ -122,8 +122,8 @@ void SettingsMenuScreen::create(const ScreenContext& context, const RouteDescrip
     lv_obj_set_scroll_dir(content_container_, LV_DIR_VER);
     lv_obj_set_flex_flow(content_container_, LV_FLEX_FLOW_COLUMN);
     lv_obj_set_flex_align(content_container_, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
-    lv_obj_set_style_pad_all(content_container_, 12, 0);
-    lv_obj_set_style_pad_row(content_container_, 8, 0);
+    lv_obj_set_style_pad_all(content_container_, seedsigner::lvgl::theme::spacing::SCREEN_PADDING, 0);
+    lv_obj_set_style_pad_row(content_container_, seedsigner::lvgl::theme::spacing::ROW_GAP, 0);
 
     if (!help_text_.empty()) {
         help_label_ = lv_label_create(content_container_);
@@ -140,7 +140,7 @@ void SettingsMenuScreen::create(const ScreenContext& context, const RouteDescrip
     lv_obj_set_flex_flow(list_, LV_FLEX_FLOW_COLUMN);
     lv_obj_set_flex_align(list_, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
     lv_obj_set_style_pad_all(list_, 0, 0);
-    lv_obj_set_style_pad_row(list_, 8, 0);
+    lv_obj_set_style_pad_row(list_, seedsigner::lvgl::theme::spacing::ROW_GAP, 0);
 
     if (definitions_.empty()) {
         empty_state_ = lv_label_create(list_);
@@ -158,7 +158,7 @@ void SettingsMenuScreen::create(const ScreenContext& context, const RouteDescrip
         const auto& definition = definitions_[index];
         auto* button = lv_btn_create(list_);
         lv_obj_set_width(button, lv_pct(100));
-        lv_obj_set_style_min_height(button, definition.help_text.empty() ? 46 : 64, 0);
+        lv_obj_set_style_min_height(button, definition.help_text.empty() ? 38 : 52, 0);
         lv_obj_set_flex_flow(button, LV_FLEX_FLOW_ROW);
         lv_obj_set_flex_align(button, LV_FLEX_ALIGN_SPACE_BETWEEN, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
         lv_obj_add_style(button, &row_style_, LV_PART_MAIN);

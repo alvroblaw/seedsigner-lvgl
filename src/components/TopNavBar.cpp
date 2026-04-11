@@ -17,7 +17,7 @@ constexpr const char* kCancelAction = "cancel_requested";
 constexpr const char* kCustomAction = "action_invoked";
 
 constexpr lv_coord_t kDefaultHeight = theme::spacing::TOPBAR_HEIGHT;
-constexpr lv_coord_t kButtonWidth = 48;
+constexpr lv_coord_t kButtonWidth = 40;
 constexpr lv_coord_t kButtonHeight = theme::spacing::BUTTON_HEIGHT;
 constexpr lv_coord_t kPadding = theme::spacing::COMPONENT_PADDING;
 constexpr lv_coord_t kTitleFontSize = 18; // Overridden by theme font

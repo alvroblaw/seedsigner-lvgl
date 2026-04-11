@@ -19,8 +19,8 @@ constexpr const char* kDefaultWarningText = "Never digitize these words. Store t
 constexpr const char* kDefaultTitle = "Seed Words";
 
 constexpr int kChipWidth = 100;  // adjust based on screen size
-constexpr int kChipHeight = 40;
-constexpr int kChipMargin = 6;
+constexpr int kChipHeight = theme::spacing::CHIP_HEIGHT;
+constexpr int kChipMargin = theme::spacing::CHIP_MARGIN;
 
 const char* value_or(const PropertyMap& values, const char* key, const char* fallback) {
     const auto it = values.find(key);
@@ -40,21 +40,21 @@ void SeedWordsScreen::create(const ScreenContext& context, const RouteDescriptor
     // Initialize styles if needed
     if (!styles_initialized_) {
         lv_style_init(&chip_style_);
-        lv_style_set_radius(&chip_style_, 8);
+        lv_style_set_radius(&chip_style_, seedsigner::lvgl::theme::spacing::CHIP_RADIUS);
         lv_style_set_bg_opa(&chip_style_, LV_OPA_20);
         lv_style_set_bg_color(&chip_style_, seedsigner::lvgl::theme::colors::SURFACE_MEDIUM);
         lv_style_set_border_width(&chip_style_, 1);
         lv_style_set_border_color(&chip_style_, seedsigner::lvgl::theme::colors::BORDER);
-        lv_style_set_pad_all(&chip_style_, 8);
+        lv_style_set_pad_all(&chip_style_, 6);
         lv_style_set_text_color(&chip_style_, seedsigner::lvgl::theme::colors::TEXT_PRIMARY);
         
         lv_style_init(&warning_chip_style_);
-        lv_style_set_radius(&warning_chip_style_, 8);
+        lv_style_set_radius(&warning_chip_style_, seedsigner::lvgl::theme::spacing::CHIP_RADIUS);
         lv_style_set_bg_opa(&warning_chip_style_, LV_OPA_20);
         lv_style_set_bg_color(&warning_chip_style_, seedsigner::lvgl::theme::colors::PRIMARY);
         lv_style_set_border_width(&warning_chip_style_, 2);
         lv_style_set_border_color(&warning_chip_style_, seedsigner::lvgl::theme::colors::PRIMARY);
-        lv_style_set_pad_all(&warning_chip_style_, 8);
+        lv_style_set_pad_all(&warning_chip_style_, 6);
         lv_style_set_text_color(&warning_chip_style_, seedsigner::lvgl::theme::colors::TEXT_PRIMARY);
         styles_initialized_ = true;
     }
@@ -84,14 +84,14 @@ void SeedWordsScreen::create(const ScreenContext& context, const RouteDescriptor
     lv_obj_set_scroll_dir(content_container_, LV_DIR_VER);
     lv_obj_set_flex_flow(content_container_, LV_FLEX_FLOW_COLUMN);
     lv_obj_set_flex_align(content_container_, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
-    lv_obj_set_style_pad_all(content_container_, 12, 0);
+    lv_obj_set_style_pad_all(content_container_, seedsigner::lvgl::theme::spacing::SCREEN_PADDING, 0);
     
     // Page indicator
     page_label_ = lv_label_create(content_container_);
     lv_obj_set_width(page_label_, lv_pct(100));
     lv_label_set_text_fmt(page_label_, "Page %d/%d", current_page_ + 1, total_pages_);
     lv_obj_set_style_text_align(page_label_, LV_TEXT_ALIGN_CENTER, 0);
-    lv_obj_set_style_pad_bottom(page_label_, 12, 0);
+    lv_obj_set_style_pad_bottom(page_label_, 8, 0);
     
     // Warning text
     const std::string warning = params_.warning_text.value_or(kDefaultWarningText);
@@ -101,7 +101,7 @@ void SeedWordsScreen::create(const ScreenContext& context, const RouteDescriptor
     lv_label_set_text(warning_label_, warning.c_str());
     lv_obj_set_style_text_align(warning_label_, LV_TEXT_ALIGN_CENTER, 0);
     lv_obj_set_style_text_color(warning_label_, seedsigner::lvgl::theme::colors::WARNING, 0);
-    lv_obj_set_style_pad_bottom(warning_label_, 16, 0);
+    lv_obj_set_style_pad_bottom(warning_label_, 10, 0);
     
     // Words container (grid)
     words_container_ = lv_obj_create(content_container_);

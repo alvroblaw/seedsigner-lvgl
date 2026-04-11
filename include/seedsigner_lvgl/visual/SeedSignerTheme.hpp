@@ -49,11 +49,17 @@ namespace typography {
 
 // Spacing and sizing
 namespace spacing {
-    constexpr lv_coord_t SCREEN_PADDING = 12;
-    constexpr lv_coord_t COMPONENT_PADDING = 8;
-    constexpr lv_coord_t BUTTON_HEIGHT = 48;
-    constexpr lv_coord_t BUTTON_RADIUS = 8;
-    constexpr lv_coord_t TOPBAR_HEIGHT = 52;
+    constexpr lv_coord_t SCREEN_PADDING = 8;
+    constexpr lv_coord_t COMPONENT_PADDING = 6;
+    constexpr lv_coord_t BUTTON_HEIGHT = 40;
+    constexpr lv_coord_t BUTTON_RADIUS = 4;
+    constexpr lv_coord_t TOPBAR_HEIGHT = 44;
+    constexpr lv_coord_t ROW_RADIUS = 4;
+    constexpr lv_coord_t ROW_PAD = 8;
+    constexpr lv_coord_t ROW_GAP = 6;
+    constexpr lv_coord_t CHIP_RADIUS = 4;
+    constexpr lv_coord_t CHIP_MARGIN = 4;
+    constexpr lv_coord_t CHIP_HEIGHT = 36;
 }
 
 // Style helpers
