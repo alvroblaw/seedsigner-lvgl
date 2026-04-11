@@ -57,7 +57,7 @@ RowWidgets create_row(lv_obj_t* parent, const char* icon_symbol, const char* tex
         widgets.value = lv_label_create(widgets.container);
         lv_label_set_text(widgets.value, value_text);
         lv_obj_set_style_pad_left(widgets.value, 8, 0);
-        lv_obj_set_style_text_color(widgets.value, seedsigner::lvgl::theme::colors::TEXT_SECONDARY, 0);
+        lv_obj_set_style_text_color(widgets.value, seedsigner::lvgl::theme::active_theme().TEXT_SECONDARY, 0);
         lv_obj_set_flex_grow(widgets.value, 1);
         lv_obj_set_style_text_align(widgets.value, LV_TEXT_ALIGN_RIGHT, 0);
     } else {
@@ -130,7 +130,7 @@ void PSBTMathScreen::create(const ScreenContext& context, const RouteDescriptor&
     // Footer hint
     footer_label_ = lv_label_create(content_container_);
     lv_label_set_text(footer_label_, "Press OK to continue, BACK to cancel");
-    lv_obj_set_style_text_color(footer_label_, seedsigner::lvgl::theme::colors::TEXT_SECONDARY, 0);
+    lv_obj_set_style_text_color(footer_label_, seedsigner::lvgl::theme::active_theme().TEXT_SECONDARY, 0);
     lv_obj_set_style_text_align(footer_label_, LV_TEXT_ALIGN_CENTER, 0);
     lv_obj_set_width(footer_label_, lv_pct(100));
     lv_obj_set_style_pad_top(footer_label_, 16, 0);

@@ -197,12 +197,12 @@ const lv_img_dsc_t* WarningScreen::severity_to_icon(WarningSeverity severity) {
 lv_color_t WarningScreen::severity_to_title_color(WarningSeverity severity) {
     switch (severity) {
     case WarningSeverity::Error:
-        return seedsigner::lvgl::theme::colors::ERROR;
+        return seedsigner::lvgl::theme::active_theme().ERROR;
     case WarningSeverity::DireWarning:
-        return seedsigner::lvgl::theme::colors::WARNING; // Orange-amber
+        return seedsigner::lvgl::theme::active_theme().WARNING; // Orange-amber
     case WarningSeverity::Warning:
     default:
-        return seedsigner::lvgl::theme::colors::WARNING; // Amber for both warning levels
+        return seedsigner::lvgl::theme::active_theme().WARNING; // Amber for both warning levels
     }
 }
 
