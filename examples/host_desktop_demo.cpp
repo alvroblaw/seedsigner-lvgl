@@ -14,6 +14,7 @@
 
 #include <cstdio>
 #include <cstdlib>
+#include <functional>
 #include <memory>
 #include <string>
 #include <vector>
@@ -123,15 +124,6 @@ int main(int argc, char** argv) {
 
     constexpr uint32_t Scale = 2;
 
-    lv_init();
-    auto sdl = std::make_unique<SdlDisplay>(kProfiles[0].w, kProfiles[0].h, Scale);
-    sdl->enable_pointer();
-
-    UiRuntime runtime(RuntimeConfig{.width = kProfiles[0].w, .height = kProfiles[0].h, .skip_native_display = true});
-    runtime.init();
-
-    register_routes(runtime.screen_registry());
-
     // ---- Scenario mode (headless) ----
     if (!scenario_path.empty()) {
         // Run scenario in headless mode (no SDL window) so screenshots work.
@@ -152,61 +144,90 @@ int main(int argc, char** argv) {
     }
     // ---- End scenario mode ----
 
-    auto go = [&](const DemoScreen& ds) {
-        runtime.activate({.route_id = RouteId{ds.route}, .args = ds.args});
-        while (runtime.next_event()) {}
+    struct ActiveSession {
+        std::unique_ptr<SdlDisplay> sdl;
+        std::unique_ptr<UiRuntime> runtime;
+        std::function<void(const DemoScreen&)> go;
     };
-    go(kDemoScreens[0]);
+
+    auto make_session = [&](int idx) -> ActiveSession {
+        const auto& p = kProfiles[idx];
+        lv_init();
+
+        auto sdl = std::make_unique<SdlDisplay>(p.w, p.h, Scale);
+        sdl->enable_pointer();
+
+        auto runtime = std::make_unique<UiRuntime>(RuntimeConfig{
+            .width = p.w,
+            .height = p.h,
+            .skip_native_display = true,
+        });
+        runtime->init();
+        register_routes(runtime->screen_registry());
+
+        auto go = [runtime_ptr = runtime.get()](const DemoScreen& ds) {
+            runtime_ptr->activate({.route_id = RouteId{ds.route}, .args = ds.args});
+            while (runtime_ptr->next_event()) {}
+        };
+
+        return ActiveSession{
+            .sdl = std::move(sdl),
+            .runtime = std::move(runtime),
+            .go = std::move(go),
+        };
+    };
+
+    auto session = make_session(profile_idx);
+    session.go(kDemoScreens[0]);
 
     std::printf("Screens:\n");
     for (const auto& ds : kDemoScreens) std::printf("  [%d] %s\n", ds.key, ds.label);
     std::printf("\n");
 
     bool running = true;
-    while (running && !sdl->should_quit()) {
+    while (running && !session.sdl->should_quit()) {
         SDL_Event ev;
         while (SDL_PollEvent(&ev)) {
             if (ev.type == SDL_QUIT) { running = false; break; }
 
-            // Feed mouse/touch events to LVGL pointer indev.
-            sdl->handle_mouse_event(ev);
+            session.sdl->handle_mouse_event(ev);
 
             if (ev.type != SDL_KEYDOWN) continue;
             const SDL_Keycode sym = ev.key.keysym.sym;
 
-            // Number keys → screen switch
             bool switched = false;
             for (const auto& ds : kDemoScreens) {
                 if (sym == SDLK_0 + ds.key) {
                     std::printf("[switch] → %s\n", ds.label);
-                    go(ds);
+                    session.go(ds);
                     switched = true;
                     break;
                 }
             }
             if (switched) continue;
 
-            // F2 → cycle display profile
+            // Full teardown + reinit is safer than hot-swapping LVGL's
+            // display driver, which left stale state and caused corruption
+            // after subsequent input interaction.
             if (sym == SDLK_F2) {
                 profile_idx = (profile_idx + 1) % 2;
                 const auto& p = kProfiles[profile_idx];
-                std::printf("[profile] switching to %s\n", p.name);
-                sdl->switch_resolution(p.w, p.h);
-                profile::set_profile(profile::match(
-                    static_cast<lv_coord_t>(p.w),
-                    static_cast<lv_coord_t>(p.h)));
-                // Re-activate the first demo screen to rebuild the UI at the new resolution.
-                go(kDemoScreens[0]);
+                std::printf("[profile] full reinit → %s\n", p.name);
+
+                session.go = {};
+                session.runtime.reset();
+                session.sdl.reset();
+                session = make_session(profile_idx);
+                session.go(kDemoScreens[0]);
                 continue;
             }
 
-            // Navigation keys → runtime input
             if (auto input = map_key(sym)) {
-                runtime.send_input(*input);
-                while (auto uev = runtime.next_event()) {
+                session.runtime->send_input(*input);
+                while (auto uev = session.runtime->next_event()) {
                     if (uev->type == EventType::CancelRequested) {
                         std::printf("[back] returning to menu\n");
-                        go(kDemoScreens[0]);
+                        session.go(kDemoScreens[0]);
                     } else if (uev->type == EventType::ActionInvoked && uev->meta) {
                         std::printf("[action] key=%s\n", uev->meta->key.c_str());
                     }
@@ -214,10 +235,8 @@ int main(int argc, char** argv) {
             }
         }
 
-        runtime.tick(8);
-        sdl->refresh();
-
-        // Small sleep to avoid busy-loop (~60 fps).
+        session.runtime->tick(8);
+        session.sdl->refresh();
         SDL_Delay(8);
     }
 
