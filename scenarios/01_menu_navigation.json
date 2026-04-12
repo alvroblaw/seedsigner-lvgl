@@ -1,0 +1,17 @@
+{
+  "_doc": "Navigate main menu, scroll through items, verify no crash.",
+  "default_delay_ms": 50,
+  "steps": [
+    { "action": "activate", "route": "suite.menu",
+      "args": {
+        "title": "SeedSigner",
+        "items": "scan|Scan QR|Point camera at a QR code|chevron\nseeds|Seeds|Load or generate a seed|chevron\ntools|Tools|Signing tools and utilities|chevron\nsettings|Settings|Device configuration|chevron"
+      }},
+    { "action": "screenshot", "path": "scenarios/out/01_menu_initial.png" },
+    { "action": "input", "key": "Down" },
+    { "action": "input", "key": "Down" },
+    { "action": "screenshot", "path": "scenarios/out/01_menu_highlight_tools.png" },
+    { "action": "input", "key": "Up" },
+    { "action": "screenshot", "path": "scenarios/out/01_menu_back_up.png" }
+  ]
+}

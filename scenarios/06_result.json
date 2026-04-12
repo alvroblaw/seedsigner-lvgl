@@ -1,0 +1,9 @@
+{
+  "_doc": "Result screen showing success.",
+  "default_delay_ms": 50,
+  "steps": [
+    { "action": "activate", "route": "suite.result",
+      "args": { "title": "Signed Successfully", "body": "Transaction signed and QR\ndisplayed for broadcast.", "continue_action": "done" }},
+    { "action": "screenshot", "path": "scenarios/out/06_result.png" }
+  ]
+}

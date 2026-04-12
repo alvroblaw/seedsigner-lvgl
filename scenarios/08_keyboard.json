@@ -1,0 +1,12 @@
+{
+  "_doc": "Keyboard input screen.",
+  "default_delay_ms": 50,
+  "steps": [
+    { "action": "activate", "route": "suite.keyboard",
+      "args": { "layout": "lowercase", "placeholder": "Enter passphrase", "max_length": "64" }},
+    { "action": "screenshot", "path": "scenarios/out/08_keyboard.png" },
+    { "action": "input", "key": "Right" },
+    { "action": "input", "key": "Down" },
+    { "action": "screenshot", "path": "scenarios/out/08_keyboard_navigated.png" }
+  ]
+}

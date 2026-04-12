@@ -1,0 +1,9 @@
+{
+  "_doc": "Error screen with retry button.",
+  "default_delay_ms": 50,
+  "steps": [
+    { "action": "activate", "route": "suite.error",
+      "args": { "title": "Scan Failed", "body": "Could not decode QR code.\nTry again with better lighting.", "button_text": "Retry" }},
+    { "action": "screenshot", "path": "scenarios/out/04_error.png" }
+  ]
+}

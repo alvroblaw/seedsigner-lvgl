@@ -1,0 +1,22 @@
+{
+  "_doc": "Settings selection screen: single-choice language picker.",
+  "default_delay_ms": 50,
+  "steps": [
+    { "action": "activate", "route": "suite.settings",
+      "args": {
+        "title": "Settings",
+        "subtitle": "Language",
+        "section_title": "Display language",
+        "help_text": "Choose one language.",
+        "footer_text": "Press to apply.",
+        "value_type": "single",
+        "default_values": "en",
+        "current_values": "en",
+        "items": "en|English|Default Latin font\nes|Español|Accented glyphs\nfr|Français|Wider Latin coverage",
+        "selected_index": "0"
+      }},
+    { "action": "screenshot", "path": "scenarios/out/02_settings_initial.png" },
+    { "action": "input", "key": "Down" },
+    { "action": "screenshot", "path": "scenarios/out/02_settings_highlight_es.png" }
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "_doc": "Dire warning screen for destructive actions.",
+  "default_delay_ms": 50,
+  "steps": [
+    { "action": "activate", "route": "suite.dire_warning",
+      "args": { "title": "DANGER", "body": "You are about to sign a transaction\nthat sends ALL funds to a single address.\n\nThis cannot be undone.", "button_text": "I Accept the Risk" }},
+    { "action": "screenshot", "path": "scenarios/out/05_dire_warning.png" }
+  ]
+}

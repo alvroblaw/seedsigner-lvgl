@@ -1,0 +1,17 @@
+{
+  "_doc": "PSBT overview screen.",
+  "default_delay_ms": 50,
+  "steps": [
+    { "action": "activate", "route": "suite.psbt_overview",
+      "args": {
+        "total_amount": "0.005 BTC",
+        "fee_amount": "0.0001 BTC",
+        "change_amount": "0.0049 BTC",
+        "inputs_count": "2",
+        "outputs_count": "2",
+        "network": "mainnet",
+        "recipient_label": "bc1qexample..."
+      }},
+    { "action": "screenshot", "path": "scenarios/out/10_psbt_overview.png" }
+  ]
+}

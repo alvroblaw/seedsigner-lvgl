@@ -106,6 +106,14 @@ if(BUILD_HOST_DESKTOP)
   )
   target_link_libraries(host_desktop_demo PRIVATE seedsigner_lvgl ${SDL2_LIBRARIES} nlohmann_json::nlohmann_json)
   target_compile_options(host_desktop_demo PRIVATE ${SDL2_CFLAGS_OTHER})
+
+  # --- Scenario validation suite (headless) ---
+  add_executable(scenario_suite_runner
+    tests/scenario_suite_runner.cpp
+    src/desktop/ScenarioRunner.cpp
+  )
+  target_link_libraries(scenario_suite_runner PRIVATE seedsigner_lvgl nlohmann_json::nlohmann_json)
+  target_compile_definitions(scenario_suite_runner PRIVATE SOURCE_ROOT="${CMAKE_SOURCE_DIR}")
 endif()
 
 if(BUILD_TESTING)
@@ -129,4 +137,13 @@ if(BUILD_TESTING)
   )
   target_link_libraries(input_profile_tests PRIVATE seedsigner_lvgl)
   add_test(NAME input_profile_tests COMMAND input_profile_tests)
+
+  # Scenario suite as a test target (requires BUILD_HOST_DESKTOP for nlohmann_json)
+  if(BUILD_HOST_DESKTOP)
+    add_test(NAME scenario_suite
+      COMMAND scenario_suite_runner
+      WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+    set_tests_properties(scenario_suite PROPERTIES
+      ENVIRONMENT "SCENARIO_DIR=${CMAKE_SOURCE_DIR}/scenarios;SCENARIO_OUT_DIR=${CMAKE_BINARY_DIR}/scenario_out")
+  endif()
 endif()
