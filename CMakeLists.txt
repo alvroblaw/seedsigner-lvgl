@@ -89,14 +89,22 @@ if(BUILD_HOST_DESKTOP)
   find_package(PkgConfig REQUIRED)
   pkg_check_modules(SDL2 REQUIRED sdl2)
 
+  # nlohmann/json for scenario loader
+  FetchContent_Declare(
+    nlohmann_json
+    URL https://github.com/nlohmann/json/releases/download/v3.11.3/json.tar.xz
+  )
+  FetchContent_MakeAvailable(nlohmann_json)
+
   add_executable(host_desktop_demo
     examples/host_desktop_demo.cpp
     src/platform/SdlDisplay.cpp
+    src/desktop/ScenarioRunner.cpp
   )
   target_include_directories(host_desktop_demo PRIVATE
     ${SDL2_INCLUDE_DIRS}
   )
-  target_link_libraries(host_desktop_demo PRIVATE seedsigner_lvgl ${SDL2_LIBRARIES})
+  target_link_libraries(host_desktop_demo PRIVATE seedsigner_lvgl ${SDL2_LIBRARIES} nlohmann_json::nlohmann_json)
   target_compile_options(host_desktop_demo PRIVATE ${SDL2_CFLAGS_OTHER})
 endif()
 

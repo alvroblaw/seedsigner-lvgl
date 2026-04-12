@@ -13,12 +13,15 @@
 //   ./build-desktop/host_desktop_demo
 
 #include <cstdio>
+#include <cstdlib>
 #include <memory>
 #include <string>
 #include <vector>
 
 #include <SDL.h>
 #include <lvgl.h>
+
+#include "seedsigner_lvgl/desktop/ScenarioRunner.hpp"
 
 #include "seedsigner_lvgl/platform/SdlDisplay.hpp"
 #include "seedsigner_lvgl/visual/DisplayProfile.hpp"
@@ -92,8 +95,21 @@ static std::optional<InputEvent> map_key(SDL_Keycode sym) {
     }
 }
 
-int main() {
+static std::string find_arg(int argc, char** argv, const std::string& flag) {
+    for (int i = 1; i < argc - 1; ++i) {
+        if (argv[i] == flag) return argv[i + 1];
+    }
+    return {};
+}
+
+int main(int argc, char** argv) {
+    const std::string scenario_path = find_arg(argc, argv, "--scenario");
+    const bool interactive = (scenario_path.empty()) || (find_arg(argc, argv, "--interactive") == "true");
+
     std::printf("=== SeedSigner LVGL Interactive Desktop Demo ===\n");
+    if (!scenario_path.empty()) {
+        std::printf("Scenario mode: %s\n", scenario_path.c_str());
+    }
     std::printf("Keys: arrows=nav  Enter=select  Esc=back/quit  1-5=switch screen  F2=switch profile\n");
     std::printf("Mouse: click/tap to interact with touch-oriented screens\n\n");
 
@@ -115,6 +131,26 @@ int main() {
     runtime.init();
 
     register_routes(runtime.screen_registry());
+
+    // ---- Scenario mode (headless) ----
+    if (!scenario_path.empty()) {
+        // Run scenario in headless mode (no SDL window) so screenshots work.
+        UiRuntime headless_rt(RuntimeConfig{.width = kProfiles[0].w, .height = kProfiles[0].h});
+        headless_rt.init();
+        register_routes(headless_rt.screen_registry());
+
+        auto res = ScenarioRunner::load_and_run(scenario_path, headless_rt,
+                                                 kProfiles[0].w, kProfiles[0].h);
+        if (!res.ok) {
+            std::fprintf(stderr, "Scenario failed after %d steps: %s\n",
+                         res.steps_run, res.error.c_str());
+            return 1;
+        }
+        std::printf("Scenario completed: %d steps\n", res.steps_run);
+        if (!interactive) return 0;
+        std::printf("Dropping into interactive mode...\n\n");
+    }
+    // ---- End scenario mode ----
 
     auto go = [&](const DemoScreen& ds) {
         runtime.activate({.route_id = RouteId{ds.route}, .args = ds.args});

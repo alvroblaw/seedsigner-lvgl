@@ -1,0 +1,24 @@
+{
+  "profile": [240, 320],
+  "default_delay_ms": 80,
+  "steps": [
+    {
+      "action": "activate",
+      "route": "demo.menu",
+      "args": {
+        "title": "Main Menu",
+        "items": "settings|Settings|Configure the device|chevron\nscan|Scan QR|Open camera to scan a QR code|chevron\ntools|Tools|Seed tools and utilities|chevron\ninfo|About|Device info & version|chevron"
+      }
+    },
+    { "action": "screenshot", "path": "scenario/main_menu.png" },
+    { "action": "input", "key": "Down", "delay_ms": 100 },
+    { "action": "input", "key": "Down", "delay_ms": 100 },
+    { "action": "screenshot", "path": "scenario/main_menu_scan_highlighted.png" },
+    { "action": "input", "key": "Back" },
+    { "action": "activate",
+      "route": "demo.result",
+      "args": { "title": "Success", "body": "Scenario replay complete!" }
+    },
+    { "action": "screenshot", "path": "scenario/result_screen.png" }
+  ]
+}
