@@ -9,6 +9,7 @@ enum class InputKey {
     Right,
     Press,
     Back,
+    ProfileSwitch,
 };
 
 struct InputEvent {
