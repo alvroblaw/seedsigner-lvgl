@@ -1,15 +1,28 @@
 # Screenshot Visual Regression
 
 This document describes the screenshot diff / visual regression tooling added
-in support of issue #69.
+in support of issue #69, with multi-profile coverage added in issue #73.
 
 ## Overview
 
 The `tools/screenshot_diff.py` script compares PNG screenshots produced by the
 `screenshot_tests` binary against a committed golden baseline and generates:
 
-- **Pixel-diff images** in `screenshots_diff/` (red intensity = magnitude of per-pixel change)
-- **JSON report** at `screenshot_diff_report.json` with per-image diff scores
+- **Pixel-diff images** in `screenshots_diff/<profile>/` (red intensity = magnitude of per-pixel change)
+- **JSON report** at `screenshot_diff_report.json` with per-image diff scores, grouped by display profile
+
+## Display Profiles
+
+Screenshots are captured **per display profile**, producing output in
+profile-scoped subdirectories under `screenshots/`:
+
+| Profile | Directory | Resolution |
+|---------|-----------|------------|
+| Square 240×240 | `screenshots/square_240x240/` | Original SeedSigner hardware |
+| Portrait 240×320 | `screenshots/portrait_240x320/` | Waveshare-style portrait hat (default) |
+
+The **default portrait profile** is also copied as flat files into `screenshots/`
+for backward compatibility with tools or scripts that expect the old flat layout.
 
 ## Quick Start
 
@@ -47,14 +60,17 @@ python3 tools/screenshot_diff.py
 
 ## How It Works
 
-1. `screenshot_tests` renders each screen to `screenshots/*.png` via the
-   headless LVGL framebuffer capture path. Each screen runs in a **forked child
-   process** to prevent LVGL state leakage between captures.
-2. Output is always written to `screenshots/` **at the repo root**, regardless
+1. `screenshot_tests` renders each screen for **each display profile** to
+   `screenshots/<profile>/*.png` via the headless LVGL framebuffer capture path.
+   Each screen runs in a **forked child process** to prevent LVGL state leakage
+   between captures. The `RuntimeConfig` (width/height) is set per profile so
+   that LVGL and the `DisplayProfile` system configure correctly.
+2. Output is always written under `screenshots/` **at the repo root**, regardless
    of the build directory or CWD. This is achieved via a `SOURCE_ROOT` compile
-   definition injected by CMake.
-3. `screenshot_diff.py` compares every PNG against the matching file in
-   `screenshots_baseline/`.
+   definition injected by CMake. The default portrait profile is also copied as
+   flat files into `screenshots/` for backward compatibility.
+3. `screenshot_diff.py` iterates over profile subdirectories, comparing every
+   PNG against the matching file in `screenshots_baseline/<profile>/`.
 4. For each pair it computes a **mean absolute pixel difference** (0–255 scale
    across all RGBA bytes) and writes a diff image highlighting changed pixels.
 5. If any image's score exceeds the threshold (default 1.0), the tool exits
@@ -118,7 +134,9 @@ absolute-difference image with a threshold gate is reused here.
 | Path | Purpose |
 |------|---------|
 | `Makefile` | Top-level convenience targets |
-| `tools/screenshot_diff.py` | Diff script |
-| `screenshots_baseline/` | Golden reference images (committed) |
-| `screenshots_diff/` | Generated diff images (git-ignored) |
+| `tools/screenshot_diff.py` | Diff script (multi-profile aware) |
+| `screenshots/<profile>/` | Profile-scoped generated screenshots |
+| `screenshots/*.png` | Flat backward-compat copy of default profile |
+| `screenshots_baseline/<profile>/` | Golden reference images per profile (committed) |
+| `screenshots_diff/<profile>/` | Generated diff images per profile (git-ignored) |
 | `screenshot_diff_report.json` | Machine-readable report (git-ignored) |

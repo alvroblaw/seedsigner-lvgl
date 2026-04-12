@@ -6,6 +6,7 @@
 #include <sys/stat.h>
 #include <sys/wait.h>
 #include <unistd.h>
+#include <filesystem>
 #include <vector>
 
 #include <lvgl.h>
@@ -29,8 +30,10 @@
 #include "seedsigner_lvgl/contracts/KeyboardContract.hpp"
 #include "seedsigner_lvgl/contracts/SeedWordsContract.hpp"
 #include "seedsigner_lvgl/contracts/PSBTOverviewContract.hpp"
+#include "seedsigner_lvgl/visual/DisplayProfile.hpp"
 
 using namespace seedsigner::lvgl;
+using namespace seedsigner::lvgl::profile;
 
 // Resolve output directory relative to repo root (where this file's parent directory lives), falling back to CWD-relative "screenshots" if unavailable.
 // This ensures correct output regardless of where the binary is invoked from.
@@ -59,15 +62,30 @@ static std::string _detect_repo_root() {
     #endif
 }
 static const std::string REPO_ROOT = _detect_repo_root();
-static const std::string OUT_DIR_STR = REPO_ROOT + "/screenshots";
-static const char* OUT_DIR = OUT_DIR_STR.c_str();
+
+/// Profile descriptor for screenshot iteration.
+struct ProfileInfo {
+    ProfileId id;
+    const char* dir_name;    // subdirectory under screenshots/
+    uint32_t width;
+    uint32_t height;
+};
+
+static const ProfileInfo PROFILES[] = {
+    {ProfileId::Square240x240,  "square_240x240",  240, 240},
+    {ProfileId::Portrait240x320, "portrait_240x320", 240, 320},
+};
+static constexpr int NUM_PROFILES = sizeof(PROFILES) / sizeof(PROFILES[0]);
 
 /// Each screen capture runs in a forked child to avoid LVGL state leakage.
-static bool fork_capture(std::function<void(UiRuntime&)> setup, const std::string& name) {
+static bool fork_capture(std::function<void(UiRuntime&)> setup, const std::string& name, const std::string& out_dir, uint32_t w, uint32_t h) {
     pid_t pid = fork();
     if (pid == 0) {
         // Child
-        UiRuntime rt;
+        RuntimeConfig cfg;
+        cfg.width = w;
+        cfg.height = h;
+        UiRuntime rt(std::move(cfg));
         assert(rt.init());
         setup(rt);
         rt.tick(16);
@@ -76,7 +94,7 @@ static bool fork_capture(std::function<void(UiRuntime&)> setup, const std::strin
         rt.tick(16);
         rt.refresh_now();
 
-        std::string path = std::string(OUT_DIR) + "/" + name + ".png";
+        std::string path = out_dir + "/" + name + ".png";
         bool ok = FramebufferCapture::write_png(path, *rt.display());
         _exit(ok ? 0 : 1);
     } else if (pid > 0) {
@@ -90,13 +108,22 @@ static bool fork_capture(std::function<void(UiRuntime&)> setup, const std::strin
     return false;
 }
 
-int main() {
-    mkdir(OUT_DIR, 0755);
-    std::printf("=== SeedSigner-LVGL Screenshot Capture ===\n\n");
+/// Run all 11 screen captures for one profile.
+static int run_profile_captures(const ProfileInfo& pi) {
+    std::string screenshots_root = REPO_ROOT + "/screenshots";
+    std::string profile_dir = screenshots_root + "/" + pi.dir_name;
+    mkdir(screenshots_root.c_str(), 0755);
+    mkdir(profile_dir.c_str(), 0755);
+
+    std::printf("\n--- Profile: %s (%ux%u) ---\n", pi.dir_name, pi.width, pi.height);
+    int failures = 0;
+    auto cap = [&](int n, const char* label, std::function<void(UiRuntime&)> setup, const char* name) {
+        std::printf("[%d/11] %s\n", n, label);
+        if (!fork_capture(setup, name, profile_dir, pi.width, pi.height)) ++failures;
+    };
 
     // 1. Main Menu
-    std::printf("[1/11] MenuListScreen\n");
-    fork_capture([](UiRuntime& rt) {
+    cap(1, "MenuListScreen", [](UiRuntime& rt) {
         rt.screen_registry().register_route(RouteId{"menu.main"}, []() -> std::unique_ptr<Screen> {
             return std::make_unique<MenuListScreen>();
         });
@@ -112,8 +139,7 @@ int main() {
     }, "01_main_menu");
 
     // 2. Settings Menu
-    std::printf("[2/11] SettingsMenuScreen\n");
-    fork_capture([](UiRuntime& rt) {
+    cap(2, "SettingsMenuScreen", [](UiRuntime& rt) {
         rt.screen_registry().register_route(RouteId{"settings.menu"}, []() -> std::unique_ptr<Screen> {
             return std::make_unique<SettingsMenuScreen>();
         });
@@ -134,8 +160,7 @@ int main() {
     }, "02_settings_menu");
 
     // 3. Settings Selection
-    std::printf("[3/11] SettingsSelectionScreen\n");
-    fork_capture([](UiRuntime& rt) {
+    cap(3, "SettingsSelectionScreen", [](UiRuntime& rt) {
         rt.screen_registry().register_route(RouteId{"settings.locale"}, []() -> std::unique_ptr<Screen> {
             return std::make_unique<SettingsSelectionScreen>();
         });
@@ -161,8 +186,7 @@ int main() {
     }, "03_settings_language");
 
     // 4. Warning
-    std::printf("[4/11] WarningScreen\n");
-    fork_capture([](UiRuntime& rt) {
+    cap(4, "WarningScreen", [](UiRuntime& rt) {
         rt.screen_registry().register_route(RouteId{"warn"}, []() -> std::unique_ptr<Screen> {
             return std::make_unique<WarningScreen>();
         });
@@ -173,8 +197,7 @@ int main() {
     }, "04_warning");
 
     // 5. Error
-    std::printf("[5/11] ErrorScreen\n");
-    fork_capture([](UiRuntime& rt) {
+    cap(5, "ErrorScreen", [](UiRuntime& rt) {
         rt.screen_registry().register_route(RouteId{"err"}, []() -> std::unique_ptr<Screen> {
             return std::make_unique<ErrorScreen>();
         });
@@ -185,8 +208,7 @@ int main() {
     }, "05_error");
 
     // 6. Dire Warning
-    std::printf("[6/11] DireWarningScreen\n");
-    fork_capture([](UiRuntime& rt) {
+    cap(6, "DireWarningScreen", [](UiRuntime& rt) {
         rt.screen_registry().register_route(RouteId{"dire"}, []() -> std::unique_ptr<Screen> {
             return std::make_unique<DireWarningScreen>();
         });
@@ -197,8 +219,7 @@ int main() {
     }, "06_dire_warning");
 
     // 7. Result
-    std::printf("[7/11] ResultScreen\n");
-    fork_capture([](UiRuntime& rt) {
+    cap(7, "ResultScreen", [](UiRuntime& rt) {
         rt.screen_registry().register_route(RouteId{"result"}, []() -> std::unique_ptr<Screen> {
             return std::make_unique<ResultScreen>();
         });
@@ -209,8 +230,7 @@ int main() {
     }, "07_result_success");
 
     // 8. QR Display
-    std::printf("[8/11] QRDisplayScreen\n");
-    fork_capture([](UiRuntime& rt) {
+    cap(8, "QRDisplayScreen", [](UiRuntime& rt) {
         rt.screen_registry().register_route(RouteId{"qr"}, []() -> std::unique_ptr<Screen> {
             return std::make_unique<QRDisplayScreen>();
         });
@@ -225,8 +245,7 @@ int main() {
     }, "08_qr_display");
 
     // 9. Keyboard
-    std::printf("[9/11] KeyboardScreen\n");
-    fork_capture([](UiRuntime& rt) {
+    cap(9, "KeyboardScreen", [](UiRuntime& rt) {
         rt.screen_registry().register_route(RouteId{"kb"}, []() -> std::unique_ptr<Screen> {
             return std::make_unique<KeyboardScreen>();
         });
@@ -241,8 +260,7 @@ int main() {
     }, "09_keyboard");
 
     // 10. Seed Words
-    std::printf("[10/11] SeedWordsScreen\n");
-    fork_capture([](UiRuntime& rt) {
+    cap(10, "SeedWordsScreen", [](UiRuntime& rt) {
         rt.screen_registry().register_route(RouteId{"seed"}, []() -> std::unique_ptr<Screen> {
             return std::make_unique<SeedWordsScreen>();
         });
@@ -258,8 +276,7 @@ int main() {
     }, "10_seed_words_page1");
 
     // 11. PSBT Overview
-    std::printf("[11/11] PSBTOverviewScreen\n");
-    fork_capture([](UiRuntime& rt) {
+    cap(11, "PSBTOverviewScreen", [](UiRuntime& rt) {
         rt.screen_registry().register_route(RouteId{"psbt"}, []() -> std::unique_ptr<Screen> {
             return std::make_unique<PSBTOverviewScreen>();
         });
@@ -277,6 +294,28 @@ int main() {
         rt.activate(rd);
     }, "11_psbt_overview");
 
-    std::printf("\n=== Done. Check %s/ for PNG files. ===\n", OUT_DIR);
-    return 0;
+    return failures;
+}
+
+int main() {
+    std::printf("=== SeedSigner-LVGL Screenshot Capture (multi-profile) ===\n");
+    int total_failures = 0;
+    for (int i = 0; i < NUM_PROFILES; ++i) {
+        total_failures += run_profile_captures(PROFILES[i]);
+    }
+
+    // Backward-compatible flat copy: symlink/copy the default profile (portrait) into screenshots/ root
+    std::string screenshots_root = REPO_ROOT + "/screenshots";
+    std::string default_dir = screenshots_root + "/portrait_240x320";
+    for (auto& entry : std::filesystem::directory_iterator(default_dir)) {
+        if (entry.is_regular_file() && entry.path().extension() == ".png") {
+            std::string dest = screenshots_root + "/" + entry.path().filename().string();
+            // Remove old link/file if present
+            std::remove(dest.c_str());
+            std::filesystem::copy_file(entry.path(), dest);
+        }
+    }
+
+    std::printf("\n=== Done. Check %s/ for PNG files (profile subdirs + flat backward-compat copy). ===\n", screenshots_root.c_str());
+    return total_failures > 0 ? 1 : 0;
 }
