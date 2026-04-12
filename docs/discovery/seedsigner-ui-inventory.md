@@ -1,8 +1,26 @@
 # SeedSigner UI inventory for seedsigner-lvgl
 
-Phase 0 discovery inventory based on `SeedSigner/seedsigner` current source surface, with light historical grounding from the project’s still-present legacy structures (`views/*`, generic screen primitives, splash/screensaver code, screenshot generator hooks). This is a design inventory, not an implementation plan.
+Discovery inventory based on `SeedSigner/seedsigner` current source surface, with light historical grounding from the project’s still-present legacy structures (`views/*`, generic screen primitives, splash/screensaver code, screenshot generator hooks). This is primarily a design inventory, with an audit snapshot of what `seedsigner-lvgl` has already implemented.
 
 ## Scope and reading notes
+
+### Audit snapshot: what `seedsigner-lvgl` now covers
+
+As of current `main`, the LVGL port has working implementations for these screen families and support systems:
+- menu/list shell
+- warning/error/dire-warning family
+- QR display
+- keyboard text entry
+- scan screen with external frame injection and mock detection
+- settings menu and settings selection
+- seed words display
+- PSBT overview / math / detail screens
+- startup splash and screensaver
+- top-nav component, input profiles, SDL desktop runner, and screenshot regression tooling
+
+That means this document should now be read as both:
+- an inventory of the upstream SeedSigner UI surface, and
+- a reference for choosing which remaining high-value families to port next
 
 - Primary source areas reviewed:
   - `src/seedsigner/views/*.py`
