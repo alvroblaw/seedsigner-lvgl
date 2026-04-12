@@ -138,6 +138,13 @@ if(BUILD_TESTING)
   target_link_libraries(input_profile_tests PRIVATE seedsigner_lvgl)
   add_test(NAME input_profile_tests COMMAND input_profile_tests)
 
+  # --- Profile matrix runner (headless, multi-profile scenario validation) ---
+  add_executable(profile_matrix_runner
+    tests/profile_matrix_runner.cpp
+    src/desktop/ScenarioRunner.cpp
+  )
+  target_link_libraries(profile_matrix_runner PRIVATE seedsigner_lvgl nlohmann_json::nlohmann_json)
+
   # Scenario suite as a test target (requires BUILD_HOST_DESKTOP for nlohmann_json)
   if(BUILD_HOST_DESKTOP)
     add_test(NAME scenario_suite
@@ -145,5 +152,12 @@ if(BUILD_TESTING)
       WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
     set_tests_properties(scenario_suite PROPERTIES
       ENVIRONMENT "SCENARIO_DIR=${CMAKE_SOURCE_DIR}/scenarios;SCENARIO_OUT_DIR=${CMAKE_BINARY_DIR}/scenario_out")
+
+    # Profile matrix test — runs all scenarios across square_240x240 + portrait_240x320
+    add_test(NAME profile_matrix
+      COMMAND profile_matrix_runner
+      WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+    set_tests_properties(profile_matrix PROPERTIES
+      ENVIRONMENT "SCENARIO_DIR=${CMAKE_SOURCE_DIR}/scenarios;SCENARIO_OUT_DIR=${CMAKE_BINARY_DIR}/matrix_out")
   endif()
 endif()
