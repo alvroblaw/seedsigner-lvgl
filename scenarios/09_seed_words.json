@@ -1,0 +1,9 @@
+{
+  "_doc": "Seed words display screen.",
+  "default_delay_ms": 50,
+  "steps": [
+    { "action": "activate", "route": "suite.seed_words",
+      "args": { "words": "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about", "title": "Seed Phrase", "words_per_page": "6" }},
+    { "action": "screenshot", "path": "scenarios/out/09_seed_words_p1.png" }
+  ]
+}

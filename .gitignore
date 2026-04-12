@@ -16,3 +16,4 @@ compile_commands.json
 screenshots/
 screenshots_diff/
 screenshot_diff_report.json
+scenarios/out/

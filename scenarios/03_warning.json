@@ -1,0 +1,9 @@
+{
+  "_doc": "Warning screen with acknowledgement button.",
+  "default_delay_ms": 50,
+  "steps": [
+    { "action": "activate", "route": "suite.warning",
+      "args": { "title": "Warning", "body": "This seed was generated on this device.\nVerify the words carefully.", "button_text": "I Understand" }},
+    { "action": "screenshot", "path": "scenarios/out/03_warning.png" }
+  ]
+}

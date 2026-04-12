@@ -1,0 +1,8 @@
+{
+  "_doc": "Startup splash screen.",
+  "default_delay_ms": 50,
+  "steps": [
+    { "action": "activate", "route": "suite.splash", "args": {} },
+    { "action": "screenshot", "path": "scenarios/out/11_splash.png" }
+  ]
+}

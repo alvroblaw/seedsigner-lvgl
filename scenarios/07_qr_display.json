@@ -1,0 +1,9 @@
+{
+  "_doc": "QR code display screen.",
+  "default_delay_ms": 50,
+  "steps": [
+    { "action": "activate", "route": "suite.qr",
+      "args": { "qr_data": "bitcoin:bc1qexampleaddress123456789?amount=0.001", "title": "Signed PSBT", "brightness": "100" }},
+    { "action": "screenshot", "path": "scenarios/out/07_qr_display.png" }
+  ]
+}
