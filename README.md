@@ -54,6 +54,20 @@ The repo now carries its own LVGL configuration in [`config/lv_conf.h`](config/l
 
 For Linux/macOS requirements and host-run caveats, see [`docs/development/HOST_BUILD.md`](docs/development/HOST_BUILD.md). For automated screen capture to PNG, see [`docs/development/SCREENSHOTS.md`](docs/development/SCREENSHOTS.md).
 
+### Interactive Desktop Demo (SDL2)
+
+An optional SDL2-based desktop target lets you navigate the UI interactively in a real window.
+
+```bash
+cmake -S . -B build-desktop -DBUILD_HOST_DESKTOP=ON -DBUILD_TESTING=OFF
+cmake --build build-desktop --target host_desktop_demo
+./build-desktop/host_desktop_demo
+```
+
+Keys: **↑↓←→** navigate, **Enter** select, **Escape** back/quit, **1–5** switch demo screens (menu, settings, warning, error, result).
+
+The `SdlDisplay` adapter follows the same LVGL display-driver pattern as `HeadlessDisplay` but renders the framebuffer into an SDL2 window. `UiRuntime` is configured with `skip_native_display=true` so it defers display creation to the caller. See `examples/host_desktop_demo.cpp` and `src/platform/SdlDisplay.cpp` for details.
+
 ## Expected deliverables in this repo
 
 - architecture docs

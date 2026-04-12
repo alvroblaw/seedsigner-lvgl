@@ -19,6 +19,9 @@ struct RuntimeConfig {
     std::uint32_t height{320};
     std::size_t event_queue_capacity{16};
     input::InputProfileId input_profile{input::InputProfileId::SeedSigner4Button};
+    /// When true, UiRuntime::init() skips lv_init() and display creation
+    /// so the caller can provide its own LVGL display (e.g. SdlDisplay).
+    bool skip_native_display{false};
 };
 
 class UiRuntime {
