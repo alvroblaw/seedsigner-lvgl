@@ -172,4 +172,81 @@ void SdlDisplay::refresh() {
     blit_framebuffer();
 }
 
+// -------------------------------------------------------------------------- //
+// Pointer (mouse/touch) indev
+// -------------------------------------------------------------------------- //
+
+void SdlDisplay::enable_pointer() {
+    if (pointer_enabled_) return;
+    lv_indev_drv_init(&pointer_driver_);
+    pointer_driver_.type = LV_INDEV_TYPE_POINTER;
+    pointer_driver_.read_cb = pointer_read_cb;
+    pointer_driver_.user_data = this;
+    pointer_device_ = lv_indev_drv_register(&pointer_driver_);
+    pointer_enabled_ = true;
+    std::fprintf(stderr, "[SdlDisplay] pointer indev registered (mouse/touch)\n");
+}
+
+void SdlDisplay::handle_mouse_event(const SDL_Event& ev) {
+    if (!pointer_enabled_) return;
+
+    switch (ev.type) {
+        case SDL_MOUSEBUTTONDOWN:
+            if (ev.button.button == SDL_BUTTON_LEFT) {
+                pointer_pressed_ = true;
+                pointer_pos_.x = static_cast<lv_coord_t>(
+                    ev.button.x / static_cast<int>(pixel_scale_));
+                pointer_pos_.y = static_cast<lv_coord_t>(
+                    ev.button.y / static_cast<int>(pixel_scale_));
+            }
+            break;
+        case SDL_MOUSEBUTTONUP:
+            if (ev.button.button == SDL_BUTTON_LEFT) {
+                pointer_pressed_ = false;
+                pointer_pos_.x = static_cast<lv_coord_t>(
+                    ev.button.x / static_cast<int>(pixel_scale_));
+                pointer_pos_.y = static_cast<lv_coord_t>(
+                    ev.button.y / static_cast<int>(pixel_scale_));
+            }
+            break;
+        case SDL_MOUSEMOTION:
+            if (ev.motion.state & SDL_BUTTON_LMASK) {
+                pointer_pos_.x = static_cast<lv_coord_t>(
+                    ev.motion.x / static_cast<int>(pixel_scale_));
+                pointer_pos_.y = static_cast<lv_coord_t>(
+                    ev.motion.y / static_cast<int>(pixel_scale_));
+            }
+            break;
+        default:
+            break;
+    }
+}
+
+std::optional<InputEvent> SdlDisplay::poll_all_events() {
+    SDL_Event ev;
+    while (SDL_PollEvent(&ev)) {
+        if (ev.type == SDL_QUIT) {
+            quit_requested_ = true;
+            if (quit_callback_) quit_callback_();
+            return std::nullopt;
+        }
+        // Feed mouse/touch events to the pointer indev state.
+        handle_mouse_event(ev);
+
+        if (ev.type == SDL_KEYDOWN) {
+            if (auto mapped = map_sdl_event(ev)) return mapped;
+        }
+    }
+    return std::nullopt;
+}
+
+void SdlDisplay::pointer_read_cb(lv_indev_drv_t* drv, lv_indev_data_t* data) {
+    auto* self = static_cast<SdlDisplay*>(drv->user_data);
+    if (!self) return;
+    data->point = self->pointer_pos_;
+    data->state = self->pointer_pressed_ ? LV_INDEV_STATE_PRESSED : LV_INDEV_STATE_RELEASED;
+    // Continuous reporting — LVGL will keep calling this cb.
+    data->continue_reading = false;
+}
+
 }  // namespace seedsigner::lvgl

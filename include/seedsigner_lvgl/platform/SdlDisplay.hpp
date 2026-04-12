@@ -1,13 +1,16 @@
 #pragma once
 // SdlDisplay — SDL2-backed display adapter for host desktop builds.
-// Renders the LVGL framebuffer into an SDL2 window and exposes a poll_events()
-// method that maps keyboard input to seedsigner::lvgl::InputEvent values.
+// Renders the LVGL framebuffer into an SDL2 window, maps keyboard input to
+// seedsigner::lvgl::InputEvent values, and optionally drives an LVGL pointer
+// indev from SDL mouse / touch events so click/tap interactions work on
+// touch-oriented screens.
 //
 // This adapter follows the same pattern as HeadlessDisplay (lv_disp_drv_t
 // registration with a flat framebuffer) but adds an SDL2 window for visual
-// output and keyboard polling.  No external code was directly adapted; the
-// approach is idiomatic LVGL+SDL2 integration (see LVGL docs on "Add a
-// display").  License: same as the parent project.
+// output, keyboard polling, and mouse/touch pointer support.  No external
+// code was directly adapted; the approach is idiomatic LVGL+SDL2 integration
+// (see LVGL docs on "Add a display" and "Add a mouse / touchpad").
+// License: same as the parent project.
 
 #include <cstdint>
 #include <functional>
@@ -62,6 +65,24 @@ public:
     /// Returns true after the SDL window has been closed.
     bool should_quit() const noexcept { return quit_requested_; }
 
+    /// Register an LVGL pointer input device driven by SDL mouse events.
+    /// After calling this, feed SDL mouse/touch events via handle_mouse_event()
+    /// or let poll_all_events() do it automatically.
+    void enable_pointer();
+
+    /// Returns true after enable_pointer() was called.
+    bool pointer_enabled() const noexcept { return pointer_enabled_; }
+
+    /// Feed a single SDL_Event into the internal pointer state when it is a
+    /// mouse button or motion event.  Safe to call for any event type;
+    /// non-mouse events are silently ignored.
+    void handle_mouse_event(const SDL_Event& ev);
+
+    /// Combined event pump: drain all pending SDL events, feed mouse events to
+    /// the pointer indev, and return the first keyboard-derived InputEvent (if
+    /// any).  Replaces manual SDL_PollEvent + poll_input loops.
+    std::optional<InputEvent> poll_all_events();
+
 private:
     static void flush_cb(lv_disp_drv_t* disp_drv, const lv_area_t* area, lv_color_t* color_p);
     void blit_framebuffer();
@@ -82,6 +103,17 @@ private:
 
     QuitCallback quit_callback_;
     bool quit_requested_{false};
+
+    // --- Pointer (mouse/touch) indev ---
+    bool pointer_enabled_{false};
+    lv_indev_drv_t pointer_driver_{};
+    lv_indev_t* pointer_device_{nullptr};
+
+    // Latest pointer state (LVGL coordinates).
+    lv_point_t pointer_pos_{0, 0};
+    bool pointer_pressed_{false};
+
+    static void pointer_read_cb(lv_indev_drv_t* drv, lv_indev_data_t* data);
 };
 
 }  // namespace seedsigner::lvgl
