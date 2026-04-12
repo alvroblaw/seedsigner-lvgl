@@ -44,6 +44,9 @@ BASELINE_DIR = ROOT / "screenshots_baseline"
 DIFF_DIR = ROOT / "screenshots_diff"
 REPORT_PATH = ROOT / "screenshot_diff_report.json"
 
+# Known display-profile subdirectories under screenshots/
+PROFILE_DIRS = ["portrait_240x320", "square_240x240"]
+
 
 def _ensure_pillow():
     try:
@@ -102,15 +105,42 @@ def compare_images(image_path: Path, baseline_path: Path, diff_dir: Path, Image)
     }
 
 
+def _collect_profile_dirs():
+    """Return list of (profile_name, screenshots_subdir, baseline_subdir, diff_subdir).
+
+    If profile-scoped subdirectories exist under screenshots/ we use those.
+    Otherwise we fall back to the flat screenshots/ layout for backward compat.
+    """
+    dirs = []
+    for p in PROFILE_DIRS:
+        sd = SCREENSHOTS_DIR / p
+        if sd.is_dir():
+            dirs.append((p, sd, BASELINE_DIR / p, DIFF_DIR / p))
+    if not dirs:
+        # Flat layout (legacy)
+        dirs.append(("default", SCREENSHOTS_DIR, BASELINE_DIR, DIFF_DIR))
+    return dirs
+
+
 def update_baseline():
-    """Copy current screenshots into the baseline directory."""
-    if not SCREENSHOTS_DIR.exists():
-        print(f"No screenshots directory at {SCREENSHOTS_DIR}", file=sys.stderr)
-        sys.exit(1)
-    BASELINE_DIR.mkdir(exist_ok=True)
-    for f in sorted(SCREENSHOTS_DIR.glob("*.png")):
-        shutil.copy2(f, BASELINE_DIR / f.name)
-    print(f"Baseline updated from {SCREENSHOTS_DIR} → {BASELINE_DIR}")
+    """Copy current screenshots into the baseline directory (per-profile)."""
+    for profile_name, shots_dir, baseline_dir, _ in _collect_profile_dirs():
+        if not shots_dir.exists():
+            print(f"No screenshots directory at {shots_dir}", file=sys.stderr)
+            continue
+        baseline_dir.mkdir(parents=True, exist_ok=True)
+        for f in sorted(shots_dir.glob("*.png")):
+            shutil.copy2(f, baseline_dir / f.name)
+        print(f"  [{profile_name}] Baseline updated from {shots_dir} → {baseline_dir}")
+
+    # Also update flat baseline for backward compat
+    flat_baseline = BASELINE_DIR
+    flat_screenshots = SCREENSHOTS_DIR
+    if flat_screenshots.exists():
+        flat_baseline.mkdir(parents=True, exist_ok=True)
+        for f in sorted(flat_screenshots.glob("*.png")):
+            shutil.copy2(f, flat_baseline / f.name)
+        print(f"  [flat] Baseline updated from flat {flat_screenshots} → {flat_baseline}")
 
 
 def run_diff(threshold: float = 1.0):
@@ -119,50 +149,64 @@ def run_diff(threshold: float = 1.0):
     if not SCREENSHOTS_DIR.exists():
         print(f"No screenshots directory at {SCREENSHOTS_DIR}", file=sys.stderr)
         sys.exit(1)
-    if not BASELINE_DIR.exists():
-        print(
-            f"No baseline directory at {BASELINE_DIR}.\n"
-            f"Run with --update-baseline first to seed the golden images.",
-            file=sys.stderr,
-        )
-        sys.exit(1)
 
-    DIFF_DIR.mkdir(exist_ok=True)
-    results = []
+    all_results = []
     any_fail = False
-    missing = []
 
-    current_images = sorted(SCREENSHOTS_DIR.glob("*.png"))
-    baseline_images = {p.name for p in BASELINE_DIR.glob("*.png")}
-
-    for img_path in current_images:
-        baseline_path = BASELINE_DIR / img_path.name
-        if not baseline_path.exists():
-            missing.append(img_path.name)
-            results.append({"name": img_path.name, "status": "missing_baseline"})
+    for profile_name, shots_dir, baseline_dir, diff_dir in _collect_profile_dirs():
+        if not shots_dir.exists():
+            continue
+        if not baseline_dir.exists():
+            print(
+                f"  [{profile_name}] No baseline at {baseline_dir}. "
+                f"Run with --update-baseline first.", file=sys.stderr)
             any_fail = True
             continue
 
-        r = compare_images(img_path, baseline_path, DIFF_DIR, Image)
-        results.append(r)
-        status_icon = "✓" if r["status"] == "match" else "✗"
-        score_str = f'{r.get("diff_score", "?"):.4f}' if r.get("diff_score", 0) >= 0 else "N/A"
-        print(f"  {status_icon} {r['name']:40s}  score={score_str}")
-        if r["status"] != "match" and r.get("diff_score", 0) > threshold:
-            any_fail = True
+        diff_dir.mkdir(parents=True, exist_ok=True)
+        results = []
+        missing = []
 
-    # Check for baselines with no current image
-    current_names = {p.name for p in current_images}
-    for name in sorted(baseline_images - current_names):
-        results.append({"name": name, "status": "missing_current"})
+        current_images = sorted(shots_dir.glob("*.png"))
+        baseline_images = {p.name for p in baseline_dir.glob("*.png")}
+
+        print(f"\n--- Profile: {profile_name} ---")
+        for img_path in current_images:
+            baseline_path = baseline_dir / img_path.name
+            if not baseline_path.exists():
+                missing.append(img_path.name)
+                results.append({"name": img_path.name, "status": "missing_baseline"})
+                any_fail = True
+                continue
+
+            r = compare_images(img_path, baseline_path, diff_dir, Image)
+            results.append(r)
+            status_icon = "✓" if r["status"] == "match" else "✗"
+            score_str = f'{r.get("diff_score", "?"):.4f}' if r.get("diff_score", 0) >= 0 else "N/A"
+            print(f"  {status_icon} {r['name']:40s}  score={score_str}")
+            if r["status"] != "match" and r.get("diff_score", 0) > threshold:
+                any_fail = True
+
+        # Check for baselines with no current image
+        current_names = {p.name for p in current_images}
+        for name in sorted(baseline_images - current_names):
+            results.append({"name": name, "status": "missing_current"})
+
+        all_results.append({
+            "profile": profile_name,
+            "total": len(results),
+            "matched": sum(1 for r in results if r["status"] == "match"),
+            "diff": sum(1 for r in results if r["status"] == "diff"),
+            "missing_baseline": len(missing),
+            "results": results,
+        })
 
     report = {
         "threshold": threshold,
-        "total": len(results),
-        "matched": sum(1 for r in results if r["status"] == "match"),
-        "diff": sum(1 for r in results if r["status"] == "diff"),
-        "missing_baseline": len(missing),
-        "results": results,
+        "profiles": all_results,
+        "total": sum(p["total"] for p in all_results),
+        "matched": sum(p["matched"] for p in all_results),
+        "diff": sum(p["diff"] for p in all_results),
     }
     REPORT_PATH.write_text(json.dumps(report, indent=2) + "\n")
 
