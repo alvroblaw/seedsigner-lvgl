@@ -15,8 +15,20 @@ Implemented in `main` today:
 - `ResultScreen`
 - `CameraPreviewScreen`
 - `PlaceholderScreen` (development stub, not a parity target)
-- `SettingsSelectionScreen` (first real settings-route slice)
-- runtime hooks for input events, outbound screen events, full/patch screen data, and external frame injection
+- `SettingsSelectionScreen` and `SettingsMenuScreen` (settings route with host-side definition bridge)
+- `WarningScreen` / `ErrorScreen` / `DireWarningScreen` (warning family)
+- `QRDisplayScreen` (QR display with brightness controls)
+- `KeyboardScreen` (generic text entry)
+- `ScanScreen` (camera-backed scan with mock detection)
+- `StartupSplashScreen` and `ScreensaverScreen` (app shell)
+- `SeedWordsScreen` (seed word display with pagination)
+- `PSBTOverviewScreen`, `PSBTMathScreen`, `PSBTDetailScreen` (transaction review family)
+- `TopNavBar` component integrated across all main screens
+- `InputProfile` for hardware input abstraction
+- Desktop interactive runner (`SdlDisplay`, `ScenarioRunner`) with JSON scenario replay
+- Per-display-profile screenshot coverage and visual regression diff tooling
+- Runtime display-profile switching
+- Runtime hooks for input events, outbound screen events, full/patch screen data, and external frame injection
 
 ## Status scale
 
@@ -64,11 +76,12 @@ Implemented in `main` today:
    - up/down/press/back input handling
    - outbound events for focus change and selection
 
-2. **Settings menu screen family (`SettingsMenuScreen`)**
+2. **Settings screen family (`SettingsMenuScreen`, `SettingsSelectionScreen`)**
    - grouped settings menu with sections
-   - selection events for settings navigation
+   - single-choice and multi-choice selection screens
+   - typed host-side definitions via `SettingDefinition` / `SettingItemDefinition`
    - up/down/press/back interaction
-   - contract: `SettingsMenuContract`
+   - contract: `SettingsContract`
 
 3. **Warning/Error/DireWarning screen family (`WarningScreen`, `ErrorScreen`, `DireWarningScreen`)**
    - severity-specific layouts (warning, error, dire warning)
@@ -125,18 +138,18 @@ Implemented in `main` today:
     - warning overlays for security
     - contract: `SeedWordsContract`
 
-### New contracts added to the external API
-- `SettingsMenuContract`: for settings menu navigation and selection
-- `SettingsContract`: for settings selection and update (single/multi-choice, toggles)
-- `WarningContract`: for warning/error/dire warning screens
-- `QRDisplayContract`: for QR display with brightness controls
-- `KeyboardContract`: for generic text entry
-- `CameraContract`: for camera‑backed screens and frame ingestion
-- `PSBTOverviewContract`, `PSBTMathContract`, `PSBTDetailContract`: for PSBT review screens
-- `StartupSplashContract`, `ScreensaverContract`: for startup and screensaver
-- `SeedWordsContract`: for seed words display
+### Implemented external API contracts
+- `SettingsContract`: settings menu navigation plus single-choice and multi-choice selection/update
+- `WarningContract`: warning, error, and dire warning screens
+- `QRDisplayContract`: QR display with brightness controls
+- `KeyboardContract`: generic text entry
+- `CameraContract`: camera-backed screens and frame ingestion
+- `PSBTOverviewContract`, `PSBTMathContract`, `PSBTDetailContract`: PSBT review screens
+- `StartupSplashContract`, `ScreensaverContract`: startup and screensaver
+- `SeedWordsContract`: seed words display
 
-These contracts define the structured payloads and events for each screen family, keeping the external API small and stable while enabling rich screen‑specific behavior.
+These contracts define the structured payloads and events for each screen family, keeping the external API small and stable while enabling rich screen-specific behavior.
+
 ## What is still missing before "real SeedSigner feel"
 
 ### Visual parity gaps
@@ -164,27 +177,43 @@ The current scan path is still a **preview + capture shell**, not a scanner prod
 - typed routing by payload kind
 - real downstream flows for seeds, PSBTs, settings, addresses, and messages
 
-## Recommended next implementation block
+## Recommended next implementation blocks
 
-**Build the reusable SeedSigner-style structured list family on top of `MenuListScreen`.**
+The project has moved beyond pure API scaffolding, so the next milestones should focus on converting landed primitives into higher-fidelity routed flows.
 
-Why this next:
+### 1. SeedSigner shell and list fidelity
+
+Build the reusable SeedSigner-style structured list family on top of `MenuListScreen` and the already-landed `TopNavBar`.
+
+Why first:
 - it unlocks the largest number of real product surfaces fastest
-- many SeedSigner domains are list-first even when the later steps are custom
-- it is materially cheaper than jumping straight into keyboard or PSBT review complexity
-- it gives a better shell for Seeds / Tools / Settings / signer selection before deeper flow work
+- many SeedSigner domains are list-first even when later steps are custom
+- it gives the project a visibly more authentic shell before deeper flow work
 
-### Concrete scope for that block
-
-1. Add a **top-nav + standard screen chrome** wrapper
-2. Finish the list-family shell with:
-   - optional icon support
-   - scroll cues / pagination behavior
-   - tighter SeedSigner visual treatment around the already-landed selection semantics
-3. Add at least 2 real route implementations using the family:
+Concrete scope:
+1. Add SeedSigner visual treatment for list rows, top-nav chrome, focus states, and scroll cues
+2. Add icon-aware and metadata-aware row variants
+3. Convert at least two real routes to this shell:
    - main menu
-   - settings menu or seed/signer selector
-4. Keep event contracts external-controller-friendly
+   - a selector-style list such as seed/signer selection
+
+### 2. Real scan pipeline behind `ScanScreen`
+
+Replace the current mock-detection path with an actual decode/result pipeline.
+
+Concrete scope:
+1. wire real QR decoder integration
+2. surface multipart progress and failure states
+3. emit typed route intents for PSBT, SeedQR, settings QR, and address flows
+
+### 3. Visual polish pass across already-implemented families
+
+Apply SeedSigner styling and assets to the screen families that already exist.
+
+Concrete scope:
+1. warning/dire-warning iconography and color treatment
+2. QR display and seed-word presentation polish
+3. PSBT screen typography, spacing, and fixed-width data formatting
 
 ## Planning takeaway
 

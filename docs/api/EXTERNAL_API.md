@@ -4,13 +4,20 @@
 Phase 0–4 implemented. Core external API stable, with screen‑specific contracts added for implemented screen families.
 
 ### Implemented contracts
-- `SettingsMenuContract` – settings menu navigation and selection
+- `SettingsContract` – settings menu navigation and selection (covers `SettingsMenuScreen` and `SettingsSelectionScreen`)
 - `WarningContract` – warning/error/dire warning screens
 - `QRDisplayContract` – QR display with brightness controls
 - `KeyboardContract` – generic text entry
 - `CameraContract` – camera‑backed screens and frame ingestion
+- `SeedWordsContract` – seed word display with pagination and warning overlays
+- `PSBTOverviewContract` – PSBT transaction overview screen
+- `PSBTMathContract` – PSBT input/output math breakdown
+- `PSBTDetailContract` – PSBT detail inspection (inputs, outputs, fees)
+- `StartupSplashContract` – startup splash animation
+- `ScreensaverContract` – screensaver activation and dismissal
 
 Each contract defines route IDs, payload schemas, and event shapes for its screen family.
+Contract headers live in `include/seedsigner_lvgl/contracts/`; implementations in `src/contracts/`.
 
 ## Purpose
 Define the external API boundary for driving the LVGL UI module from a higher-level controller, with MicroPython on ESP32-P4 / ESP32-S3 as the primary future caller and native C++ as a secondary caller.

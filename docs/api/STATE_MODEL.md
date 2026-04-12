@@ -44,6 +44,8 @@ Characteristics:
 
 This is the structured data the host provides so the UI can render a particular screen.
 
+In the current implementation this is carried primarily through string-keyed `RouteDescriptor.args` / `PropertyMap` payloads, with typed host-side helpers layered on top for selected families such as settings, PSBT review, seed words, startup, and screensaver.
+
 Examples:
 - menu item list
 - title/subtitle/body text
@@ -277,8 +279,8 @@ Guidelines:
 - prefer short-lived view models for sensitive entry/review screens
 - make buffer/data lifetime rules explicit in later implementation docs
 
-Phase 0 note:
-This document does not define secure memory handling, but the API should avoid making it harder.
+Implementation note:
+This document does not define secure memory handling, but the API should avoid making it harder. As the project adds more seed, passphrase, and QR-decoding flows, buffer lifetime and zeroization rules should be documented separately rather than hidden inside route contracts.
 
 ---
 
