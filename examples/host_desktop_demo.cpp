@@ -5,6 +5,7 @@
 //   Enter      — Select / confirm
 //   Escape     — Back / quit (quits when pressed on root screen)
 //   1–5        — Switch between demo screens
+//   Mouse      — Click/tap to interact with touch-oriented screens
 //
 // Build:
 //   cmake -S . -B build-desktop -DBUILD_HOST_DESKTOP=ON
@@ -92,12 +93,14 @@ static std::optional<InputEvent> map_key(SDL_Keycode sym) {
 
 int main() {
     std::printf("=== SeedSigner LVGL Interactive Desktop Demo ===\n");
-    std::printf("Keys: arrows=nav  Enter=select  Esc=back/quit  1-5=switch screen\n\n");
+    std::printf("Keys: arrows=nav  Enter=select  Esc=back/quit  1-5=switch screen\n");
+    std::printf("Mouse: click/tap to interact with touch-oriented screens\n\n");
 
     constexpr uint32_t W = 240, H = 320, Scale = 2;
 
     lv_init();
     auto sdl = std::make_unique<SdlDisplay>(W, H, Scale);
+    sdl->enable_pointer();
 
     UiRuntime runtime(RuntimeConfig{.width = W, .height = H, .skip_native_display = true});
     runtime.init();
@@ -119,8 +122,11 @@ int main() {
         SDL_Event ev;
         while (SDL_PollEvent(&ev)) {
             if (ev.type == SDL_QUIT) { running = false; break; }
-            if (ev.type != SDL_KEYDOWN) continue;
 
+            // Feed mouse/touch events to LVGL pointer indev.
+            sdl->handle_mouse_event(ev);
+
+            if (ev.type != SDL_KEYDOWN) continue;
             const SDL_Keycode sym = ev.key.keysym.sym;
 
             // Number keys → screen switch
