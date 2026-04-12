@@ -83,10 +83,18 @@ public:
     /// any).  Replaces manual SDL_PollEvent + poll_input loops.
     std::optional<InputEvent> poll_all_events();
 
+    /// Switch the display to a new resolution at runtime.
+    /// Destroys the current LVGL display driver and SDL window, then recreates
+    /// both at the new dimensions.  The caller should re-activate the current
+    /// route (or any route) after calling this.
+    /// @return true on success.
+    bool switch_resolution(std::uint32_t new_width, std::uint32_t new_height);
+
 private:
     static void flush_cb(lv_disp_drv_t* disp_drv, const lv_area_t* area, lv_color_t* color_p);
     void blit_framebuffer();
     std::optional<InputEvent> map_sdl_event(const SDL_Event& ev);
+    void create_sdl_window();
 
     std::uint32_t width_;
     std::uint32_t height_;
@@ -95,6 +103,7 @@ private:
 
     lv_disp_draw_buf_t draw_buffer_{};
     lv_disp_drv_t display_driver_{};
+    lv_disp_t* display_{nullptr};  ///< LVGL display handle (needed for removal on profile switch)
     std::vector<lv_color_t> framebuffer_;
 
     // SDL state — opaque pointers; lifetime managed in .cpp via RAII.

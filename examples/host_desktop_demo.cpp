@@ -21,6 +21,7 @@
 #include <lvgl.h>
 
 #include "seedsigner_lvgl/platform/SdlDisplay.hpp"
+#include "seedsigner_lvgl/visual/DisplayProfile.hpp"
 #include "seedsigner_lvgl/contracts/SettingsContract.hpp"
 #include "seedsigner_lvgl/contracts/RouteDescriptor.hpp"
 #include "seedsigner_lvgl/runtime/Event.hpp"
@@ -93,16 +94,24 @@ static std::optional<InputEvent> map_key(SDL_Keycode sym) {
 
 int main() {
     std::printf("=== SeedSigner LVGL Interactive Desktop Demo ===\n");
-    std::printf("Keys: arrows=nav  Enter=select  Esc=back/quit  1-5=switch screen\n");
+    std::printf("Keys: arrows=nav  Enter=select  Esc=back/quit  1-5=switch screen  F2=switch profile\n");
     std::printf("Mouse: click/tap to interact with touch-oriented screens\n\n");
 
-    constexpr uint32_t W = 240, H = 320, Scale = 2;
+    // Available display profiles to cycle through with F2.
+    struct ProfileDef { uint32_t w, h; const char* name; };
+    static const ProfileDef kProfiles[] = {
+        {240, 320, "Portrait 240×320"},
+        {240, 240, "Square 240×240"},
+    };
+    int profile_idx = 0;
+
+    constexpr uint32_t Scale = 2;
 
     lv_init();
-    auto sdl = std::make_unique<SdlDisplay>(W, H, Scale);
+    auto sdl = std::make_unique<SdlDisplay>(kProfiles[0].w, kProfiles[0].h, Scale);
     sdl->enable_pointer();
 
-    UiRuntime runtime(RuntimeConfig{.width = W, .height = H, .skip_native_display = true});
+    UiRuntime runtime(RuntimeConfig{.width = kProfiles[0].w, .height = kProfiles[0].h, .skip_native_display = true});
     runtime.init();
 
     register_routes(runtime.screen_registry());
@@ -140,6 +149,20 @@ int main() {
                 }
             }
             if (switched) continue;
+
+            // F2 → cycle display profile
+            if (sym == SDLK_F2) {
+                profile_idx = (profile_idx + 1) % 2;
+                const auto& p = kProfiles[profile_idx];
+                std::printf("[profile] switching to %s\n", p.name);
+                sdl->switch_resolution(p.w, p.h);
+                profile::set_profile(profile::match(
+                    static_cast<lv_coord_t>(p.w),
+                    static_cast<lv_coord_t>(p.h)));
+                // Re-activate the first demo screen to rebuild the UI at the new resolution.
+                go(kDemoScreens[0]);
+                continue;
+            }
 
             // Navigation keys → runtime input
             if (auto input = map_key(sym)) {

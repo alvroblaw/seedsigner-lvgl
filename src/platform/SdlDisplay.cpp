@@ -42,26 +42,7 @@ SdlDisplay::SdlDisplay(std::uint32_t width, std::uint32_t height, std::uint32_t 
         return;
     }
 
-    const int win_w = static_cast<int>(width  * pixel_scale_);
-    const int win_h = static_cast<int>(height * pixel_scale_);
-
-    sdl_->window = SDL_CreateWindow(
-        "SeedSigner LVGL Desktop",
-        SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-        win_w, win_h,
-        SDL_WINDOW_SHOWN);
-
-    if (!sdl_->window) {
-        std::fprintf(stderr, "[SdlDisplay] SDL_CreateWindow failed: %s\n", SDL_GetError());
-        return;
-    }
-
-    // Prefer a software renderer so we don't need GPU drivers on headless CI.
-    sdl_->renderer = SDL_CreateRenderer(sdl_->window, -1, SDL_RENDERER_SOFTWARE);
-    if (!sdl_->renderer) {
-        std::fprintf(stderr, "[SdlDisplay] SDL_CreateRenderer failed: %s\n", SDL_GetError());
-        return;
-    }
+    create_sdl_window();
 
     // Register an LVGL display driver backed by our framebuffer.
     lv_disp_draw_buf_init(&draw_buffer_, framebuffer_.data(), nullptr,
@@ -72,7 +53,7 @@ SdlDisplay::SdlDisplay(std::uint32_t width, std::uint32_t height, std::uint32_t 
     display_driver_.flush_cb = flush_cb;
     display_driver_.draw_buf = &draw_buffer_;
     display_driver_.user_data = this;
-    lv_disp_drv_register(&display_driver_);
+    display_ = lv_disp_drv_register(&display_driver_);
 }
 
 SdlDisplay::~SdlDisplay() = default;
@@ -158,6 +139,7 @@ std::optional<InputEvent> SdlDisplay::map_sdl_event(const SDL_Event& ev) {
         case SDLK_KP_ENTER:
                          return InputEvent{InputKey::Press};
         case SDLK_ESCAPE:return InputEvent{InputKey::Back};
+        case SDLK_F2:    return InputEvent{InputKey::ProfileSwitch};
         default:         return std::nullopt;
     }
 }
@@ -247,6 +229,89 @@ void SdlDisplay::pointer_read_cb(lv_indev_drv_t* drv, lv_indev_data_t* data) {
     data->state = self->pointer_pressed_ ? LV_INDEV_STATE_PRESSED : LV_INDEV_STATE_RELEASED;
     // Continuous reporting — LVGL will keep calling this cb.
     data->continue_reading = false;
+}
+
+// -------------------------------------------------------------------------- //
+// SDL window (re-)creation helper
+// -------------------------------------------------------------------------- //
+
+void SdlDisplay::create_sdl_window() {
+    // Destroy previous window/renderer if any.
+    if (sdl_->renderer) { SDL_DestroyRenderer(sdl_->renderer); sdl_->renderer = nullptr; }
+    if (sdl_->window)   { SDL_DestroyWindow(sdl_->window);     sdl_->window   = nullptr; }
+
+    const int win_w = static_cast<int>(width_  * pixel_scale_);
+    const int win_h = static_cast<int>(height_ * pixel_scale_);
+
+    sdl_->window = SDL_CreateWindow(
+        "SeedSigner LVGL Desktop",
+        SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
+        win_w, win_h,
+        SDL_WINDOW_SHOWN);
+
+    if (!sdl_->window) {
+        std::fprintf(stderr, "[SdlDisplay] SDL_CreateWindow failed: %s\n", SDL_GetError());
+        return;
+    }
+
+    sdl_->renderer = SDL_CreateRenderer(sdl_->window, -1, SDL_RENDERER_SOFTWARE);
+    if (!sdl_->renderer) {
+        std::fprintf(stderr, "[SdlDisplay] SDL_CreateRenderer failed: %s\n", SDL_GetError());
+        return;
+    }
+}
+
+// -------------------------------------------------------------------------- //
+// Runtime profile / resolution switching
+// -------------------------------------------------------------------------- //
+
+bool SdlDisplay::switch_resolution(std::uint32_t new_width, std::uint32_t new_height) {
+    if (new_width == width_ && new_height == height_) return true;
+
+    std::fprintf(stderr, "[SdlDisplay] switch_resolution %ux%u → %ux%u\n",
+                 width_, height_, new_width, new_height);
+
+    // 1. Remove the old LVGL display driver.
+    if (display_) {
+        lv_disp_remove(display_);
+        display_ = nullptr;
+    }
+
+    // 2. Update dimensions and reallocate framebuffer.
+    width_  = new_width;
+    height_ = new_height;
+    framebuffer_.assign(static_cast<std::size_t>(width_) * height_, lv_color_t{});
+
+    // 3. Recreate SDL window at new size.
+    create_sdl_window();
+    if (!sdl_->window || !sdl_->renderer) return false;
+
+    // 4. Re-register the LVGL display driver with the new resolution.
+    lv_disp_draw_buf_init(&draw_buffer_, framebuffer_.data(), nullptr,
+                          static_cast<uint32_t>(framebuffer_.size()));
+    lv_disp_drv_init(&display_driver_);
+    display_driver_.hor_res  = width_;
+    display_driver_.ver_res  = height_;
+    display_driver_.flush_cb = flush_cb;
+    display_driver_.draw_buf = &draw_buffer_;
+    display_driver_.user_data = this;
+    display_ = lv_disp_drv_register(&display_driver_);
+
+    // 5. Re-register pointer indev if it was previously enabled.
+    if (pointer_enabled_ && pointer_device_) {
+        lv_indev_delete(pointer_device_);
+        pointer_device_ = nullptr;
+        lv_indev_drv_init(&pointer_driver_);
+        pointer_driver_.type = LV_INDEV_TYPE_POINTER;
+        pointer_driver_.read_cb = pointer_read_cb;
+        pointer_driver_.user_data = this;
+        pointer_device_ = lv_indev_drv_register(&pointer_driver_);
+    }
+
+    // Force a full refresh.
+    lv_refr_now(nullptr);
+
+    return display_ != nullptr;
 }
 
 }  // namespace seedsigner::lvgl
