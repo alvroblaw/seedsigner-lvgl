@@ -24,8 +24,10 @@ bool UiRuntime::init() {
         return true;
     }
 
-    lv_init();
-    display_ = std::make_unique<HeadlessDisplay>(config_.width, config_.height);
+    if (!config_.skip_native_display) {
+        lv_init();
+        display_ = std::make_unique<HeadlessDisplay>(config_.width, config_.height);
+    }
     profile::set_profile(profile::match(
         static_cast<lv_coord_t>(config_.width),
         static_cast<lv_coord_t>(config_.height)));

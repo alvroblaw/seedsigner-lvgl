@@ -83,6 +83,23 @@ target_compile_features(seedsigner_lvgl PUBLIC cxx_std_17)
 add_executable(host_sim_demo examples/host_sim_demo.cpp)
 target_link_libraries(host_sim_demo PRIVATE seedsigner_lvgl)
 
+# --- Host desktop interactive demo (SDL2) ---
+option(BUILD_HOST_DESKTOP "Build the interactive SDL2 desktop demo" OFF)
+if(BUILD_HOST_DESKTOP)
+  find_package(PkgConfig REQUIRED)
+  pkg_check_modules(SDL2 REQUIRED sdl2)
+
+  add_executable(host_desktop_demo
+    examples/host_desktop_demo.cpp
+    src/platform/SdlDisplay.cpp
+  )
+  target_include_directories(host_desktop_demo PRIVATE
+    ${SDL2_INCLUDE_DIRS}
+  )
+  target_link_libraries(host_desktop_demo PRIVATE seedsigner_lvgl ${SDL2_LIBRARIES})
+  target_compile_options(host_desktop_demo PRIVATE ${SDL2_CFLAGS_OTHER})
+endif()
+
 if(BUILD_TESTING)
   add_executable(seedsigner_lvgl_tests
     tests/navigation_runtime_tests.cpp
