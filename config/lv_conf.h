@@ -26,4 +26,10 @@
 /* Enable snapshot for screen capture / testing */
 #define LV_USE_SNAPSHOT 1
 
+/* Enable Montserrat fonts used by SeedSigner theme */
+#define LV_FONT_MONTSERRAT_14 1
+#define LV_FONT_MONTSERRAT_16 1
+#define LV_FONT_MONTSERRAT_18 1
+#define LV_FONT_MONTSERRAT_20 1
+
 #endif /* LV_CONF_H */

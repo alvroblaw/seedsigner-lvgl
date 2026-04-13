@@ -57,47 +57,54 @@ ThemeVariant current_theme_variant();
 namespace colors {
     static const lv_color_t BLACK            = lv_color_hex(0x000000);
     static const lv_color_t SURFACE_DARK     = lv_color_hex(0x1a1a1a);
-    static const lv_color_t SURFACE_MEDIUM   = lv_color_hex(0x222222);
-    static const lv_color_t SURFACE_LIGHT    = lv_color_hex(0x2a2a2a);
+    static const lv_color_t SURFACE_MEDIUM   = lv_color_hex(0x2C2C2C);  // SeedSigner BUTTON_BACKGROUND
+    static const lv_color_t SURFACE_LIGHT    = lv_color_hex(0x333333);
     static const lv_color_t SURFACE_DISABLED = lv_color_hex(0x111111);
-    static const lv_color_t PRIMARY          = lv_color_hex(0xFF9900);
-    static const lv_color_t PRIMARY_LIGHT    = lv_color_hex(0xFFB340);
-    static const lv_color_t PRIMARY_DARK     = lv_color_hex(0xCC7A00);
-    static const lv_color_t TEXT_PRIMARY     = lv_color_hex(0xFFFFFF);
-    static const lv_color_t TEXT_SECONDARY   = lv_color_hex(0xAAAAAA);
+    static const lv_color_t PRIMARY          = lv_color_hex(0xFF9F0A);  // SeedSigner ACCENT_COLOR
+    static const lv_color_t PRIMARY_LIGHT    = lv_color_hex(0xFFB840);
+    static const lv_color_t PRIMARY_DARK     = lv_color_hex(0xCC7F08);
+    static const lv_color_t TEXT_PRIMARY     = lv_color_hex(0xFCFCFC);  // SeedSigner BODY_FONT_COLOR
+    static const lv_color_t TEXT_SECONDARY   = lv_color_hex(0x777777);  // SeedSigner LABEL_FONT_COLOR
     static const lv_color_t TEXT_DISABLED    = lv_color_hex(0x555555);
-    static const lv_color_t SUCCESS          = lv_color_hex(0x00AA00);
-    static const lv_color_t WARNING          = lv_color_hex(0xFFAA00);
-    static const lv_color_t ERROR            = lv_color_hex(0xFF3333);
-    static const lv_color_t INFO             = lv_color_hex(0x3399FF);
-    static const lv_color_t BORDER           = lv_color_hex(0x333333);
-    static const lv_color_t DIVIDER          = lv_color_hex(0x444444);
+    static const lv_color_t SUCCESS          = lv_color_hex(0x30D158);  // SeedSigner SUCCESS_COLOR
+    static const lv_color_t WARNING          = lv_color_hex(0xFFD60A);  // SeedSigner WARNING_COLOR
+    static const lv_color_t ERROR            = lv_color_hex(0xFF1B0A);  // SeedSigner ERROR_COLOR
+    static const lv_color_t INFO             = lv_color_hex(0x409CFF);  // SeedSigner INFO_COLOR
+    static const lv_color_t BORDER           = lv_color_hex(0x414141);  // SeedSigner INACTIVE_COLOR
+    static const lv_color_t DIVIDER          = lv_color_hex(0x414141);
     static const lv_color_t QR_BACKGROUND    = lv_color_hex(0xFFFFFF);
     static const lv_color_t QR_FOREGROUND    = lv_color_hex(0x000000);
 }
 
 // Typography constants
 namespace typography {
-    constexpr const lv_font_t* TITLE   = &lv_font_montserrat_14;
-    constexpr const lv_font_t* BODY    = &lv_font_montserrat_14;
-    constexpr const lv_font_t* CAPTION = &lv_font_montserrat_14;
+    // Calibrated to SeedSigner: title=20, body=17, button=18, label=15
+    // LVGL montserrat step is 2; pick nearest available size.
+    constexpr const lv_font_t* TITLE   = &lv_font_montserrat_20;  // TOP_NAV_TITLE_FONT_SIZE=20
+    constexpr const lv_font_t* BODY    = &lv_font_montserrat_16;  // BODY_FONT_SIZE=17 (nearest)
+    constexpr const lv_font_t* CAPTION = &lv_font_montserrat_14;  // LABEL_FONT_SIZE=15 (nearest)
     constexpr const lv_font_t* MONO    = &lv_font_montserrat_14;
+    constexpr const lv_font_t* BUTTON  = &lv_font_montserrat_18;  // BUTTON_FONT_SIZE=18
 }
 
 // Spacing and sizing
 namespace spacing {
-    constexpr lv_coord_t SCREEN_PADDING     = 8;
-    constexpr lv_coord_t COMPONENT_PADDING  = 6;
-    constexpr lv_coord_t BUTTON_HEIGHT      = 40;
+    // Calibrated to SeedSigner GUIConstants
+    constexpr lv_coord_t SCREEN_PADDING     = 8;   // EDGE_PADDING
+    constexpr lv_coord_t COMPONENT_PADDING  = 8;   // COMPONENT_PADDING
+    constexpr lv_coord_t BUTTON_HEIGHT      = 32;  // BUTTON_HEIGHT
     constexpr lv_coord_t BUTTON_RADIUS      = 4;
-    constexpr lv_coord_t TOPBAR_HEIGHT      = 44;
+    constexpr lv_coord_t TOPBAR_HEIGHT      = 48;  // TOP_NAV_HEIGHT
+    constexpr lv_coord_t TOPBAR_BUTTON_SIZE = 32;  // TOP_NAV_BUTTON_SIZE
     constexpr lv_coord_t ROW_RADIUS         = 4;
-    constexpr lv_coord_t ROW_PAD            = 8;
-    constexpr lv_coord_t ROW_GAP            = 6;
+    constexpr lv_coord_t ROW_PAD            = 4;   // LIST_ITEM_PADDING
+    constexpr lv_coord_t ROW_GAP            = 4;   // LIST_ITEM_PADDING
     constexpr lv_coord_t CHIP_RADIUS        = 4;
     constexpr lv_coord_t CHIP_MARGIN        = 4;
-    constexpr lv_coord_t CHIP_HEIGHT        = 36;
-}
+    constexpr lv_coord_t CHIP_HEIGHT        = 32;  // match BUTTON_HEIGHT
+    constexpr lv_coord_t MENU_ROW_HEIGHT    = 32;  // single-line row
+    constexpr lv_coord_t MENU_ROW_HEIGHT_TWO_LINE = 46; // two-line row
+};
 
 // ---------------------------------------------------------------------------
 // Style helpers — now read from active_theme()

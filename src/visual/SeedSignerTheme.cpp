@@ -8,25 +8,25 @@ namespace seedsigner::lvgl::theme {
 const ThemeColors DarkPalette = {
     /* BLACK           */ lv_color_hex(0x000000),
     /* SURFACE_DARK    */ lv_color_hex(0x1a1a1a),
-    /* SURFACE_MEDIUM  */ lv_color_hex(0x222222),
-    /* SURFACE_LIGHT   */ lv_color_hex(0x2a2a2a),
+    /* SURFACE_MEDIUM  */ lv_color_hex(0x2C2C2C),  // SeedSigner BUTTON_BACKGROUND
+    /* SURFACE_LIGHT   */ lv_color_hex(0x333333),
     /* SURFACE_DISABLED*/ lv_color_hex(0x111111),
 
-    /* PRIMARY         */ lv_color_hex(0xFF9900),
-    /* PRIMARY_LIGHT   */ lv_color_hex(0xFFB340),
-    /* PRIMARY_DARK    */ lv_color_hex(0xCC7A00),
+    /* PRIMARY         */ lv_color_hex(0xFF9F0A),  // SeedSigner ACCENT_COLOR
+    /* PRIMARY_LIGHT   */ lv_color_hex(0xFFB840),
+    /* PRIMARY_DARK    */ lv_color_hex(0xCC7F08),
 
-    /* TEXT_PRIMARY    */ lv_color_hex(0xFFFFFF),
-    /* TEXT_SECONDARY  */ lv_color_hex(0xAAAAAA),
+    /* TEXT_PRIMARY    */ lv_color_hex(0xFCFCFC),  // SeedSigner BODY_FONT_COLOR
+    /* TEXT_SECONDARY  */ lv_color_hex(0x777777),  // SeedSigner LABEL_FONT_COLOR
     /* TEXT_DISABLED   */ lv_color_hex(0x555555),
 
-    /* SUCCESS         */ lv_color_hex(0x00AA00),
-    /* WARNING         */ lv_color_hex(0xFFAA00),
-    /* ERROR           */ lv_color_hex(0xFF3333),
-    /* INFO            */ lv_color_hex(0x3399FF),
+    /* SUCCESS         */ lv_color_hex(0x30D158),  // SeedSigner SUCCESS_COLOR
+    /* WARNING         */ lv_color_hex(0xFFD60A),  // SeedSigner WARNING_COLOR
+    /* ERROR           */ lv_color_hex(0xFF1B0A),  // SeedSigner ERROR_COLOR
+    /* INFO            */ lv_color_hex(0x409CFF),  // SeedSigner INFO_COLOR
 
-    /* BORDER          */ lv_color_hex(0x333333),
-    /* DIVIDER         */ lv_color_hex(0x444444),
+    /* BORDER          */ lv_color_hex(0x414141),  // SeedSigner INACTIVE_COLOR
+    /* DIVIDER         */ lv_color_hex(0x414141),
 
     /* QR_BACKGROUND   */ lv_color_hex(0xFFFFFF),
     /* QR_FOREGROUND   */ lv_color_hex(0x000000),
