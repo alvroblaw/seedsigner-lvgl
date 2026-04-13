@@ -85,8 +85,8 @@ void KeyboardScreen::create(const ScreenContext& context, const RouteDescriptor&
 
     // Content container (everything below the nav bar)
     content_container_ = lv_obj_create(container_);
-    lv_obj_set_size(content_container_, lv_pct(100), lv_pct(100));
-    lv_obj_set_style_pad_all(content_container_, 6, 0);
+    lv_obj_set_width(content_container_, lv_pct(100));
+    lv_obj_set_style_pad_all(content_container_, 4, 0);
     lv_obj_set_flex_flow(content_container_, LV_FLEX_FLOW_COLUMN);
     lv_obj_set_flex_align(content_container_, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
     lv_obj_set_flex_grow(content_container_, 1); // Take remaining height
@@ -164,7 +164,7 @@ void KeyboardScreen::create_text_display() {
     // Text display area — SeedSigner dark styling
     text_display_ = lv_textarea_create(content_container_);
     lv_obj_set_width(text_display_, lv_pct(100));
-    lv_obj_set_height(text_display_, LV_SIZE_CONTENT);
+    lv_obj_set_height(text_display_, 28);  // fixed compact height
     lv_textarea_set_text(text_display_, current_text_.c_str());
     lv_textarea_set_cursor_pos(text_display_, cursor_position_);
     lv_textarea_set_one_line(text_display_, true);
@@ -180,8 +180,8 @@ void KeyboardScreen::create_text_display() {
     lv_obj_set_style_radius(text_display_, theme::spacing::BUTTON_RADIUS, 0);
     lv_obj_set_style_text_color(text_display_, thm.TEXT_PRIMARY, 0);
     lv_obj_set_style_text_font(text_display_, &lv_font_montserrat_14, 0);
-    lv_obj_set_style_pad_all(text_display_, 6, 0);
-    lv_obj_set_style_pad_bottom(text_display_, 8, 0);
+    lv_obj_set_style_pad_ver(text_display_, 4, 0);
+    lv_obj_set_style_pad_hor(text_display_, 6, 0);
 }
 
 void KeyboardScreen::create_keyboard_grid() {
@@ -189,8 +189,8 @@ void KeyboardScreen::create_keyboard_grid() {
     auto& thm = theme::active_theme();
     keyboard_grid_ = lv_btnmatrix_create(content_container_);
     lv_obj_set_width(keyboard_grid_, lv_pct(100));
-    lv_obj_set_height(keyboard_grid_, LV_SIZE_CONTENT);
-    // Build layout map
+    lv_obj_clear_flag(keyboard_grid_, LV_OBJ_FLAG_SCROLLABLE);
+    // Build layout map first to know the row count
     build_layout_map();
     std::cout << "btn_count_=" << btn_count_ << std::endl;
     // Build null-terminated map as a member so it outlives the btnmatrix widget
@@ -228,14 +228,25 @@ void KeyboardScreen::create_keyboard_grid() {
     selected_row_ = 0;
     selected_col_ = 0;
     lv_btnmatrix_set_btn_ctrl(keyboard_grid_, 0, LV_BTNMATRIX_CTRL_CHECKED);
-    lv_obj_set_style_pad_bottom(keyboard_grid_, 8, 0);
+    lv_obj_set_style_pad_bottom(keyboard_grid_, 4, 0);
+
+    // Explicit height so all grid rows are visible (LVGL btnmatrix with flex_grow alone
+    // reports too small an intrinsic size; a computed minimum guarantees visibility).
+    {
+        int rows = get_grid_rows();
+        int key_h = 22;  // per-row height (font 14 + padding)
+        int kb_h = rows * key_h + (rows > 0 ? (rows - 1) * kKeyGap : 0) + 4;
+        lv_obj_set_height(keyboard_grid_, kb_h);
+    }
+    lv_obj_set_flex_grow(keyboard_grid_, 1);  // expand further if space allows
 }
 
 void KeyboardScreen::create_soft_buttons() {
     // Container for soft buttons in a horizontal row
     auto& thm = theme::active_theme();
     soft_container_ = lv_obj_create(content_container_);
-    lv_obj_set_size(soft_container_, lv_pct(100), LV_SIZE_CONTENT);
+    lv_obj_set_width(soft_container_, lv_pct(100));
+    lv_obj_set_height(soft_container_, LV_SIZE_CONTENT);
     lv_obj_set_flex_flow(soft_container_, LV_FLEX_FLOW_ROW);
     lv_obj_set_flex_align(soft_container_, LV_FLEX_ALIGN_SPACE_EVENLY, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
     lv_obj_clear_flag(soft_container_, LV_OBJ_FLAG_SCROLLABLE);
@@ -243,11 +254,12 @@ void KeyboardScreen::create_soft_buttons() {
     lv_obj_set_style_bg_color(soft_container_, thm.SURFACE_DARK, 0);
     lv_obj_set_style_bg_opa(soft_container_, LV_OPA_COVER, 0);
     lv_obj_set_style_border_width(soft_container_, 0, 0);
-    lv_obj_set_style_pad_all(soft_container_, 4, 0);
+    lv_obj_set_style_pad_ver(soft_container_, 2, 0);
+    lv_obj_set_style_pad_hor(soft_container_, 4, 0);
 
     auto style_soft_btn = [&](lv_obj_t* btn) {
         theme::apply_button_style(btn);
-        lv_obj_set_style_min_height(btn, theme::spacing::BUTTON_HEIGHT, 0);
+        lv_obj_set_style_min_height(btn, 26, 0);  // compact soft buttons
         lv_obj_set_style_text_font(btn, &lv_font_montserrat_14, 0);
         lv_obj_set_style_text_color(btn, thm.TEXT_PRIMARY, 0);
     };
@@ -297,7 +309,7 @@ void KeyboardScreen::create_soft_buttons() {
         style_soft_btn(save_btn_);
         // SAVE button uses primary accent styling
         theme::apply_button_style(save_btn_, true);
-        lv_obj_set_style_min_height(save_btn_, theme::spacing::BUTTON_HEIGHT, 0);
+        lv_obj_set_style_min_height(save_btn_, 26, 0);
         lv_obj_set_style_text_font(save_btn_, &lv_font_montserrat_14, 0);
     }
 }
@@ -351,8 +363,8 @@ void KeyboardScreen::build_layout_map() {
                 layout_map_.push_back("");
             }
         }
-        // Add row separator (empty string)
-        layout_map_.push_back("");
+        // Add row separator (newline character — LVGL btnmatrix uses "\n", not "")
+        layout_map_.push_back("\n");
     }
 }
 
