@@ -1,5 +1,6 @@
 #include "seedsigner_lvgl/screens/MenuListScreen.hpp"
 #include "seedsigner_lvgl/visual/SeedSignerTheme.hpp"
+#include "icons.h"
 
 #include <algorithm>
 #include <sstream>
@@ -28,13 +29,17 @@ std::string trim(std::string value) {
     return value.substr(first, last - first + 1);
 }
 
-const char* accessory_glyph(std::string_view accessory) {
+const lv_img_dsc_t* accessory_icon(std::string_view accessory) {
     if (accessory == "check" || accessory == "checked" || accessory == "selected") {
-        return LV_SYMBOL_OK;
+        return &img_check;
     }
     if (accessory == "chevron" || accessory == "next") {
-        return LV_SYMBOL_RIGHT;
+        return &img_arrow_right;
     }
+    return nullptr;
+}
+
+const char* accessory_glyph(std::string_view accessory) {
     if (accessory == "toggle_on") {
         return LV_SYMBOL_OK " on";
     }
@@ -163,9 +168,17 @@ void MenuListScreen::create(const ScreenContext& context, const RouteDescriptor&
 
         lv_obj_t* accessory = nullptr;
         if (!item.accessory.empty()) {
-            accessory = lv_label_create(button);
-            const char* glyph = accessory_glyph(item.accessory);
-            lv_label_set_text(accessory, glyph != nullptr ? glyph : item.accessory.c_str());
+            const lv_img_dsc_t* icon = accessory_icon(item.accessory);
+            if (icon != nullptr) {
+                accessory = lv_img_create(button);
+                lv_img_set_src(accessory, icon);
+                lv_obj_set_style_img_recolor(accessory, seedsigner::lvgl::theme::active_theme().TEXT_PRIMARY, 0);
+                lv_obj_set_style_img_recolor_opa(accessory, LV_OPA_COVER, 0);
+            } else {
+                const char* glyph = accessory_glyph(item.accessory);
+                accessory = lv_label_create(button);
+                lv_label_set_text(accessory, glyph != nullptr ? glyph : item.accessory.c_str());
+            }
             lv_obj_set_style_text_align(accessory, LV_TEXT_ALIGN_RIGHT, 0);
         }
 

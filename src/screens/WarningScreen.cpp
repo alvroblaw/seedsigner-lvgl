@@ -98,6 +98,8 @@ void WarningScreen::create(const ScreenContext& context, const RouteDescriptor& 
     if (icon_img) {
         icon_obj_ = lv_img_create(content_container_);
         lv_img_set_src(icon_obj_, icon_img);
+        lv_obj_set_style_img_recolor(icon_obj_, severity_to_title_color(severity_), 0);
+        lv_obj_set_style_img_recolor_opa(icon_obj_, LV_OPA_COVER, 0);
     } else {
         icon_obj_ = lv_label_create(content_container_);
         lv_label_set_text(icon_obj_, icon_symbol);
