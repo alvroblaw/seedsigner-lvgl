@@ -66,9 +66,11 @@ void SdlDisplay::flush_cb(lv_disp_drv_t* disp_drv, const lv_area_t* area, lv_col
     auto* self = static_cast<SdlDisplay*>(disp_drv->user_data);
     if (self) {
         ++self->flush_count_;
-        // We always blit the full framebuffer — partial area blitting is a
-        // future optimisation that isn't worth the complexity for a demo.
-        self->blit_framebuffer();
+        // Only blit on the last flush of a LVGL refresh cycle to avoid
+        // tearing from partial mid-cycle renders.
+        if (lv_disp_flush_is_last(disp_drv)) {
+            self->blit_framebuffer();
+        }
     }
     lv_disp_flush_ready(disp_drv);
 }
@@ -82,9 +84,11 @@ void SdlDisplay::blit_framebuffer() {
 
     // LV_COLOR_FORMAT is RGB565 (16-bit) by default on v8.3.  We expand to
     // RGB888 for SDL's surface.
+    // Use ARGB8888: on little-endian the uint32 value 0xAARRGGBB maps to
+    // memory bytes B,G,R,A which is what SDL expects for ARGB8888.
     SDL_Surface* surf = SDL_CreateRGBSurfaceWithFormat(
         0, static_cast<int>(width_), static_cast<int>(height_), 32,
-        SDL_PIXELFORMAT_RGBX8888);
+        SDL_PIXELFORMAT_ARGB8888);
     if (!surf) return;
 
     auto* px = static_cast<std::uint32_t*>(surf->pixels);
@@ -94,7 +98,7 @@ void SdlDisplay::blit_framebuffer() {
         const auto r = static_cast<std::uint32_t>((c.full >> 11) & 0x1F) * 255 / 31;
         const auto g = static_cast<std::uint32_t>((c.full >>  5) & 0x3F) * 255 / 63;
         const auto b = static_cast<std::uint32_t>( c.full        & 0x1F) * 255 / 31;
-        px[i] = (r << 24) | (g << 16) | (b << 8) | 0xFF;
+        px[i] = (0xFF << 24) | (r << 16) | (g << 8) | b;
     }
 
     SDL_Texture* tex = SDL_CreateTextureFromSurface(sdl_->renderer, surf);
@@ -102,6 +106,7 @@ void SdlDisplay::blit_framebuffer() {
         int win_w, win_h;
         SDL_GetRendererOutputSize(sdl_->renderer, &win_w, &win_h);
         SDL_Rect dst{0, 0, win_w, win_h};
+        SDL_RenderClear(sdl_->renderer);
         SDL_RenderCopy(sdl_->renderer, tex, nullptr, &dst);
         SDL_RenderPresent(sdl_->renderer);
         SDL_DestroyTexture(tex);
