@@ -17,3 +17,9 @@ screenshots/
 screenshots_diff/
 screenshot_diff_report.json
 scenarios/out/
+
+# Agent/CI artifacts
+implementation_result.json
+pr_manager_result.json
+test_report.json
+Testing/
