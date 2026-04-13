@@ -126,7 +126,7 @@ void MenuListScreen::create(const ScreenContext& context, const RouteDescriptor&
         const auto& item = items_[index];
         auto* button = lv_btn_create(list_);
         lv_obj_set_width(button, lv_pct(100));
-        lv_obj_set_style_min_height(button, item.secondary_text.empty() ? 38 : 52, 0);
+        lv_obj_set_style_min_height(button, item.secondary_text.empty() ? theme::spacing::MENU_ROW_HEIGHT : theme::spacing::MENU_ROW_HEIGHT_TWO_LINE, 0);
         lv_obj_set_flex_flow(button, LV_FLEX_FLOW_ROW);
         lv_obj_set_flex_align(button, LV_FLEX_ALIGN_SPACE_BETWEEN, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
         lv_obj_add_style(button, &row_style_, LV_PART_MAIN);
