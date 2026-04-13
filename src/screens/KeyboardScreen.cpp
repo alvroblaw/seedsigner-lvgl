@@ -1,4 +1,5 @@
 #include "seedsigner_lvgl/screens/KeyboardScreen.hpp"
+#include "seedsigner_lvgl/visual/SeedSignerTheme.hpp"
 
 #include <lvgl.h>
 #include <string>
@@ -18,9 +19,11 @@ constexpr const char* kCursorLeftAction = "cursor_left";
 constexpr const char* kCursorRightAction = "cursor_right";
 constexpr const char* kPreviousPageAction = "previous_page";
 
-// Default grid dimensions
+// Grid dimensions — tighter grid for SeedSigner-style density
 constexpr int kDefaultRows = 4;
 constexpr int kDefaultCols = 10;
+constexpr int kKeyGap = 2;        // px between keys
+constexpr int kKeyRadius = 3;     // rounded corners on keys
 
 // Soft button labels
 constexpr const char* kBackspaceLabel = "<-";
@@ -30,9 +33,9 @@ constexpr const char* kCursorRightLabel = ">";
 constexpr const char* kPreviousPageLabel = "<<";
 constexpr const char* kSaveLabel = "SAVE";
 
-// Layout strings for lowercase letters a-z
-constexpr const char* kLowercaseLetters = "abcdefghijklmnopqrstuvwxyz";
-constexpr const char* kUppercaseLetters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+// QWERTY-ordered layout strings (SeedSigner parity)
+constexpr const char* kLowercaseLetters = "qwertyuiopasdfghjklzxcvbnm";
+constexpr const char* kUppercaseLetters = "QWERTYUIOPASDFGHJKLZXCVBNM";
 constexpr const char* kDigits = "0123456789";
 constexpr const char* kSymbols = "!@#$%^&*()_+-=[]{}|;:'\",.<>?/`~";
 
@@ -83,10 +86,15 @@ void KeyboardScreen::create(const ScreenContext& context, const RouteDescriptor&
     // Content container (everything below the nav bar)
     content_container_ = lv_obj_create(container_);
     lv_obj_set_size(content_container_, lv_pct(100), lv_pct(100));
-    lv_obj_set_style_pad_all(content_container_, 8, 0);
+    lv_obj_set_style_pad_all(content_container_, 6, 0);
     lv_obj_set_flex_flow(content_container_, LV_FLEX_FLOW_COLUMN);
     lv_obj_set_flex_align(content_container_, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
     lv_obj_set_flex_grow(content_container_, 1); // Take remaining height
+    // Dark background, no border
+    auto& thm = theme::active_theme();
+    lv_obj_set_style_bg_color(content_container_, thm.SURFACE_DARK, 0);
+    lv_obj_set_style_bg_opa(content_container_, LV_OPA_COVER, 0);
+    lv_obj_set_style_border_width(content_container_, 0, 0);
 
     create_text_display();
     create_keyboard_grid();
@@ -152,7 +160,8 @@ bool KeyboardScreen::handle_input(const InputEvent& input) {
 
 void KeyboardScreen::create_text_display() {
     std::cout << "KeyboardScreen::create_text_display" << std::endl;
-    // Create a text area for display and editing
+    auto& thm = theme::active_theme();
+    // Text display area — SeedSigner dark styling
     text_display_ = lv_textarea_create(content_container_);
     lv_obj_set_width(text_display_, lv_pct(100));
     lv_obj_set_height(text_display_, LV_SIZE_CONTENT);
@@ -163,11 +172,21 @@ void KeyboardScreen::create_text_display() {
     // Disable input via LVGL's built‑in keyboard; we handle input ourselves
     lv_textarea_set_text_selection(text_display_, false);
     lv_obj_clear_flag(text_display_, LV_OBJ_FLAG_CLICKABLE);
-    lv_obj_set_style_pad_bottom(text_display_, 16, 0);
+    // Dark styling for text area
+    lv_obj_set_style_bg_color(text_display_, thm.SURFACE_MEDIUM, 0);
+    lv_obj_set_style_bg_opa(text_display_, LV_OPA_COVER, 0);
+    lv_obj_set_style_border_color(text_display_, thm.BORDER, 0);
+    lv_obj_set_style_border_width(text_display_, 1, 0);
+    lv_obj_set_style_radius(text_display_, theme::spacing::BUTTON_RADIUS, 0);
+    lv_obj_set_style_text_color(text_display_, thm.TEXT_PRIMARY, 0);
+    lv_obj_set_style_text_font(text_display_, &lv_font_montserrat_14, 0);
+    lv_obj_set_style_pad_all(text_display_, 6, 0);
+    lv_obj_set_style_pad_bottom(text_display_, 8, 0);
 }
 
 void KeyboardScreen::create_keyboard_grid() {
     std::cout << "KeyboardScreen::create_keyboard_grid" << std::endl;
+    auto& thm = theme::active_theme();
     keyboard_grid_ = lv_btnmatrix_create(content_container_);
     lv_obj_set_width(keyboard_grid_, lv_pct(100));
     lv_obj_set_height(keyboard_grid_, LV_SIZE_CONTENT);
@@ -182,26 +201,62 @@ void KeyboardScreen::create_keyboard_grid() {
     for (int i = 0; i < btn_count_; ++i) {
         lv_btnmatrix_set_btn_ctrl(keyboard_grid_, i, LV_BTNMATRIX_CTRL_CHECKABLE);
     }
+    // --- SeedSigner dark theme key styling ---
+    // Default (unchecked) key: dark surface
+    lv_obj_set_style_bg_color(keyboard_grid_, thm.SURFACE_MEDIUM, LV_PART_ITEMS | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_opa(keyboard_grid_, LV_OPA_COVER, LV_PART_ITEMS | LV_STATE_DEFAULT);
+    lv_obj_set_style_border_color(keyboard_grid_, thm.BORDER, LV_PART_ITEMS | LV_STATE_DEFAULT);
+    lv_obj_set_style_border_width(keyboard_grid_, 1, LV_PART_ITEMS | LV_STATE_DEFAULT);
+    lv_obj_set_style_radius(keyboard_grid_, kKeyRadius, LV_PART_ITEMS | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_color(keyboard_grid_, thm.TEXT_PRIMARY, LV_PART_ITEMS | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(keyboard_grid_, &lv_font_montserrat_14, LV_PART_ITEMS | LV_STATE_DEFAULT);
+    // Checked (focused) key: accent highlight — strong SeedSigner orange
+    lv_obj_set_style_bg_color(keyboard_grid_, thm.PRIMARY, LV_PART_ITEMS | LV_STATE_CHECKED);
+    lv_obj_set_style_bg_opa(keyboard_grid_, LV_OPA_COVER, LV_PART_ITEMS | LV_STATE_CHECKED);
+    lv_obj_set_style_border_color(keyboard_grid_, thm.PRIMARY_LIGHT, LV_PART_ITEMS | LV_STATE_CHECKED);
+    lv_obj_set_style_border_width(keyboard_grid_, 2, LV_PART_ITEMS | LV_STATE_CHECKED);
+    lv_obj_set_style_text_color(keyboard_grid_, thm.BLACK, LV_PART_ITEMS | LV_STATE_CHECKED);
+    // Pressed feedback
+    lv_obj_set_style_bg_color(keyboard_grid_, thm.PRIMARY_LIGHT, LV_PART_ITEMS | LV_STATE_PRESSED);
+    // Tighter key spacing for density
+    lv_obj_set_style_pad_gap(keyboard_grid_, kKeyGap, LV_PART_ITEMS | LV_STATE_DEFAULT);
+    // Background of btnmatrix itself
+    lv_obj_set_style_bg_color(keyboard_grid_, thm.SURFACE_DARK, 0);
+    lv_obj_set_style_bg_opa(keyboard_grid_, LV_OPA_COVER, 0);
+    lv_obj_set_style_border_width(keyboard_grid_, 0, 0);
     // Set selected button (first)
     selected_row_ = 0;
     selected_col_ = 0;
     lv_btnmatrix_set_btn_ctrl(keyboard_grid_, 0, LV_BTNMATRIX_CTRL_CHECKED);
-    lv_obj_set_style_pad_bottom(keyboard_grid_, 16, 0);
+    lv_obj_set_style_pad_bottom(keyboard_grid_, 8, 0);
 }
 
 void KeyboardScreen::create_soft_buttons() {
     // Container for soft buttons in a horizontal row
+    auto& thm = theme::active_theme();
     soft_container_ = lv_obj_create(content_container_);
     lv_obj_set_size(soft_container_, lv_pct(100), LV_SIZE_CONTENT);
     lv_obj_set_flex_flow(soft_container_, LV_FLEX_FLOW_ROW);
     lv_obj_set_flex_align(soft_container_, LV_FLEX_ALIGN_SPACE_EVENLY, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
     lv_obj_clear_flag(soft_container_, LV_OBJ_FLAG_SCROLLABLE);
+    // Dark container, no border
+    lv_obj_set_style_bg_color(soft_container_, thm.SURFACE_DARK, 0);
+    lv_obj_set_style_bg_opa(soft_container_, LV_OPA_COVER, 0);
+    lv_obj_set_style_border_width(soft_container_, 0, 0);
+    lv_obj_set_style_pad_all(soft_container_, 4, 0);
 
+    auto style_soft_btn = [&](lv_obj_t* btn) {
+        theme::apply_button_style(btn);
+        lv_obj_set_style_min_height(btn, theme::spacing::BUTTON_HEIGHT, 0);
+        lv_obj_set_style_text_font(btn, &lv_font_montserrat_14, 0);
+        lv_obj_set_style_text_color(btn, thm.TEXT_PRIMARY, 0);
+    };
     if (params_.allow_backspace) {
         backspace_btn_ = lv_btn_create(soft_container_);
         lv_obj_t* label = lv_label_create(backspace_btn_);
         lv_label_set_text(label, kBackspaceLabel);
         lv_obj_set_size(backspace_btn_, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
+        style_soft_btn(backspace_btn_);
         lv_obj_add_event_cb(backspace_btn_, [](lv_event_t* e) {
             // Not used; we handle input via handle_input
         }, LV_EVENT_CLICKED, this);
@@ -211,30 +266,39 @@ void KeyboardScreen::create_soft_buttons() {
         lv_obj_t* label = lv_label_create(space_btn_);
         lv_label_set_text(label, kSpaceLabel);
         lv_obj_set_size(space_btn_, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
+        style_soft_btn(space_btn_);
     }
     if (params_.allow_cursor_left) {
         cursor_left_btn_ = lv_btn_create(soft_container_);
         lv_obj_t* label = lv_label_create(cursor_left_btn_);
         lv_label_set_text(label, kCursorLeftLabel);
         lv_obj_set_size(cursor_left_btn_, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
+        style_soft_btn(cursor_left_btn_);
     }
     if (params_.allow_cursor_right) {
         cursor_right_btn_ = lv_btn_create(soft_container_);
         lv_obj_t* label = lv_label_create(cursor_right_btn_);
         lv_label_set_text(label, kCursorRightLabel);
         lv_obj_set_size(cursor_right_btn_, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
+        style_soft_btn(cursor_right_btn_);
     }
     if (params_.allow_previous_page) {
         previous_page_btn_ = lv_btn_create(soft_container_);
         lv_obj_t* label = lv_label_create(previous_page_btn_);
         lv_label_set_text(label, kPreviousPageLabel);
         lv_obj_set_size(previous_page_btn_, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
+        style_soft_btn(previous_page_btn_);
     }
     if (params_.show_save_button) {
         save_btn_ = lv_btn_create(soft_container_);
         lv_obj_t* label = lv_label_create(save_btn_);
         lv_label_set_text(label, kSaveLabel);
         lv_obj_set_size(save_btn_, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
+        style_soft_btn(save_btn_);
+        // SAVE button uses primary accent styling
+        theme::apply_button_style(save_btn_, true);
+        lv_obj_set_style_min_height(save_btn_, theme::spacing::BUTTON_HEIGHT, 0);
+        lv_obj_set_style_text_font(save_btn_, &lv_font_montserrat_14, 0);
     }
 }
 
