@@ -152,6 +152,8 @@ int main(int argc, char** argv) {
     std::printf("Scenario dir: %s\n", scenario_dir.c_str());
     std::printf("Output dir:   %s\n\n", out_dir.c_str());
 
+    // Wipe any previous output to prevent stale artifacts from prior runs.
+    std::filesystem::remove_all(out_dir);
     std::filesystem::create_directories(out_dir);
 
     auto scenario_names = find_scenarios(scenario_dir);
@@ -182,6 +184,9 @@ int main(int argc, char** argv) {
             std::fflush(stdout);
             std::fflush(stderr);
 
+            // Isolation: each scenario×profile runs in its own forked child with a
+            // completely fresh LVGL instance (lv_init + UiRuntime::init).  No state
+            // leaks between runs — matching screenshot_tests' process-per-case model.
             pid_t pid = fork();
             if (pid == 0) {
                 // Child: set up LVGL with this profile's resolution
@@ -195,7 +200,7 @@ int main(int argc, char** argv) {
 
                 auto result = ScenarioRunner::load_and_run(tmp_path, rt, prof.width, prof.height);
 
-                // Cleanup temp file
+                // Cleanup temp file (best-effort; parent also cleans)
                 std::filesystem::remove(tmp_path);
 
                 if (result.ok) {
@@ -209,6 +214,8 @@ int main(int argc, char** argv) {
             } else if (pid > 0) {
                 int status;
                 waitpid(pid, &status, 0);
+                // Ensure temp file is cleaned even if child crashed
+                std::filesystem::remove(tmp_path);
                 bool ok = WIFEXITED(status) && WEXITSTATUS(status) == 0;
                 matrix[prof.name][sc_name] = ok;
                 if (ok) ++total_pass; else ++total_fail;
