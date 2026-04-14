@@ -87,7 +87,7 @@ target_link_libraries(host_sim_demo PRIVATE seedsigner_lvgl)
 option(BUILD_HOST_DESKTOP "Build the interactive SDL2 desktop demo" OFF)
 if(BUILD_HOST_DESKTOP)
   find_package(PkgConfig REQUIRED)
-  pkg_check_modules(SDL2 REQUIRED sdl2)
+  pkg_check_modules(SDL2 REQUIRED IMPORTED_TARGET sdl2)
 
   # nlohmann/json for scenario loader
   FetchContent_Declare(
@@ -101,11 +101,7 @@ if(BUILD_HOST_DESKTOP)
     src/platform/SdlDisplay.cpp
     src/desktop/ScenarioRunner.cpp
   )
-  target_include_directories(host_desktop_demo PRIVATE
-    ${SDL2_INCLUDE_DIRS}
-  )
-  target_link_libraries(host_desktop_demo PRIVATE seedsigner_lvgl ${SDL2_LIBRARIES} nlohmann_json::nlohmann_json)
-  target_compile_options(host_desktop_demo PRIVATE ${SDL2_CFLAGS_OTHER})
+  target_link_libraries(host_desktop_demo PRIVATE seedsigner_lvgl PkgConfig::SDL2 nlohmann_json::nlohmann_json)
 
   # --- Scenario validation suite (headless) ---
   add_executable(scenario_suite_runner
