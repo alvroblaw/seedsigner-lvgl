@@ -35,6 +35,7 @@ SdlDisplay::SdlDisplay(std::uint32_t width, std::uint32_t height, std::uint32_t 
     , height_(height)
     , pixel_scale_(pixel_scale)
     , framebuffer_(static_cast<std::size_t>(width) * height)
+    , argb_buffer_(static_cast<std::size_t>(width) * height)
     , sdl_(std::make_unique<SdlState>())
 {
     if (SDL_Init(SDL_INIT_VIDEO) != 0) {
@@ -80,33 +81,43 @@ void SdlDisplay::flush_cb(lv_disp_drv_t* disp_drv, const lv_area_t* area, lv_col
 void SdlDisplay::blit_framebuffer() {
     if (!sdl_->renderer) return;
 
-    // LV_COLOR_FORMAT is RGB565 (16-bit) by default on v8.3.  We expand to
-    // RGB888 for SDL's surface.
-    SDL_Surface* surf = SDL_CreateRGBSurfaceWithFormat(
-        0, static_cast<int>(width_), static_cast<int>(height_), 32,
-        SDL_PIXELFORMAT_RGBX8888);
-    if (!surf) return;
+    // Lazily create (or recreate after resolution switch) the persistent texture.
+    if (!texture_) {
+        texture_ = SDL_CreateTexture(
+            sdl_->renderer,
+            SDL_PIXELFORMAT_ARGB8888,
+            SDL_TEXTUREACCESS_STREAMING,
+            static_cast<int>(width_),
+            static_cast<int>(height_));
+        if (!texture_) {
+            std::fprintf(stderr, "[SdlDisplay] SDL_CreateTexture failed: %s\n", SDL_GetError());
+            return;
+        }
+    }
 
-    auto* px = static_cast<std::uint32_t*>(surf->pixels);
+    // Expand RGB565 framebuffer → ARGB8888 intermediate buffer.
     for (std::size_t i = 0; i < framebuffer_.size(); ++i) {
         const lv_color_t c = framebuffer_[i];
-        // lv_color_t is a uint16_t in RGB565.  Expand channels.
         const auto r = static_cast<std::uint32_t>((c.full >> 11) & 0x1F) * 255 / 31;
         const auto g = static_cast<std::uint32_t>((c.full >>  5) & 0x3F) * 255 / 63;
         const auto b = static_cast<std::uint32_t>( c.full        & 0x1F) * 255 / 31;
-        px[i] = (r << 24) | (g << 16) | (b << 8) | 0xFF;
+        argb_buffer_[i] = (0xFFu << 24) | (r << 16) | (g << 8) | b;
     }
 
-    SDL_Texture* tex = SDL_CreateTextureFromSurface(sdl_->renderer, surf);
-    if (tex) {
-        int win_w, win_h;
-        SDL_GetRendererOutputSize(sdl_->renderer, &win_w, &win_h);
-        SDL_Rect dst{0, 0, win_w, win_h};
-        SDL_RenderCopy(sdl_->renderer, tex, nullptr, &dst);
-        SDL_RenderPresent(sdl_->renderer);
-        SDL_DestroyTexture(tex);
+    // Upload full buffer to the persistent texture.
+    // pitch = width * 4 bytes (ARGB8888), guaranteed correct for our linear buffer.
+    const int pitch = static_cast<int>(width_) * 4;
+    if (SDL_UpdateTexture(texture_, nullptr, argb_buffer_.data(), pitch) != 0) {
+        std::fprintf(stderr, "[SdlDisplay] SDL_UpdateTexture failed: %s\n", SDL_GetError());
+        return;
     }
-    SDL_FreeSurface(surf);
+
+    int win_w, win_h;
+    SDL_GetRendererOutputSize(sdl_->renderer, &win_w, &win_h);
+    SDL_Rect dst{0, 0, win_w, win_h};
+    SDL_RenderClear(sdl_->renderer);
+    SDL_RenderCopy(sdl_->renderer, texture_, nullptr, &dst);
+    SDL_RenderPresent(sdl_->renderer);
 }
 
 // -------------------------------------------------------------------------- //
@@ -236,7 +247,8 @@ void SdlDisplay::pointer_read_cb(lv_indev_drv_t* drv, lv_indev_data_t* data) {
 // -------------------------------------------------------------------------- //
 
 void SdlDisplay::create_sdl_window() {
-    // Destroy previous window/renderer if any.
+    // Destroy previous texture/window/renderer if any.
+    if (texture_)      { SDL_DestroyTexture(texture_);        texture_       = nullptr; }
     if (sdl_->renderer) { SDL_DestroyRenderer(sdl_->renderer); sdl_->renderer = nullptr; }
     if (sdl_->window)   { SDL_DestroyWindow(sdl_->window);     sdl_->window   = nullptr; }
 
@@ -281,8 +293,9 @@ bool SdlDisplay::switch_resolution(std::uint32_t new_width, std::uint32_t new_he
     width_  = new_width;
     height_ = new_height;
     framebuffer_.assign(static_cast<std::size_t>(width_) * height_, lv_color_t{});
+    argb_buffer_.assign(static_cast<std::size_t>(width_) * height_, 0);
 
-    // 3. Recreate SDL window at new size.
+    // 3. Recreate SDL window at new size (also resets texture_).
     create_sdl_window();
     if (!sdl_->window || !sdl_->renderer) return false;
 

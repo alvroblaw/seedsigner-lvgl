@@ -20,6 +20,7 @@
 
 #include <lvgl.h>
 
+struct SDL_Texture;
 struct SDL_Window;
 struct SDL_Renderer;
 union SDL_Event;
@@ -109,6 +110,11 @@ private:
     // SDL state — opaque pointers; lifetime managed in .cpp via RAII.
     struct SdlState;
     std::unique_ptr<SdlState> sdl_;
+
+    // Persistent texture — created once, updated each frame via SDL_UpdateTexture.
+    // Avoids per-frame allocation churn that causes corruption on some SDL backends.
+    SDL_Texture* texture_{nullptr};
+    std::vector<std::uint32_t> argb_buffer_;  ///< Expanded ARGB8888 pixel buffer
 
     QuitCallback quit_callback_;
     bool quit_requested_{false};
