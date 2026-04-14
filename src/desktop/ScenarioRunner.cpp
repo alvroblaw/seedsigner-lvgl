@@ -45,6 +45,14 @@ void drain_events(UiRuntime& rt) {
     while (rt.next_event()) {}
 }
 
+void settle_runtime(UiRuntime& rt, std::uint32_t tick_ms = 16) {
+    rt.tick(tick_ms);
+    rt.refresh_now();
+    drain_events(rt);
+    rt.tick(tick_ms);
+    rt.refresh_now();
+}
+
 }  // namespace
 
 ScenarioResult ScenarioRunner::load_and_run(const std::string& path,
@@ -96,7 +104,7 @@ ScenarioResult ScenarioRunner::load_and_run(const std::string& path,
                     desc.args = json_to_props(step["args"]);
                 }
                 runtime.activate(desc);
-                drain_events(runtime);
+                settle_runtime(runtime);
 
             } else if (action == "input") {
                 if (!step.contains("key") || !step["key"].is_string()) {
@@ -105,7 +113,7 @@ ScenarioResult ScenarioRunner::load_and_run(const std::string& path,
                 }
                 InputKey key = parse_input_key(step["key"].get<std::string>());
                 runtime.send_input(InputEvent{key});
-                drain_events(runtime);
+                settle_runtime(runtime);
 
             } else if (action == "screenshot") {
                 if (!step.contains("path") || !step["path"].is_string()) {
@@ -113,7 +121,7 @@ ScenarioResult ScenarioRunner::load_and_run(const std::string& path,
                     return result;
                 }
                 const std::string sp = step["path"].get<std::string>();
-                runtime.refresh_now();
+                settle_runtime(runtime);
                 const auto* disp = runtime.display();
                 if (!disp) {
                     result.error = "no headless display available for screenshot";

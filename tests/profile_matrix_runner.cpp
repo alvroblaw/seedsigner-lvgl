@@ -25,8 +25,6 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
-#include <lvgl.h>
-
 #include "seedsigner_lvgl/desktop/ScenarioRunner.hpp"
 #include "seedsigner_lvgl/runtime/UiRuntime.hpp"
 #include "seedsigner_lvgl/screen/ScreenRegistry.hpp"
@@ -181,10 +179,12 @@ int main(int argc, char** argv) {
             // Rewrite screenshot paths for this profile
             std::string tmp_path = rewrite_scenario_for_profile(sc_path, prof.name, out_dir);
 
+            std::fflush(stdout);
+            std::fflush(stderr);
+
             pid_t pid = fork();
             if (pid == 0) {
                 // Child: set up LVGL with this profile's resolution
-                lv_init();
                 set_profile(prof.pid);
                 UiRuntime rt(RuntimeConfig{
                     .width = prof.width,
