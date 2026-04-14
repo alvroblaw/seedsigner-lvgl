@@ -5,6 +5,7 @@
 #include "seedsigner_lvgl/runtime/InputEvent.hpp"
 
 #include <cstdio>
+#include <cstring>
 
 // SDL2 headers — keep after project headers to avoid macro collisions.
 #include <SDL.h>
@@ -34,6 +35,7 @@ SdlDisplay::SdlDisplay(std::uint32_t width, std::uint32_t height, std::uint32_t 
     : width_(width)
     , height_(height)
     , pixel_scale_(pixel_scale)
+    , draw_buf_(static_cast<std::size_t>(width) * 40)          // 40-row LVGL render scratch
     , framebuffer_(static_cast<std::size_t>(width) * height)
     , argb_buffer_(static_cast<std::size_t>(width) * height)
     , sdl_(std::make_unique<SdlState>())
@@ -45,9 +47,10 @@ SdlDisplay::SdlDisplay(std::uint32_t width, std::uint32_t height, std::uint32_t 
 
     create_sdl_window();
 
-    // Register an LVGL display driver backed by our framebuffer.
-    lv_disp_draw_buf_init(&draw_buffer_, framebuffer_.data(), nullptr,
-                          static_cast<uint32_t>(framebuffer_.size()));
+    // Use a small render scratch for LVGL — flush_cb copies partial areas
+    // into the correct position in the full framebuffer.
+    lv_disp_draw_buf_init(&draw_buffer_, draw_buf_.data(), nullptr,
+                          static_cast<uint32_t>(draw_buf_.size()));
     lv_disp_drv_init(&display_driver_);
     display_driver_.hor_res  = width_;
     display_driver_.ver_res  = height_;
@@ -63,12 +66,20 @@ SdlDisplay::~SdlDisplay() = default;
 // LVGL flush callback
 // -------------------------------------------------------------------------- //
 
-void SdlDisplay::flush_cb(lv_disp_drv_t* disp_drv, const lv_area_t* area, lv_color_t* /*color_p*/) {
+void SdlDisplay::flush_cb(lv_disp_drv_t* disp_drv, const lv_area_t* area, lv_color_t* color_p) {
     auto* self = static_cast<SdlDisplay*>(disp_drv->user_data);
     if (self) {
         ++self->flush_count_;
-        // We always blit the full framebuffer — partial area blitting is a
-        // future optimisation that isn't worth the complexity for a demo.
+
+        // Copy the partial render from LVGL's linear scratch buffer into the
+        // correct position in the full framebuffer.
+        const int area_w = area->x2 - area->x1 + 1;
+        for (int y = area->y1; y <= area->y2; ++y) {
+            std::memcpy(&self->framebuffer_[static_cast<std::size_t>(y) * self->width_ + area->x1],
+                        color_p,
+                        static_cast<std::size_t>(area_w) * sizeof(lv_color_t));
+            color_p += area_w;
+        }
         self->blit_framebuffer();
     }
     lv_disp_flush_ready(disp_drv);
@@ -160,7 +171,6 @@ void SdlDisplay::set_quit_callback(QuitCallback cb) {
 }
 
 void SdlDisplay::refresh() {
-    lv_refr_now(nullptr);
     lv_timer_handler();
     blit_framebuffer();
 }
@@ -292,6 +302,7 @@ bool SdlDisplay::switch_resolution(std::uint32_t new_width, std::uint32_t new_he
     // 2. Update dimensions and reallocate framebuffer.
     width_  = new_width;
     height_ = new_height;
+    draw_buf_.assign(static_cast<std::size_t>(width_) * 40, lv_color_t{});
     framebuffer_.assign(static_cast<std::size_t>(width_) * height_, lv_color_t{});
     argb_buffer_.assign(static_cast<std::size_t>(width_) * height_, 0);
 
@@ -300,8 +311,8 @@ bool SdlDisplay::switch_resolution(std::uint32_t new_width, std::uint32_t new_he
     if (!sdl_->window || !sdl_->renderer) return false;
 
     // 4. Re-register the LVGL display driver with the new resolution.
-    lv_disp_draw_buf_init(&draw_buffer_, framebuffer_.data(), nullptr,
-                          static_cast<uint32_t>(framebuffer_.size()));
+    lv_disp_draw_buf_init(&draw_buffer_, draw_buf_.data(), nullptr,
+                          static_cast<uint32_t>(draw_buf_.size()));
     lv_disp_drv_init(&display_driver_);
     display_driver_.hor_res  = width_;
     display_driver_.ver_res  = height_;
