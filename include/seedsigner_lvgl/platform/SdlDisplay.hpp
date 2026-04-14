@@ -20,6 +20,7 @@
 
 #include <lvgl.h>
 
+struct SDL_Texture;
 struct SDL_Window;
 struct SDL_Renderer;
 union SDL_Event;
@@ -104,11 +105,17 @@ private:
     lv_disp_draw_buf_t draw_buffer_{};
     lv_disp_drv_t display_driver_{};
     lv_disp_t* display_{nullptr};  ///< LVGL display handle (needed for removal on profile switch)
-    std::vector<lv_color_t> framebuffer_;
+    std::vector<lv_color_t> draw_buf_;     ///< LVGL render scratch (partial-area, linear)
+    std::vector<lv_color_t> framebuffer_;  ///< Full-frame buffer (always coherent)
 
     // SDL state — opaque pointers; lifetime managed in .cpp via RAII.
     struct SdlState;
     std::unique_ptr<SdlState> sdl_;
+
+    // Persistent texture — created once, updated each frame via SDL_UpdateTexture.
+    // Avoids per-frame allocation churn that causes corruption on some SDL backends.
+    SDL_Texture* texture_{nullptr};
+    std::vector<std::uint32_t> argb_buffer_;  ///< Expanded ARGB8888 pixel buffer
 
     QuitCallback quit_callback_;
     bool quit_requested_{false};
