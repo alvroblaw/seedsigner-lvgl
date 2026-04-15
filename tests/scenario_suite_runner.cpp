@@ -21,8 +21,6 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
-#include <lvgl.h>
-
 #include "seedsigner_lvgl/desktop/ScenarioRunner.hpp"
 #include "seedsigner_lvgl/runtime/UiRuntime.hpp"
 #include "seedsigner_lvgl/screen/ScreenRegistry.hpp"
@@ -108,10 +106,11 @@ int main(int argc, char** argv) {
         std::string name = std::filesystem::path(scenario_path).filename().string();
 
         // Fork to isolate LVGL state between scenarios.
+        std::fflush(stdout);
+        std::fflush(stderr);
         pid_t pid = fork();
         if (pid == 0) {
             // Child process.
-            lv_init();
             UiRuntime rt(RuntimeConfig{.width = 240, .height = 320});
             rt.init();
             register_suite_routes(rt.screen_registry());
