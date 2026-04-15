@@ -6,6 +6,7 @@
 
 #include <cstdio>
 #include <fstream>
+#include <filesystem>
 #include <nlohmann/json.hpp>
 #include <stdexcept>
 #include <thread>
@@ -122,6 +123,10 @@ ScenarioResult ScenarioRunner::load_and_run(const std::string& path,
                 }
                 const std::string sp = step["path"].get<std::string>();
                 settle_runtime(runtime, 16, 12);
+                std::filesystem::path out_path(sp);
+                if (out_path.has_parent_path()) {
+                    std::filesystem::create_directories(out_path.parent_path());
+                }
                 const auto* disp = runtime.display();
                 if (!disp) {
                     result.error = "no headless display available for screenshot";
