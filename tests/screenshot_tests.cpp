@@ -130,8 +130,10 @@ static int run_profile_captures(const ProfileInfo& pi) {
         RouteDescriptor rd;
         rd.route_id = RouteId{"menu.main"};
         rd.args = {{"title", "SeedSigner"}, {"items",
+            "---|Wallets\n"
             "scan|Scan QR|Point camera at a QR code|chevron\n"
             "seeds|Seeds|Load or generate a seed|chevron\n"
+            "---|Utilities\n"
             "tools|Tools|Signing tools and utilities|chevron\n"
             "settings|Settings|Device configuration|chevron\n"
             "power|Power Off|Shut down the device"}};

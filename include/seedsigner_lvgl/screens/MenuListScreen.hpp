@@ -17,6 +17,7 @@ public:
         std::string label;
         std::string secondary_text;
         std::string accessory;
+        bool is_section_header{false};  // Non-selectable divider row
     };
 
     void create(const ScreenContext& context, const RouteDescriptor& route) override;
@@ -44,6 +45,7 @@ private:
     lv_obj_t* container_{nullptr};
     lv_obj_t* content_container_{nullptr};
     lv_obj_t* list_{nullptr};
+    lv_obj_t* scrollbar_{nullptr};      // Vertical scroll position indicator
     lv_obj_t* empty_state_{nullptr};
     lv_style_t selected_row_style_{};
     lv_style_t row_style_{};
