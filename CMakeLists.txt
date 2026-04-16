@@ -58,6 +58,7 @@ add_library(seedsigner_lvgl
   src/screens/StartupSplashScreen.cpp
   src/screens/ScreensaverScreen.cpp
   src/platform/FramebufferCapture.cpp
+  src/scan/QrDecoder.cpp
   src/visual/SeedSignerTheme.cpp
   src/visual/DisplayProfile.cpp
   src/input/InputProfile.cpp

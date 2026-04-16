@@ -1,4 +1,5 @@
 #include "seedsigner_lvgl/screens/ScanScreen.hpp"
+#include "seedsigner_lvgl/scan/QrDecoder.hpp"
 #include "seedsigner_lvgl/visual/DisplayProfile.hpp"
 #include "seedsigner_lvgl/visual/SeedSignerTheme.hpp"
 
@@ -44,6 +45,12 @@ void ScanScreen::create(const ScreenContext& context, const RouteDescriptor& rou
     if (const auto it = route.args.find("scan_mode"); it != route.args.end()) {
         scan_mode_ = it->second;
     }
+    if (const auto it = route.args.find("mock_mode"); it != route.args.end()) {
+        mock_mode_ = (it->second != "false" && it->second != "0");
+    }
+    
+    // Initialize QR decoder (null by default; host injects real decoder)
+    qr_decoder_ = scan::create_decoder();
     
     // Create root container
     container_ = lv_obj_create(context.root);
@@ -117,6 +124,11 @@ void ScanScreen::create(const ScreenContext& context, const RouteDescriptor& rou
     
     // Request camera frames
     context_.emit_needs_data("camera.frame", kScanScreenComponent);
+}
+
+void ScanScreen::set_decoder(std::unique_ptr<scan::QrDecoder> decoder) {
+    qr_decoder_ = std::move(decoder);
+    mock_mode_ = false;
 }
 
 void ScanScreen::destroy() {
@@ -198,23 +210,33 @@ bool ScanScreen::push_frame(const CameraFrame& frame) {
         lv_obj_invalidate(preview_img_);
     }
     
-    // Mock QR detection logic
-    // Every frame we toggle frame status dot randomly (simulate readability)
-    mock_frames_received_++;
-    bool mock_valid = (mock_frames_received_ % 3) != 0; // 2 out of 3 frames "valid"
-    update_frame_status(mock_valid);
-    
-    // Simulate multipart QR progress: after certain number of frames, progress increases
-    if (!scan_complete_ && mock_frames_received_ % 2 == 0) {
-        progress_percent_ = std::min(100u, progress_percent_ + 10);
-        update_progress(progress_percent_);
-    }
-    
-    // Simulate QR detection after N frames
-    if (!scan_complete_ && mock_frames_received_ >= MOCK_FRAMES_TO_DETECTION) {
-        scan_complete_ = true;
-        // Freeze preview (optional: keep last frame)
-        emit_scan_complete("mock_qr_data_here");
+    // --- QR decode pipeline ---
+    if (!scan_complete_) {
+        if (mock_mode_) {
+            // Mock: simulate detection after N frames
+            mock_frames_received_++;
+            bool mock_valid = (mock_frames_received_ % 3) != 0;
+            update_frame_status(mock_valid);
+            if (mock_frames_received_ % 2 == 0) {
+                progress_percent_ = std::min(100u, progress_percent_ + 10);
+                update_progress(progress_percent_);
+            }
+            if (mock_frames_received_ >= MOCK_FRAMES_TO_DETECTION) {
+                scan_complete_ = true;
+                emit_scan_complete("mock_qr_data_here");
+            }
+        } else {
+            // Real: try to decode QR from grayscale frame
+            const uint32_t stride = frame.stride == 0 ? frame_width_ : frame.stride;
+            auto result = qr_decoder_->decode(latest_frame_.data(), frame_width_, frame_height_, stride);
+            if (result.has_value()) {
+                update_frame_status(true);
+                scan_complete_ = true;
+                emit_scan_complete(result->payload);
+            } else {
+                update_frame_status(false);
+            }
+        }
     }
     
     return true;

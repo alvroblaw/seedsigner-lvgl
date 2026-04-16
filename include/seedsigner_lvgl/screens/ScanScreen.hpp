@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "seedsigner_lvgl/components/TopNavBar.hpp"
+#include "seedsigner_lvgl/scan/QrDecoder.hpp"
 #include "seedsigner_lvgl/screen/Screen.hpp"
 
 namespace seedsigner::lvgl {
@@ -15,6 +16,10 @@ public:
     void destroy() override;
     bool handle_input(const InputEvent& input) override;
     bool push_frame(const CameraFrame& frame) override;
+
+    /// Inject a QR decoder implementation (takes ownership).
+    /// Call before the first push_frame(). If unset, mock_mode controls behavior.
+    void set_decoder(std::unique_ptr<scan::QrDecoder> decoder);
 
 private:
     void update_progress(unsigned int percent);
@@ -32,6 +37,7 @@ private:
     lv_obj_t* frame_status_dot_{nullptr};
     lv_obj_t* progress_label_{nullptr}; // optional label for percentage
     std::unique_ptr<TopNavBar> top_nav_bar_{};
+    std::unique_ptr<scan::QrDecoder> qr_decoder_;
     
     std::string instruction_text_{"Scan QR code"};
     std::string scan_mode_{"any"};
@@ -43,7 +49,8 @@ private:
     uint32_t frame_height_{0};
     uint64_t frame_sequence_{0};
     
-    // Mock detection state
+    // QR decode mode: true = mock detection, false = real quirc decode
+    bool mock_mode_{true};
     unsigned int mock_frames_received_{0};
     static constexpr unsigned int MOCK_FRAMES_TO_DETECTION = 10;
 };
