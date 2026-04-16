@@ -123,12 +123,42 @@ void MenuListScreen::create(const ScreenContext& context, const RouteDescriptor&
         return;
     }
 
+    // Determine section header label (use label field if non-empty, else uppercase id)
+    // Items with is_section_header=true get rendered as dividers.
+    std::size_t selectable_count = 0;
+
     if (selected_index_ >= items_.size()) {
         selected_index_ = 0;
     }
 
     for (std::size_t index = 0; index < items_.size(); ++index) {
         const auto& item = items_[index];
+
+        // --- Section header row ---
+        if (item.is_section_header) {
+            auto* header = lv_obj_create(list_);
+            lv_obj_set_size(header, lv_pct(100), LV_SIZE_CONTENT);
+            lv_obj_set_style_bg_opa(header, LV_OPA_TRANSP, 0);
+            lv_obj_set_style_border_width(header, 0, 0);
+            lv_obj_set_style_pad_all(header, 2, 0);
+            lv_obj_clear_flag(header, LV_OBJ_FLAG_SCROLLABLE | LV_OBJ_FLAG_CLICKABLE);
+
+            auto* lbl = lv_label_create(header);
+            std::string header_text = item.label.empty() ? item.id : item.label;
+            // Convert to uppercase for section headers
+            std::transform(header_text.begin(), header_text.end(), header_text.begin(), ::toupper);
+            lv_label_set_text(lbl, header_text.c_str());
+            lv_obj_set_style_text_font(lbl, seedsigner::lvgl::theme::typography::CAPTION, 0);
+            lv_obj_set_style_text_color(lbl, seedsigner::lvgl::theme::active_theme().TEXT_SECONDARY, 0);
+
+            item_buttons_.push_back(nullptr);  // Placeholder to keep index alignment
+            item_primary_labels_.push_back(lbl);
+            item_secondary_labels_.push_back(nullptr);
+            item_accessory_labels_.push_back(nullptr);
+            continue;
+        }
+
+        ++selectable_count;
         auto* button = lv_btn_create(list_);
         lv_obj_set_width(button, lv_pct(100));
         lv_obj_set_style_min_height(button, item.secondary_text.empty() ? theme::spacing::MENU_ROW_HEIGHT : theme::spacing::MENU_ROW_HEIGHT_TWO_LINE, 0);
@@ -189,6 +219,28 @@ void MenuListScreen::create(const ScreenContext& context, const RouteDescriptor&
     }
 
     apply_selection(selected_index_);
+
+    // --- Scroll position indicator ---
+    // A thin vertical bar on the right edge showing scroll progress when list overflows
+    if (selectable_count > 0) {
+        scrollbar_ = lv_obj_create(content_container_);
+        lv_obj_set_size(scrollbar_, 3, lv_pct(100));
+        lv_obj_align(scrollbar_, LV_ALIGN_TOP_RIGHT, -2, 0);
+        lv_obj_set_style_bg_opa(scrollbar_, LV_OPA_TRANSP, 0);
+        lv_obj_set_style_border_width(scrollbar_, 0, 0);
+        lv_obj_clear_flag(scrollbar_, LV_OBJ_FLAG_SCROLLABLE | LV_OBJ_FLAG_CLICKABLE);
+        lv_obj_set_style_pad_all(scrollbar_, 0, 0);
+
+        // Inner thumb
+        auto* thumb = lv_obj_create(scrollbar_);
+        lv_obj_set_size(thumb, 3, 20);  // Default height, updated on scroll
+        lv_obj_align(thumb, LV_ALIGN_TOP_MID, 0, 0);
+        lv_obj_set_style_bg_color(thumb, seedsigner::lvgl::theme::active_theme().BORDER, 0);
+        lv_obj_set_style_bg_opa(thumb, LV_OPA_60, 0);
+        lv_obj_set_style_radius(thumb, LV_RADIUS_CIRCLE, 0);
+        lv_obj_set_style_border_width(thumb, 0, 0);
+        lv_obj_clear_flag(thumb, LV_OBJ_FLAG_SCROLLABLE | LV_OBJ_FLAG_CLICKABLE);
+    }
 }
 
 void MenuListScreen::destroy() {
@@ -201,6 +253,7 @@ void MenuListScreen::destroy() {
     container_ = nullptr;
     content_container_ = nullptr;
     list_ = nullptr;
+    scrollbar_ = nullptr;
     empty_state_ = nullptr;
     item_buttons_.clear();
     item_primary_labels_.clear();
@@ -222,14 +275,28 @@ bool MenuListScreen::handle_input(const InputEvent& input) {
     }
 
     switch (input.key) {
-    case InputKey::Up:
-        apply_selection(selected_index_ == 0 ? item_buttons_.size() - 1 : selected_index_ - 1);
-        emit_focus_changed(context_, selected_index_);
+    case InputKey::Up: {
+        std::size_t next = selected_index_;
+        do {
+            next = (next == 0) ? item_buttons_.size() - 1 : next - 1;
+        } while (next != selected_index_ && items_[next].is_section_header);
+        if (!items_[next].is_section_header) {
+            apply_selection(next);
+            emit_focus_changed(context_, selected_index_);
+        }
         return true;
-    case InputKey::Down:
-        apply_selection((selected_index_ + 1) % item_buttons_.size());
-        emit_focus_changed(context_, selected_index_);
+    }
+    case InputKey::Down: {
+        std::size_t next = selected_index_;
+        do {
+            next = (next + 1) % item_buttons_.size();
+        } while (next != selected_index_ && items_[next].is_section_header);
+        if (!items_[next].is_section_header) {
+            apply_selection(next);
+            emit_focus_changed(context_, selected_index_);
+        }
         return true;
+    }
     case InputKey::Press:
         emit_item_selected(context_, selected_index_);
         return true;
@@ -285,10 +352,13 @@ std::vector<MenuListScreen::Item> MenuListScreen::parse_items(const PropertyMap&
             continue;
         }
 
+        // Section headers: lines starting with "---" become non-selectable dividers
+        bool is_header = (parts[0] == "---");
         Item item{.id = parts[0],
-                  .label = parts.size() >= 2 && !parts[1].empty() ? parts[1] : parts[0],
+                  .label = parts.size() >= 2 && !parts[1].empty() ? parts[1] : (is_header ? "" : parts[0]),
                   .secondary_text = parts.size() >= 3 ? parts[2] : std::string{},
-                  .accessory = parts.size() >= 4 ? parts[3] : std::string{}};
+                  .accessory = parts.size() >= 4 ? parts[3] : std::string{},
+                  .is_section_header = is_header};
         items.push_back(std::move(item));
     }
 
@@ -319,9 +389,18 @@ void MenuListScreen::apply_selection(std::size_t index) {
         return;
     }
 
+    // Skip over section headers when selecting
+    if (index < items_.size() && items_[index].is_section_header) {
+        // Try to find next selectable item
+        for (std::size_t i = index + 1; i < items_.size(); ++i) {
+            if (!items_[i].is_section_header) { index = i; break; }
+        }
+    }
+
     selected_index_ = std::min(index, item_buttons_.size() - 1);
     for (std::size_t button_index = 0; button_index < item_buttons_.size(); ++button_index) {
         auto* button = item_buttons_[button_index];
+        if (button == nullptr) continue;  // Section header placeholder
         lv_obj_remove_style(button, &selected_row_style_, LV_PART_MAIN);
         if (button_index == selected_index_) {
             lv_obj_add_style(button, &selected_row_style_, LV_PART_MAIN);
