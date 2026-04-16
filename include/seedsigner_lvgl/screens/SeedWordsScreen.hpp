@@ -18,7 +18,7 @@ public:
 
 private:
     void update_page();
-    void create_word_chip(lv_obj_t* parent, int index, const std::string& word);
+    void create_word_chip(lv_obj_t* parent, int index, const std::string& word, int width);
     void apply_warning_styling(lv_obj_t* obj);
     void emit_page_changed();
     void emit_back_requested();
