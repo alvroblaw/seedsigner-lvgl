@@ -58,6 +58,7 @@ add_library(seedsigner_lvgl
   src/screens/StartupSplashScreen.cpp
   src/screens/ScreensaverScreen.cpp
   src/platform/FramebufferCapture.cpp
+  src/bindings/c_api.cpp
   src/visual/SeedSignerTheme.cpp
   src/visual/DisplayProfile.cpp
   src/input/InputProfile.cpp
@@ -156,4 +157,11 @@ if(BUILD_TESTING)
     set_tests_properties(profile_matrix PROPERTIES
       ENVIRONMENT "SCENARIO_DIR=${CMAKE_SOURCE_DIR}/scenarios;SCENARIO_OUT_DIR=${CMAKE_BINARY_DIR}/matrix_out")
   endif()
+endif()
+
+# --- C API test (validates MicroPython binding layer) ---
+if(BUILD_TESTING)
+  add_executable(c_api_test tests/c_api_test.cpp)
+  target_link_libraries(c_api_test PRIVATE seedsigner_lvgl)
+  add_test(NAME c_api_test COMMAND c_api_test)
 endif()
