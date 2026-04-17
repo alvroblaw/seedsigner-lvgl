@@ -37,6 +37,15 @@ int main() {
     int ret = ss_activate(rt, "test.menu", "title=Test\nitems=a|Item A|chevron\nb|Item B|chevron");
     std::printf("[c_api_test] ss_activate returned %d (expected -1, no route registered)\n", ret);
 
+    ss_active_route active = ss_get_active_route(rt);
+    std::printf("[c_api_test] active.valid=%d\n", active.valid);
+
+    ret = ss_navigate(rt, "back", nullptr, nullptr);
+    std::printf("[c_api_test] ss_navigate(back) returned %d\n", ret);
+
+    ret = ss_push_modal(rt, "confirm", "title=Test");
+    std::printf("[c_api_test] ss_push_modal returned %d (expected unsupported=-2)\n", ret);
+
     // Send input
     std::printf("[c_api_test] Sending input...\n");
     ss_send_input(rt, SS_KEY_DOWN);
@@ -76,6 +85,9 @@ int main() {
     // Set screen data
     ret = ss_set_screen_data(rt, "title=Updated");
     std::printf("[c_api_test] ss_set_screen_data returned %d\n", ret);
+
+    ret = ss_patch_screen_data(rt, "title=Patched");
+    std::printf("[c_api_test] ss_patch_screen_data returned %d\n", ret);
 
     // Destroy
     std::printf("[c_api_test] Destroying runtime...\n");

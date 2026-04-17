@@ -74,6 +74,14 @@ typedef struct {
     uint64_t sequence;
 } ss_camera_frame;
 
+// --- Active route descriptor ---
+typedef struct {
+    const char* route_id;
+    uint32_t screen_token;
+    uint32_t stack_depth;
+    int valid;  // 0 = none, 1 = populated
+} ss_active_route;
+
 // ---------------------------------------------------------------------------
 // Lifecycle
 // ---------------------------------------------------------------------------
@@ -100,6 +108,20 @@ int ss_activate(ss_runtime_t* rt, const char* route_id, const char* args);
 /// Replace the current route.
 int ss_replace(ss_runtime_t* rt, const char* route_id, const char* args);
 
+/// Generic navigation operation.
+/// Supported actions today:
+///   - "back"    -> injects SS_KEY_BACK
+///   - "replace" -> equivalent to ss_replace(route_id, args)
+/// Returns 0 on success, -1 on error, -2 when unsupported.
+int ss_navigate(ss_runtime_t* rt, const char* action, const char* route_id, const char* args);
+
+/// Return the current active route metadata.
+ss_active_route ss_get_active_route(ss_runtime_t* rt);
+
+/// Modal APIs are reserved for future runtime support.
+int ss_push_modal(ss_runtime_t* rt, const char* modal_id, const char* data);
+int ss_dismiss_modal(ss_runtime_t* rt, uint32_t modal_token, const char* result);
+
 // ---------------------------------------------------------------------------
 // Input & data
 // ---------------------------------------------------------------------------
@@ -109,6 +131,9 @@ void ss_send_input(ss_runtime_t* rt, ss_input_key key);
 
 /// Set full screen data (args format: newline-separated key=value).
 int ss_set_screen_data(ss_runtime_t* rt, const char* data);
+
+/// Patch a subset of screen data (args format: newline-separated key=value).
+int ss_patch_screen_data(ss_runtime_t* rt, const char* patch);
 
 /// Push a camera frame (grayscale pixels, copied).
 int ss_push_frame(ss_runtime_t* rt, const ss_camera_frame* frame);
