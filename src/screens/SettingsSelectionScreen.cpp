@@ -160,6 +160,13 @@ void SettingsSelectionScreen::create(const ScreenContext& context, const RouteDe
             lv_obj_set_style_border_color(button, seedsigner::lvgl::theme::active_theme().PRIMARY_LIGHT, LV_STATE_PRESSED);
             lv_obj_set_style_translate_y(button, 2, LV_STATE_PRESSED);
             lv_obj_set_style_border_width(button, 2, LV_STATE_PRESSED);
+            lv_obj_set_style_bg_opa(button, LV_OPA_50, LV_STATE_FOCUSED);
+            lv_obj_set_style_bg_color(button, seedsigner::lvgl::theme::active_theme().PRIMARY, LV_STATE_FOCUSED);
+            lv_obj_set_style_border_width(button, 2, LV_STATE_FOCUSED);
+            lv_obj_set_style_border_color(button, seedsigner::lvgl::theme::active_theme().PRIMARY_LIGHT, LV_STATE_FOCUSED);
+            lv_obj_set_style_outline_width(button, 2, LV_STATE_FOCUSED);
+            lv_obj_set_style_outline_pad(button, 1, LV_STATE_FOCUSED);
+            lv_obj_set_style_outline_color(button, seedsigner::lvgl::theme::active_theme().PRIMARY, LV_STATE_FOCUSED);
             lv_obj_add_event_cb(button, &SettingsSelectionScreen::on_item_event, LV_EVENT_FOCUSED, this);
             lv_obj_add_event_cb(button, &SettingsSelectionScreen::on_item_event, LV_EVENT_CLICKED, this);
 
@@ -336,13 +343,9 @@ void SettingsSelectionScreen::apply_selection(std::size_t index) {
     }
 
     selected_index_ = std::min(index, item_buttons_.size() - 1);
-    for (std::size_t button_index = 0; button_index < item_buttons_.size(); ++button_index) {
-        auto* button = item_buttons_[button_index];
-        lv_obj_remove_style(button, &selected_row_style_, LV_PART_MAIN);
-        if (button_index == selected_index_) {
-            lv_obj_add_style(button, &selected_row_style_, LV_PART_MAIN);
-            lv_obj_scroll_to_view(button, LV_ANIM_OFF);
-        }
+    auto* button = item_buttons_[selected_index_];
+    if (button != nullptr && lv_obj_is_valid(button)) {
+        lv_obj_scroll_to_view(button, LV_ANIM_OFF);
     }
 }
 

@@ -164,4 +164,8 @@ if(BUILD_TESTING)
   add_executable(c_api_test tests/c_api_test.cpp)
   target_link_libraries(c_api_test PRIVATE seedsigner_lvgl)
   add_test(NAME c_api_test COMMAND c_api_test)
+
+  add_executable(bridge_stress_tests tests/bridge_stress_tests.cpp)
+  target_link_libraries(bridge_stress_tests PRIVATE seedsigner_lvgl)
+  add_test(NAME bridge_stress_tests COMMAND bridge_stress_tests)
 endif()

@@ -38,7 +38,7 @@ jobs:
         run: cmake --build build --parallel
 
       - name: Unit and integration tests
-        run: ctest --test-dir build --output-on-failure -R 'seedsigner_lvgl_tests|input_profile_tests|scenario_suite|profile_matrix'
+        run: ctest --test-dir build --output-on-failure -R 'seedsigner_lvgl_tests|input_profile_tests|c_api_test|bridge_stress_tests|scenario_suite|profile_matrix'
 
       - name: Screenshot capture
         run: ./build/screenshot_tests

@@ -44,6 +44,9 @@ void ScanScreen::create(const ScreenContext& context, const RouteDescriptor& rou
     if (const auto it = route.args.find("scan_mode"); it != route.args.end()) {
         scan_mode_ = it->second;
     }
+    if (const auto it = route.args.find("mock_mode"); it != route.args.end()) {
+        mock_mode_ = (it->second == "true" || it->second == "1" || it->second == "yes");
+    }
     
     // Create root container
     container_ = lv_obj_create(context.root);
@@ -74,7 +77,9 @@ void ScanScreen::create(const ScreenContext& context, const RouteDescriptor& rou
     lv_obj_set_flex_grow(content_container_, 1); // Take remaining height
     
     // Create preview canvas (initially black)
+    preview_canvas_buffer_.resize(static_cast<std::size_t>(preview_width()) * static_cast<std::size_t>(preview_height()));
     preview_img_ = lv_canvas_create(content_container_);
+    lv_canvas_set_buffer(preview_img_, preview_canvas_buffer_.data(), preview_width(), preview_height(), LV_IMG_CF_TRUE_COLOR);
     lv_obj_set_size(preview_img_, preview_width(), preview_height());
     lv_obj_align(preview_img_, LV_ALIGN_CENTER, 0, 0);
     lv_canvas_fill_bg(preview_img_, seedsigner::lvgl::theme::active_theme().BLACK, LV_OPA_COVER);
@@ -134,6 +139,7 @@ void ScanScreen::destroy() {
     frame_status_dot_ = nullptr;
     context_ = {};
     latest_frame_.clear();
+    preview_canvas_buffer_.clear();
 }
 
 bool ScanScreen::handle_input(const InputEvent& input) {
@@ -166,7 +172,7 @@ bool ScanScreen::push_frame(const CameraFrame& frame) {
     latest_frame_ = frame.pixels; // copy
     
     // Convert frame to LVGL canvas (grayscale -> color)
-    if (preview_img_ && !latest_frame_.empty() && frame_width_ > 0 && frame_height_ > 0) {
+    if (!mock_mode_ && preview_img_ && !latest_frame_.empty() && frame_width_ > 0 && frame_height_ > 0) {
         // Ensure canvas buffer exists (we use canvas, not image)
         // We'll draw scaled preview similar to CameraPreviewScreen
         const auto source_stride = frame.stride == 0 ? frame_width_ : frame.stride;

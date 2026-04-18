@@ -16,6 +16,9 @@ std::optional<ActiveRoute> NavigationController::replace(const RouteDescriptor& 
     }
 
     teardown_active();
+    if (context.root != nullptr) {
+        lv_obj_clean(context.root);
+    }
 
     const ActiveRoute active_route{
         .route_id = route.route_id,
