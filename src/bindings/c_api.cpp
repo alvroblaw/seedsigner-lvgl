@@ -23,6 +23,7 @@ struct ss_runtime {
     std::string cached_value_str;
     std::string cached_meta_key;
     std::string cached_meta_value_str;
+    std::string cached_route_id;
 };
 
 // ---------------------------------------------------------------------------
@@ -114,6 +115,50 @@ int ss_replace(ss_runtime_t* rt, const char* route_id, const char* args) {
     return result.has_value() ? 0 : -1;
 }
 
+int ss_navigate(ss_runtime_t* rt, const char* action, const char* route_id, const char* args) {
+    if (!rt || !rt->rt || !action) return -1;
+
+    std::string action_str(action);
+    if (action_str == "back") {
+        rt->rt->send_input(InputEvent{InputKey::Back});
+        return 0;
+    }
+    if (action_str == "replace") {
+        return ss_replace(rt, route_id, args);
+    }
+    return -2;
+}
+
+ss_active_route ss_get_active_route(ss_runtime_t* rt) {
+    ss_active_route out{};
+    out.valid = 0;
+    if (!rt || !rt->rt) return out;
+
+    auto active = rt->rt->get_active_route();
+    if (!active.has_value()) return out;
+
+    rt->cached_route_id = active->route_id.value();
+    out.route_id = rt->cached_route_id.c_str();
+    out.screen_token = active->screen_token;
+    out.stack_depth = static_cast<uint32_t>(active->stack_depth);
+    out.valid = 1;
+    return out;
+}
+
+int ss_push_modal(ss_runtime_t* rt, const char* modal_id, const char* data) {
+    (void)rt;
+    (void)modal_id;
+    (void)data;
+    return -2;
+}
+
+int ss_dismiss_modal(ss_runtime_t* rt, uint32_t modal_token, const char* result) {
+    (void)rt;
+    (void)modal_token;
+    (void)result;
+    return -2;
+}
+
 // ---------------------------------------------------------------------------
 // Input & data
 // ---------------------------------------------------------------------------
@@ -127,6 +172,12 @@ int ss_set_screen_data(ss_runtime_t* rt, const char* data) {
     if (!rt || !rt->rt || !data) return -1;
     auto map = parse_args(data);
     return rt->rt->set_screen_data(map) ? 0 : -1;
+}
+
+int ss_patch_screen_data(ss_runtime_t* rt, const char* patch) {
+    if (!rt || !rt->rt || !patch) return -1;
+    auto map = parse_args(patch);
+    return rt->rt->patch_screen_data(map) ? 0 : -1;
 }
 
 int ss_push_frame(ss_runtime_t* rt, const ss_camera_frame* frame) {
