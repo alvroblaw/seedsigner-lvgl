@@ -28,6 +28,7 @@ private:
     std::uint32_t flush_count_{0};
     lv_disp_draw_buf_t draw_buffer_{};
     lv_disp_drv_t display_driver_{};
+    std::vector<lv_color_t> draw_buf_;
     std::vector<lv_color_t> framebuffer_;
 };
 
