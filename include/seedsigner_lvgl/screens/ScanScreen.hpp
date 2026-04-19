@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdint>
 #include <memory>
 #include <string>
 #include <vector>
@@ -35,10 +36,12 @@ private:
     
     std::string instruction_text_{"Scan QR code"};
     std::string scan_mode_{"any"};
+    bool mock_mode_{false};
     unsigned int progress_percent_{0};
     bool frame_valid_{false};
     bool scan_complete_{false};
     std::vector<uint8_t> latest_frame_{};
+    std::vector<lv_color_t> preview_canvas_buffer_{};
     uint32_t frame_width_{0};
     uint32_t frame_height_{0};
     uint64_t frame_sequence_{0};

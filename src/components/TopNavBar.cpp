@@ -31,7 +31,6 @@ TopNavBar::TopNavBar(ScreenContext context)
     : context_(std::move(context)) {}
 
 TopNavBar::~TopNavBar() {
-    fprintf(stderr, "[TopNavBar] destructor container_=%p\n", container_); fflush(stderr);
     detach();
 }
 
@@ -51,7 +50,6 @@ void TopNavBar::attach(lv_obj_t* parent) {
 }
 
 void TopNavBar::detach() {
-    fprintf(stderr, "[TopNavBar] detach container_=%p parent=%p\n", container_, container_ ? lv_obj_get_parent(container_) : nullptr); fflush(stderr);
     destroy_widgets();
     // Do NOT delete container_ here; the parent (screen root container) will delete it.
     // Simply clear the pointer to avoid dangling reference.
