@@ -6,14 +6,41 @@
 
 ## Installation
 
-Build as a MicroPython user module:
+Build as a MicroPython user module.
+
+### Unix-port validation flow
+
+Real validation was done against upstream MicroPython `ports/unix` with the user-module root pointed at the repo `bindings/` directory:
 
 ```bash
-# Using mp-build (recommended)
-mp-build --module bindings/micropython/ --cflags "-Iinclude -Iconfig" --ldflags "-Lbuild -lseedsigner_lvgl -llvgl"
-
-# Or integrate into a custom firmware build via CMakeLists.txt
+cd /path/to/micropython
+make -C mpy-cross -j$(nproc)
+make -C ports/unix -j$(nproc) \
+  USER_C_MODULES=/path/to/seedsigner-lvgl/bindings
 ```
+
+Important notes:
+
+- Use `USER_C_MODULES=/path/to/seedsigner-lvgl/bindings`, not `bindings/micropython`.
+- The actual build wrapper lives in `bindings/usermod_uiseedsigner/`.
+- `bindings/micropython/` contains the module source, docs, and examples.
+- The split avoids a unix-port path collision where a module directory named `micropython/` can clash with the output binary path `build-standard/micropython`.
+- Current unix validation links against prebuilt host libraries from the repo build, including `libseedsigner_lvgl.a`, `liblvgl.a`, and `-lstdc++`.
+
+Smoke test used for validation:
+
+```bash
+ports/unix/build-standard/micropython - <<'PY'
+import uiseedsigner
+rt = uiseedsigner.UiRuntime(240, 240)
+rt.init()
+print("ok")
+PY
+```
+
+### Other build systems
+
+For custom firmware/CMake integration, use the top-level `bindings/micropython.cmake`, which includes the wrapper module definition under `bindings/usermod_uiseedsigner/`.
 
 ## API Reference
 
