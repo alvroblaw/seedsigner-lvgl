@@ -6,14 +6,90 @@
 
 ## Installation
 
-Build as a MicroPython user module:
+Build as a MicroPython user module.
+
+### Unix-port validation flow
+
+Current unix validation is a two-step setup:
+
+1. Build reproducible host-side link libraries from this repo.
+2. Build upstream MicroPython `ports/unix` with `uiseedsigner` as a user module.
+
+#### 1) Build host link libraries
+
+From the `seedsigner-lvgl` repo:
 
 ```bash
-# Using mp-build (recommended)
-mp-build --module bindings/micropython/ --cflags "-Iinclude -Iconfig" --ldflags "-Lbuild -lseedsigner_lvgl -llvgl"
-
-# Or integrate into a custom firmware build via CMakeLists.txt
+./tools/build_micropython_host_libs.sh
 ```
+
+That creates a stable build directory at `build-micropython-host/` containing the libraries used by the unix-port validation build:
+
+- `build-micropython-host/libseedsigner_lvgl.a`
+- `build-micropython-host/lib/liblvgl.a`
+
+If needed, you can override the output directory:
+
+```bash
+./tools/build_micropython_host_libs.sh /tmp/seedsigner-mpy-build
+```
+
+#### 2) Build MicroPython unix port with `uiseedsigner`
+
+```bash
+cd /path/to/micropython
+make -C mpy-cross -j$(nproc)
+make -C ports/unix -j$(nproc) \
+  USER_C_MODULES=/path/to/seedsigner-lvgl/bindings
+```
+
+If you built the host libs into a non-default path, pass it through to the MicroPython make invocation:
+
+```bash
+make -C ports/unix -j$(nproc) \
+  USER_C_MODULES=/path/to/seedsigner-lvgl/bindings \
+  UISEEDSIGNER_BUILD_DIR=/tmp/seedsigner-mpy-build
+```
+
+#### Why unix setup works this way
+
+`uiseedsigner` is a MicroPython user module, but its ABI surface is backed by the real `seedsigner_lvgl` C/C++ runtime.
+
+For `ports/unix`, that means MicroPython is not enough by itself. The module must also link against host-built versions of:
+
+- `libseedsigner_lvgl.a`
+- `liblvgl.a`
+- `-lstdc++`
+
+That is why unix validation is split into:
+
+- build repo host libs first
+- then build MicroPython unix port with `USER_C_MODULES`
+
+This is validation setup for host testing, not final embedded packaging.
+
+Important notes:
+
+- Use `USER_C_MODULES=/path/to/seedsigner-lvgl/bindings`, not `bindings/micropython`.
+- The actual build wrapper lives in `bindings/usermod_uiseedsigner/`.
+- `bindings/micropython/` contains the module source, docs, and examples.
+- The split avoids a unix-port path collision where a module directory named `micropython/` can clash with the output binary path `build-standard/micropython`.
+- `bindings/usermod_uiseedsigner/micropython.mk` defaults to `build-micropython-host/`, but `UISEEDSIGNER_BUILD_DIR` can override it.
+
+#### Smoke test
+
+```bash
+ports/unix/build-standard/micropython - <<'PY'
+import uiseedsigner
+rt = uiseedsigner.UiRuntime(240, 240)
+rt.init()
+print("ok")
+PY
+```
+
+### Other build systems
+
+For custom firmware/CMake integration, use the top-level `bindings/micropython.cmake`, which includes the wrapper module definition under `bindings/usermod_uiseedsigner/`.
 
 ## API Reference
 

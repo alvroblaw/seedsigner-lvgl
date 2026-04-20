@@ -1,4 +1,2 @@
-UISEEDSIGNER_MOD_DIR := $(USERMOD_DIR)
-
-SRC_USERMOD_C += $(UISEEDSIGNER_MOD_DIR)/mod_uiseedsigner.c
-CFLAGS_USERMOD += -I$(UISEEDSIGNER_MOD_DIR)/../../include -I$(UISEEDSIGNER_MOD_DIR)/../../config
+# Kept as documentation-only stub.
+# Actual MicroPython user module build files live in ../usermod_uiseedsigner/
