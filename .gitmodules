@@ -1,0 +1,6 @@
+[submodule "third_party/esp-idf"]
+	path = third_party/esp-idf
+	url = https://github.com/espressif/esp-idf.git
+[submodule "third_party/micropython"]
+	path = third_party/micropython
+	url = https://github.com/micropython/micropython.git
