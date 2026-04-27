@@ -37,9 +37,18 @@ Key files:
 
 ## Prerequisites
 
-- ESP-IDF **5.3.x** or **5.4.x** installed and exported
+- ESP-IDF **5.4.4** validated for this project
 - `idf.py` available in shell
 - board connected over the UART/flash USB port
+
+Preferred reproducible path from repo root:
+
+```bash
+cd third_party/esp-idf
+./install.sh esp32p4
+cd ../..
+. ./third_party/esp-idf/export.sh
+```
 
 Check environment:
 
@@ -59,6 +68,8 @@ idf.py build
 ```
 
 On first build, IDF downloads managed components declared in `idf_component.yml`.
+
+This repo also carries local component overrides under `embedded/esp32p4/components/` for currently-needed compatibility fixes against the validated BSP stack.
 
 ## Flash
 
@@ -112,6 +123,21 @@ For this specific Waveshare board, current assumption is:
 - display path comes from BSP-managed ST7703 stack
 - touch path comes from BSP-managed GT911 stack
 - backlight control is exposed by BSP helper APIs
+
+Validated stack for reproducible host build:
+
+- `third_party/esp-idf`: **v5.4.4**
+- `waveshare/esp32_p4_wifi6_touch_lcd_4b`: `1.0.1`
+- `waveshare/esp_lcd_st7703`: `1.0.5`
+- `espressif/esp_lvgl_port`: `2.7.2`
+- `espressif/usb`: `1.4.0`
+- `lvgl/lvgl`: `9.5.0`
+
+Local overrides currently patch BSP/component compatibility gaps for this stack:
+
+- `embedded/esp32p4/components/esp_codec_dev`
+- `embedded/esp32p4/components/esp_lcd_st7703`
+- `embedded/esp32p4/components/esp32_p4_wifi6_touch_lcd_4b`
 
 If future Waveshare BSP versions change APIs, keep this document updated with exact component versions that were validated.
 

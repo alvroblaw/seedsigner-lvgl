@@ -1,5 +1,8 @@
 build/
 build-*/
+embedded/*/build/
+embedded/*/managed_components/
+embedded/*/sdkconfig
 .vscode/
 .idea/
 __pycache__/

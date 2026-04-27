@@ -19,13 +19,13 @@ static void create_bringup_screen(void) {
     lv_obj_t *title = lv_label_create(screen);
     lv_label_set_text(title, "seedsigner-lvgl");
     lv_obj_set_style_text_color(title, lv_color_hex(0xFCFCFC), 0);
-    lv_obj_set_style_text_font(title, &lv_font_montserrat_22, 0);
+    lv_obj_set_style_text_font(title, LV_FONT_DEFAULT, 0);
     lv_obj_align(title, LV_ALIGN_TOP_MID, 0, 28);
 
     lv_obj_t *subtitle = lv_label_create(screen);
     lv_label_set_text(subtitle, "ESP32-P4 Waveshare 4B bring-up");
     lv_obj_set_style_text_color(subtitle, lv_color_hex(0xB8B8B8), 0);
-    lv_obj_set_style_text_font(subtitle, &lv_font_montserrat_16, 0);
+    lv_obj_set_style_text_font(subtitle, LV_FONT_DEFAULT, 0);
     lv_obj_align_to(subtitle, title, LV_ALIGN_OUT_BOTTOM_MID, 0, 12);
 
     lv_obj_t *card = lv_obj_create(screen);
@@ -45,13 +45,13 @@ static void create_bringup_screen(void) {
                       "Backlight: enabled\n"
                       "Next: integrate seedsigner runtime platform layer");
     lv_obj_set_style_text_color(body, lv_color_hex(0xFCFCFC), 0);
-    lv_obj_set_style_text_font(body, &lv_font_montserrat_18, 0);
+    lv_obj_set_style_text_font(body, LV_FONT_DEFAULT, 0);
     lv_obj_align(body, LV_ALIGN_TOP_LEFT, 24, 24);
 
     lv_obj_t *footer = lv_label_create(screen);
     lv_label_set_text(footer, "If this screen renders, panel + LVGL path works.");
     lv_obj_set_style_text_color(footer, lv_color_hex(0xFF9F0A), 0);
-    lv_obj_set_style_text_font(footer, &lv_font_montserrat_16, 0);
+    lv_obj_set_style_text_font(footer, LV_FONT_DEFAULT, 0);
     lv_obj_align(footer, LV_ALIGN_BOTTOM_MID, 0, -24);
 }
 
