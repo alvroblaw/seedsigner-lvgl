@@ -314,6 +314,8 @@ esp_codec_dev_handle_t bsp_audio_codec_microphone_init(void)
 // Bit number used to represent command and parameter
 #define LCD_LEDC_CH            CONFIG_BSP_DISPLAY_BRIGHTNESS_LEDC_CH
 
+static bool s_backlight_gpio_fallback = false;
+
 esp_err_t bsp_display_brightness_init(void)
 {
     const ledc_channel_config_t LCD_backlight_channel = {
@@ -334,8 +336,28 @@ esp_err_t bsp_display_brightness_init(void)
         .clk_cfg = LEDC_AUTO_CLK
     };
 
-    BSP_ERROR_CHECK_RETURN_ERR(ledc_timer_config(&LCD_backlight_timer));
-    BSP_ERROR_CHECK_RETURN_ERR(ledc_channel_config(&LCD_backlight_channel));
+    esp_err_t ret = ledc_timer_config(&LCD_backlight_timer);
+    if (ret != ESP_OK) {
+        ESP_LOGW(TAG, "LEDC timer init failed for backlight (err=0x%x); falling back to GPIO", ret);
+        s_backlight_gpio_fallback = true;
+    } else {
+        ret = ledc_channel_config(&LCD_backlight_channel);
+        if (ret != ESP_OK) {
+            ESP_LOGW(TAG, "LEDC channel init failed for backlight (err=0x%x); falling back to GPIO", ret);
+            s_backlight_gpio_fallback = true;
+        }
+    }
+
+    if (s_backlight_gpio_fallback) {
+        gpio_config_t io_conf = {
+            .pin_bit_mask = 1ULL << BSP_LCD_BACKLIGHT,
+            .mode = GPIO_MODE_OUTPUT,
+            .pull_up_en = GPIO_PULLUP_DISABLE,
+            .pull_down_en = GPIO_PULLDOWN_DISABLE,
+            .intr_type = GPIO_INTR_DISABLE,
+        };
+        BSP_ERROR_CHECK_RETURN_ERR(gpio_config(&io_conf));
+    }
 
     return ESP_OK;
 }
@@ -351,6 +373,11 @@ esp_err_t bsp_display_brightness_set(int brightness_percent)
     int actual_percent = 47 + (brightness_percent * (100 - 47)) / 100;
 
     ESP_LOGI(TAG, "Setting LCD backlight: %d%%", brightness_percent);
+
+    if (s_backlight_gpio_fallback) {
+        /* Board backlight path is active-low; use a simple GPIO fallback when LEDC routing is unavailable. */
+        return gpio_set_level(BSP_LCD_BACKLIGHT, brightness_percent > 0 ? 0 : 1);
+    }
 
     uint32_t duty_cycle = (1023 * actual_percent) / 100;
     BSP_ERROR_CHECK_RETURN_ERR(ledc_set_duty(LEDC_LOW_SPEED_MODE, LCD_LEDC_CH, duty_cycle));
@@ -456,6 +483,7 @@ esp_err_t bsp_display_new_with_handles(const bsp_display_config_t *config, bsp_l
     ESP_GOTO_ON_ERROR(esp_lcd_new_panel_st7703(io, &lcd_dev_config, &disp_panel), err, TAG, "New LCD panel Waveshare failed");
     ESP_GOTO_ON_ERROR(esp_lcd_panel_reset(disp_panel), err, TAG, "LCD panel reset failed");
     ESP_GOTO_ON_ERROR(esp_lcd_panel_init(disp_panel), err, TAG, "LCD panel init failed");
+    ESP_GOTO_ON_ERROR(esp_lcd_panel_disp_on_off(disp_panel, true), err, TAG, "LCD panel enable failed");
 
     /* Return all handles */
     ret_handles->io = io;
