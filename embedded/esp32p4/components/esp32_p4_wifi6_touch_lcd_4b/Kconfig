@@ -16,7 +16,7 @@ menu "Board Support Package(ESP32-P4)"
 
         config BSP_I2C_FAST_MODE
             bool "Enable I2C fast mode"
-            default y
+            default n
             help
                 I2C has two speed modes: normal (100kHz) and fast (400kHz).
 

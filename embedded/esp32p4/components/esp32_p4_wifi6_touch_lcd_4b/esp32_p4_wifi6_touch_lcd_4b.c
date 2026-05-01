@@ -482,6 +482,8 @@ err:
 
 esp_err_t bsp_touch_new(const bsp_touch_config_t *config, esp_lcd_touch_handle_t *ret_touch)
 {
+    const int max_attempts = 5;
+
     /* Initilize I2C */
     BSP_ERROR_CHECK_RETURN_ERR(bsp_i2c_init());
 
@@ -506,11 +508,31 @@ esp_err_t bsp_touch_new(const bsp_touch_config_t *config, esp_lcd_touch_handle_t
             .mirror_y = 0,
         },
     };
-    esp_lcd_panel_io_handle_t tp_io_handle = NULL;
     esp_lcd_panel_io_i2c_config_t tp_io_config = ESP_LCD_TOUCH_IO_I2C_GT911_CONFIG();
     tp_io_config.scl_speed_hz = CONFIG_BSP_I2C_CLK_SPEED_HZ;
-    ESP_RETURN_ON_ERROR(esp_lcd_new_panel_io_i2c(i2c_handle, &tp_io_config, &tp_io_handle), TAG, "");
-    return esp_lcd_touch_new_i2c_gt911(tp_io_handle, &tp_cfg, ret_touch);
+
+    for (int attempt = 1; attempt <= max_attempts; ++attempt) {
+        esp_lcd_panel_io_handle_t tp_io_handle = NULL;
+        esp_err_t ret = esp_lcd_new_panel_io_i2c(i2c_handle, &tp_io_config, &tp_io_handle);
+        if (ret != ESP_OK) {
+            ESP_LOGW(TAG, "Touch I2C panel IO init failed on attempt %d/%d (err=0x%x)", attempt, max_attempts, ret);
+        } else {
+            ret = esp_lcd_touch_new_i2c_gt911(tp_io_handle, &tp_cfg, ret_touch);
+            if (ret == ESP_OK) {
+                if (attempt > 1) {
+                    ESP_LOGW(TAG, "Touch controller initialized after %d attempts", attempt);
+                }
+                return ESP_OK;
+            }
+
+            ESP_LOGW(TAG, "Touch controller init failed on attempt %d/%d (err=0x%x)", attempt, max_attempts, ret);
+            esp_lcd_panel_io_del(tp_io_handle);
+        }
+
+        vTaskDelay(pdMS_TO_TICKS(120));
+    }
+
+    return ESP_ERR_INVALID_STATE;
 }
 
 #if (BSP_CONFIG_NO_GRAPHIC_LIB == 0)
