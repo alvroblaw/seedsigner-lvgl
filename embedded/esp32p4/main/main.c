@@ -72,14 +72,19 @@ void app_main(void) {
         },
     };
 
-    bsp_display_brightness_init();
-    bsp_display_backlight_on();
-    bsp_display_brightness_set(100);
-    ESP_LOGI(TAG, "Backlight configured");
-
     lv_display_t *disp = bsp_display_start_with_config(&cfg);
     ESP_LOGI(TAG, "Display start returned: %p", disp);
     assert(disp != NULL);
+
+    /*
+     * The BSP re-initializes backlight control during display bring-up.
+     * Turning the backlight on before bsp_display_start_with_config() causes
+     * a brief visible flash followed by black, because later brightness_init()
+     * resets the PWM/GPIO state. So enable brightness only after display init.
+     */
+    bsp_display_backlight_on();
+    bsp_display_brightness_set(100);
+    ESP_LOGI(TAG, "Backlight configured after display init");
 
     bool locked = bsp_display_lock(1000);
     ESP_LOGI(TAG, "Display lock: %s", locked ? "ok" : "failed");
