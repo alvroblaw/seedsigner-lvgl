@@ -196,10 +196,9 @@ void app_main(void) {
 
     create_bringup_screen();
     lv_obj_invalidate(lv_scr_act());
-    lv_refr_now(NULL);
-    ESP_LOGI(TAG, "Bring-up screen rendered");
     bsp_display_unlock();
     ESP_LOGI(TAG, "Display unlocked");
+    ESP_LOGI(TAG, "Bring-up screen queued for LVGL task render");
 
     while (true) {
         vTaskDelay(pdMS_TO_TICKS(1000));
