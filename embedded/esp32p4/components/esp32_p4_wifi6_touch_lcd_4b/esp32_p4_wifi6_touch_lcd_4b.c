@@ -579,7 +579,11 @@ static lv_display_t *bsp_display_lcd_init(const bsp_display_cfg_t *cfg)
 static lv_indev_t *bsp_display_indev_init(lv_display_t *disp)
 {
     esp_lcd_touch_handle_t tp;
-    BSP_ERROR_CHECK_RETURN_NULL(bsp_touch_new(NULL, &tp));
+    esp_err_t ret = bsp_touch_new(NULL, &tp);
+    if (ret != ESP_OK) {
+        ESP_LOGW(TAG, "Touch initialization failed (err=0x%x); continuing without input", ret);
+        return NULL;
+    }
     assert(tp);
 
     /* Add touch input (for selected screen) */
@@ -603,7 +607,7 @@ lv_display_t *bsp_display_start(void)
 #else
             .buff_dma = true,
 #endif
-            .buff_spiram = false,
+            .buff_spiram = true,
             .sw_rotate = true,
         }
     };
@@ -621,7 +625,7 @@ lv_display_t *bsp_display_start_with_config(const bsp_display_cfg_t *cfg)
 
     BSP_NULL_CHECK(disp = bsp_display_lcd_init(cfg), NULL);
 
-    BSP_NULL_CHECK(disp_indev = bsp_display_indev_init(disp), NULL);
+    disp_indev = bsp_display_indev_init(disp);
 
     return disp;
 }

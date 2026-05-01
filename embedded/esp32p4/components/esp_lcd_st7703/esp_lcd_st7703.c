@@ -333,6 +333,10 @@ static esp_err_t panel_st7703_mirror(esp_lcd_panel_t *panel, bool mirror_x, bool
 
 static esp_err_t panel_st7703_swap_xy(esp_lcd_panel_t *panel, bool swap_axes)
 {
+    if (!swap_axes) {
+        return ESP_OK;
+    }
+
     ESP_LOGE(TAG, "swap_xy is not supported by this panel");
     return ESP_ERR_NOT_SUPPORTED;
 }

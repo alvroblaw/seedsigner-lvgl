@@ -12,7 +12,10 @@
 static const char *TAG = "sslvgl_p4";
 
 static void create_bringup_screen(void) {
+    ESP_LOGI(TAG, "Creating bring-up screen");
+
     lv_obj_t *screen = lv_scr_act();
+    lv_obj_clean(screen);
     lv_obj_set_style_bg_color(screen, lv_color_hex(0x000000), 0);
     lv_obj_set_style_bg_opa(screen, LV_OPA_COVER, 0);
 
@@ -60,22 +63,39 @@ void app_main(void) {
 
     bsp_display_cfg_t cfg = {
         .lvgl_port_cfg = ESP_LVGL_PORT_INIT_CONFIG(),
-        .buffer_size = BSP_LCD_H_RES * 80,
-        .double_buffer = true,
+        .buffer_size = BSP_LCD_H_RES * 40,
+        .double_buffer = false,
         .flags = {
             .buff_dma = true,
-            .buff_spiram = false,
+            .buff_spiram = true,
+            .sw_rotate = true,
         },
     };
 
     bsp_display_brightness_init();
     bsp_display_backlight_on();
     bsp_display_brightness_set(100);
+    ESP_LOGI(TAG, "Backlight configured");
 
-    bsp_display_start_with_config(&cfg);
-    bsp_display_lock(0);
+    lv_display_t *disp = bsp_display_start_with_config(&cfg);
+    ESP_LOGI(TAG, "Display start returned: %p", disp);
+    assert(disp != NULL);
+
+    bool locked = bsp_display_lock(1000);
+    ESP_LOGI(TAG, "Display lock: %s", locked ? "ok" : "failed");
+    if (!locked) {
+        while (true) {
+            vTaskDelay(pdMS_TO_TICKS(1000));
+            ESP_LOGE(TAG, "Unable to obtain LVGL lock");
+        }
+    }
+
     create_bringup_screen();
+    lv_obj_invalidate(lv_scr_act());
+    lv_refr_now(NULL);
+    ESP_LOGI(TAG, "Bring-up screen rendered");
     bsp_display_unlock();
+    ESP_LOGI(TAG, "Display unlocked");
 
     while (true) {
         vTaskDelay(pdMS_TO_TICKS(1000));
