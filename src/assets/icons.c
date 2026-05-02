@@ -18248,7 +18248,7 @@ static const uint8_t img_warning_data[] = {
 const lv_img_dsc_t img_arrow_down = {
     .header.w = 16,
     .header.h = 8,
-    .header.cf = LV_COLOR_FORMAT_NATIVE_ALPHA,
+    .header.cf = LV_COLOR_FORMAT_NATIVE_WITH_ALPHA,
     .data_size = 384,
     .data = img_arrow_down_data
 };
@@ -18256,7 +18256,7 @@ const lv_img_dsc_t img_arrow_down = {
 const lv_img_dsc_t img_arrow_down_selected = {
     .header.w = 16,
     .header.h = 8,
-    .header.cf = LV_COLOR_FORMAT_NATIVE_ALPHA,
+    .header.cf = LV_COLOR_FORMAT_NATIVE_WITH_ALPHA,
     .data_size = 384,
     .data = img_arrow_down_selected_data
 };
@@ -18264,7 +18264,7 @@ const lv_img_dsc_t img_arrow_down_selected = {
 const lv_img_dsc_t img_arrow_right = {
     .header.w = 24,
     .header.h = 24,
-    .header.cf = LV_COLOR_FORMAT_NATIVE_ALPHA,
+    .header.cf = LV_COLOR_FORMAT_NATIVE_WITH_ALPHA,
     .data_size = 1728,
     .data = img_arrow_right_data
 };
@@ -18272,7 +18272,7 @@ const lv_img_dsc_t img_arrow_right = {
 const lv_img_dsc_t img_arrow_right_selected = {
     .header.w = 24,
     .header.h = 24,
-    .header.cf = LV_COLOR_FORMAT_NATIVE_ALPHA,
+    .header.cf = LV_COLOR_FORMAT_NATIVE_WITH_ALPHA,
     .data_size = 1728,
     .data = img_arrow_right_selected_data
 };
@@ -18280,7 +18280,7 @@ const lv_img_dsc_t img_arrow_right_selected = {
 const lv_img_dsc_t img_arrow_up = {
     .header.w = 16,
     .header.h = 8,
-    .header.cf = LV_COLOR_FORMAT_NATIVE_ALPHA,
+    .header.cf = LV_COLOR_FORMAT_NATIVE_WITH_ALPHA,
     .data_size = 384,
     .data = img_arrow_up_data
 };
@@ -18288,7 +18288,7 @@ const lv_img_dsc_t img_arrow_up = {
 const lv_img_dsc_t img_arrow_up_selected = {
     .header.w = 16,
     .header.h = 8,
-    .header.cf = LV_COLOR_FORMAT_NATIVE_ALPHA,
+    .header.cf = LV_COLOR_FORMAT_NATIVE_WITH_ALPHA,
     .data_size = 384,
     .data = img_arrow_up_selected_data
 };
@@ -18296,7 +18296,7 @@ const lv_img_dsc_t img_arrow_up_selected = {
 const lv_img_dsc_t img_back = {
     .header.w = 24,
     .header.h = 24,
-    .header.cf = LV_COLOR_FORMAT_NATIVE_ALPHA,
+    .header.cf = LV_COLOR_FORMAT_NATIVE_WITH_ALPHA,
     .data_size = 1728,
     .data = img_back_data
 };
@@ -18304,7 +18304,7 @@ const lv_img_dsc_t img_back = {
 const lv_img_dsc_t img_back_selected = {
     .header.w = 24,
     .header.h = 24,
-    .header.cf = LV_COLOR_FORMAT_NATIVE_ALPHA,
+    .header.cf = LV_COLOR_FORMAT_NATIVE_WITH_ALPHA,
     .data_size = 1728,
     .data = img_back_selected_data
 };
@@ -18312,7 +18312,7 @@ const lv_img_dsc_t img_back_selected = {
 const lv_img_dsc_t img_btc_logo = {
     .header.w = 24,
     .header.h = 24,
-    .header.cf = LV_COLOR_FORMAT_NATIVE_ALPHA,
+    .header.cf = LV_COLOR_FORMAT_NATIVE_WITH_ALPHA,
     .data_size = 1728,
     .data = img_btc_logo_data
 };
@@ -18320,7 +18320,7 @@ const lv_img_dsc_t img_btc_logo = {
 const lv_img_dsc_t img_btc_logo_30x30 = {
     .header.w = 30,
     .header.h = 30,
-    .header.cf = LV_COLOR_FORMAT_NATIVE_ALPHA,
+    .header.cf = LV_COLOR_FORMAT_NATIVE_WITH_ALPHA,
     .data_size = 2700,
     .data = img_btc_logo_30x30_data
 };
@@ -18328,7 +18328,7 @@ const lv_img_dsc_t img_btc_logo_30x30 = {
 const lv_img_dsc_t img_btc_logo_60x60 = {
     .header.w = 60,
     .header.h = 60,
-    .header.cf = LV_COLOR_FORMAT_NATIVE_ALPHA,
+    .header.cf = LV_COLOR_FORMAT_NATIVE_WITH_ALPHA,
     .data_size = 10800,
     .data = img_btc_logo_60x60_data
 };
@@ -18336,7 +18336,7 @@ const lv_img_dsc_t img_btc_logo_60x60 = {
 const lv_img_dsc_t img_btc_logo_bw = {
     .header.w = 24,
     .header.h = 24,
-    .header.cf = LV_COLOR_FORMAT_NATIVE_ALPHA,
+    .header.cf = LV_COLOR_FORMAT_NATIVE_WITH_ALPHA,
     .data_size = 1728,
     .data = img_btc_logo_bw_data
 };
@@ -18344,7 +18344,7 @@ const lv_img_dsc_t img_btc_logo_bw = {
 const lv_img_dsc_t img_check = {
     .header.w = 24,
     .header.h = 24,
-    .header.cf = LV_COLOR_FORMAT_NATIVE_ALPHA,
+    .header.cf = LV_COLOR_FORMAT_NATIVE_WITH_ALPHA,
     .data_size = 1728,
     .data = img_check_data
 };
@@ -18352,7 +18352,7 @@ const lv_img_dsc_t img_check = {
 const lv_img_dsc_t img_check_selected = {
     .header.w = 24,
     .header.h = 24,
-    .header.cf = LV_COLOR_FORMAT_NATIVE_ALPHA,
+    .header.cf = LV_COLOR_FORMAT_NATIVE_WITH_ALPHA,
     .data_size = 1728,
     .data = img_check_selected_data
 };
@@ -18360,7 +18360,7 @@ const lv_img_dsc_t img_check_selected = {
 const lv_img_dsc_t img_close = {
     .header.w = 24,
     .header.h = 24,
-    .header.cf = LV_COLOR_FORMAT_NATIVE_ALPHA,
+    .header.cf = LV_COLOR_FORMAT_NATIVE_WITH_ALPHA,
     .data_size = 1728,
     .data = img_close_data
 };
@@ -18368,7 +18368,7 @@ const lv_img_dsc_t img_close = {
 const lv_img_dsc_t img_close_selected = {
     .header.w = 24,
     .header.h = 24,
-    .header.cf = LV_COLOR_FORMAT_NATIVE_ALPHA,
+    .header.cf = LV_COLOR_FORMAT_NATIVE_WITH_ALPHA,
     .data_size = 1728,
     .data = img_close_selected_data
 };
@@ -18376,7 +18376,7 @@ const lv_img_dsc_t img_close_selected = {
 const lv_img_dsc_t img_dire_warning = {
     .header.w = 40,
     .header.h = 40,
-    .header.cf = LV_COLOR_FORMAT_NATIVE_ALPHA,
+    .header.cf = LV_COLOR_FORMAT_NATIVE_WITH_ALPHA,
     .data_size = 4800,
     .data = img_dire_warning_data
 };
@@ -18384,7 +18384,7 @@ const lv_img_dsc_t img_dire_warning = {
 const lv_img_dsc_t img_home = {
     .header.w = 24,
     .header.h = 24,
-    .header.cf = LV_COLOR_FORMAT_NATIVE_ALPHA,
+    .header.cf = LV_COLOR_FORMAT_NATIVE_WITH_ALPHA,
     .data_size = 1728,
     .data = img_home_data
 };
@@ -18392,7 +18392,7 @@ const lv_img_dsc_t img_home = {
 const lv_img_dsc_t img_home_selected = {
     .header.w = 24,
     .header.h = 24,
-    .header.cf = LV_COLOR_FORMAT_NATIVE_ALPHA,
+    .header.cf = LV_COLOR_FORMAT_NATIVE_WITH_ALPHA,
     .data_size = 1728,
     .data = img_home_selected_data
 };
@@ -18400,7 +18400,7 @@ const lv_img_dsc_t img_home_selected = {
 const lv_img_dsc_t img_logo_black_240 = {
     .header.w = 240,
     .header.h = 240,
-    .header.cf = LV_COLOR_FORMAT_NATIVE_ALPHA,
+    .header.cf = LV_COLOR_FORMAT_NATIVE_WITH_ALPHA,
     .data_size = 172800,
     .data = img_logo_black_240_data
 };
@@ -18408,7 +18408,7 @@ const lv_img_dsc_t img_logo_black_240 = {
 const lv_img_dsc_t img_warning = {
     .header.w = 40,
     .header.h = 40,
-    .header.cf = LV_COLOR_FORMAT_NATIVE_ALPHA,
+    .header.cf = LV_COLOR_FORMAT_NATIVE_WITH_ALPHA,
     .data_size = 4800,
     .data = img_warning_data
 };
