@@ -225,7 +225,7 @@ void TopNavBar::on_cancel_clicked(lv_event_t* e) {
 void TopNavBar::on_action_clicked(lv_event_t* e) {
     auto* bar = static_cast<TopNavBar*>(lv_event_get_user_data(e));
     if (bar != nullptr) {
-        auto* btn = lv_event_get_target(e);
+        auto* btn = static_cast<lv_obj_t*>(lv_event_get_target(e));
         auto* id_ptr = static_cast<const std::string*>(lv_obj_get_user_data(btn));
         if (id_ptr != nullptr) {
             bar->emit_action(*id_ptr);
