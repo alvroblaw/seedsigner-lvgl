@@ -417,7 +417,7 @@ void SettingsMenuScreen::on_item_event(lv_event_t* event) {
     }
 
     std::size_t index = 0;
-    if (screen->find_definition(lv_event_get_target(event), &index) == nullptr) {
+    if (screen->find_definition(static_cast<lv_obj_t*>(lv_event_get_target(event)), &index) == nullptr) {
         return;
     }
 
