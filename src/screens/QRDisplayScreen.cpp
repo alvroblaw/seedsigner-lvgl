@@ -64,7 +64,12 @@ void QRDisplayScreen::create(const ScreenContext& context, const RouteDescriptor
     lv_obj_set_flex_grow(content_container_, 1); // Take remaining height
 
     // QR widget
-    qr_widget_ = lv_qrcode_create(content_container_, kQRSize, seedsigner::lvgl::theme::active_theme().QR_FOREGROUND, seedsigner::lvgl::theme::active_theme().QR_BACKGROUND);
+    qr_widget_ = lv_qrcode_create(content_container_);
+    if (qr_widget_) {
+        lv_qrcode_set_size(qr_widget_, kQRSize);
+        lv_qrcode_set_dark_color(qr_widget_, seedsigner::lvgl::theme::active_theme().QR_FOREGROUND);
+        lv_qrcode_set_light_color(qr_widget_, seedsigner::lvgl::theme::active_theme().QR_BACKGROUND);
+    }
     if (!qr_widget_) {
         // fallback: create a placeholder label
         lv_obj_t* error = lv_label_create(content_container_);

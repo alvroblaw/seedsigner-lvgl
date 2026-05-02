@@ -41,7 +41,7 @@ private:
     bool frame_valid_{false};
     bool scan_complete_{false};
     std::vector<uint8_t> latest_frame_{};
-    std::vector<lv_color_t> preview_canvas_buffer_{};
+    std::vector<std::uint16_t> preview_canvas_buffer_{};  ///< RGB565 pixels for canvas
     uint32_t frame_width_{0};
     uint32_t frame_height_{0};
     uint64_t frame_sequence_{0};

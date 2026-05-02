@@ -68,7 +68,7 @@ void ScreensaverScreen::create(const ScreenContext& context, const RouteDescript
     // Animation timer (if animation type specified)
     if (params_.animation_type) {
         animation_timer_ = lv_timer_create([](lv_timer_t* timer) {
-            auto* self = static_cast<ScreensaverScreen*>(timer->user_data);
+            auto* self = static_cast<ScreensaverScreen*>(lv_timer_get_user_data(timer));
             self->update_animation();
         }, params_.update_interval_ms, this);
     }
@@ -76,11 +76,11 @@ void ScreensaverScreen::create(const ScreenContext& context, const RouteDescript
 
 void ScreensaverScreen::destroy() {
     if (animation_timer_) {
-        lv_timer_del(animation_timer_);
+        lv_timer_delete(animation_timer_);
         animation_timer_ = nullptr;
     }
     if (container_) {
-        lv_obj_del(container_);
+        lv_obj_delete(container_);
         container_ = nullptr;
     }
     animation_obj_ = nullptr;
@@ -138,7 +138,7 @@ void ScreensaverScreen::dismiss() {
     }
     dismissed_ = true;
     if (animation_timer_) {
-        lv_timer_del(animation_timer_);
+        lv_timer_delete(animation_timer_);
         animation_timer_ = nullptr;
     }
     context_.emit_action(kDismissedAction, kScreensaverComponent);

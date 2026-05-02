@@ -281,9 +281,9 @@ void test_external_scan_flow_demo() {
     assert(canvas != nullptr);
     const auto left_px = lv_canvas_get_px(canvas, 40, 72);
     const auto right_px = lv_canvas_get_px(canvas, 176, 72);
-    assert(left_px.ch.red < right_px.ch.red);
-    assert(left_px.ch.green < right_px.ch.green);
-    assert(left_px.ch.blue < right_px.ch.blue);
+    assert(left_px.red < right_px.red);
+    assert(left_px.green < right_px.green);
+    assert(left_px.blue < right_px.blue);
 
     assert(runtime.patch_screen_data({{"status", "Frame 3 ready for capture"}}));
     assert(runtime.send_input(InputEvent{.key = InputKey::Press}));

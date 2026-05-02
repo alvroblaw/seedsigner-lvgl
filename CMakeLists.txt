@@ -10,17 +10,16 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 set(LV_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 set(LV_BUILD_DEMOS OFF CACHE BOOL "" FORCE)
+# v9: point cmake to our project-owned lv_conf.h directory
+set(LV_BUILD_CONF_DIR ${CMAKE_CURRENT_SOURCE_DIR}/config CACHE PATH "" FORCE)
 
 FetchContent_Declare(
   lvgl
-  URL https://github.com/lvgl/lvgl/archive/refs/tags/v8.3.11.tar.gz
+  URL https://github.com/lvgl/lvgl/archive/refs/tags/v9.3.0.tar.gz
 )
 FetchContent_MakeAvailable(lvgl)
-set_target_properties(lvgl_examples lvgl_demos PROPERTIES EXCLUDE_FROM_ALL TRUE)
 
 set(SEEDSIGNER_LV_CONF_DIR ${CMAKE_CURRENT_SOURCE_DIR}/config)
-target_include_directories(lvgl PUBLIC ${SEEDSIGNER_LV_CONF_DIR})
-target_compile_definitions(lvgl PUBLIC LV_CONF_INCLUDE_SIMPLE)
 
 add_library(seedsigner_lvgl
   src/contracts/SettingsContract.cpp
@@ -72,7 +71,7 @@ target_include_directories(seedsigner_lvgl
     ${CMAKE_CURRENT_SOURCE_DIR}/src/assets
     ${SEEDSIGNER_LV_CONF_DIR}
     ${lvgl_SOURCE_DIR}
-    ${lvgl_SOURCE_DIR}/src/extra/libs/qrcode
+    ${lvgl_SOURCE_DIR}/src/libs/qrcode
 )
 
 target_compile_definitions(seedsigner_lvgl PUBLIC LV_CONF_INCLUDE_SIMPLE)
@@ -136,11 +135,14 @@ if(BUILD_TESTING)
   add_test(NAME input_profile_tests COMMAND input_profile_tests)
 
   # --- Profile matrix runner (headless, multi-profile scenario validation) ---
+  # Requires nlohmann_json which is only fetched when BUILD_HOST_DESKTOP=ON.
+  if(BUILD_HOST_DESKTOP)
   add_executable(profile_matrix_runner
     tests/profile_matrix_runner.cpp
     src/desktop/ScenarioRunner.cpp
   )
   target_link_libraries(profile_matrix_runner PRIVATE seedsigner_lvgl nlohmann_json::nlohmann_json)
+  endif()
 
   # Scenario suite as a test target (requires BUILD_HOST_DESKTOP for nlohmann_json)
   if(BUILD_HOST_DESKTOP)

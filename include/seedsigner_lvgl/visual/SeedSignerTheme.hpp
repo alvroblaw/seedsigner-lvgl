@@ -80,11 +80,24 @@ namespace colors {
 namespace typography {
     // Calibrated to SeedSigner: title=20, body=17, button=18, label=15
     // LVGL montserrat step is 2; pick nearest available size.
-    constexpr const lv_font_t* TITLE   = &lv_font_montserrat_20;  // TOP_NAV_TITLE_FONT_SIZE=20
-    constexpr const lv_font_t* BODY    = &lv_font_montserrat_16;  // BODY_FONT_SIZE=17 (nearest)
-    constexpr const lv_font_t* CAPTION = &lv_font_montserrat_14;  // LABEL_FONT_SIZE=15 (nearest)
+    // Fallback to lv_font_montserrat_14 when larger sizes are not enabled in lv_conf.h.
+#if LV_FONT_MONTSERRAT_20
+    constexpr const lv_font_t* TITLE   = &lv_font_montserrat_20;
+#else
+    constexpr const lv_font_t* TITLE   = &lv_font_montserrat_14;
+#endif
+#if LV_FONT_MONTSERRAT_16
+    constexpr const lv_font_t* BODY    = &lv_font_montserrat_16;
+#else
+    constexpr const lv_font_t* BODY    = &lv_font_montserrat_14;
+#endif
+    constexpr const lv_font_t* CAPTION = &lv_font_montserrat_14;
     constexpr const lv_font_t* MONO    = &lv_font_montserrat_14;
-    constexpr const lv_font_t* BUTTON  = &lv_font_montserrat_18;  // BUTTON_FONT_SIZE=18
+#if LV_FONT_MONTSERRAT_18
+    constexpr const lv_font_t* BUTTON  = &lv_font_montserrat_18;
+#else
+    constexpr const lv_font_t* BUTTON  = &lv_font_montserrat_14;
+#endif
 }
 
 // Spacing and sizing

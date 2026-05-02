@@ -227,7 +227,7 @@ void SeedWordsScreen::create_word_chip(lv_obj_t* parent, int index, const std::s
     lv_obj_t* chip = lv_obj_create(parent);
     lv_obj_set_size(chip, width, kChipH);
     lv_obj_add_style(chip, &chip_style_, 0);
-    lv_obj_clear_flag(chip, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_clear_flag(chip, static_cast<lv_obj_flag_t>(LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_SCROLLABLE));
     lv_obj_set_flex_flow(chip, LV_FLEX_FLOW_ROW);
     lv_obj_set_flex_align(chip, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
     lv_obj_set_style_pad_all(chip, 4, 0);

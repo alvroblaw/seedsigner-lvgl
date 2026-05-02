@@ -472,7 +472,7 @@ void SettingsSelectionScreen::on_item_event(lv_event_t* event) {
     }
 
     std::size_t index = 0;
-    if (screen->find_item(lv_event_get_target(event), &index) == nullptr) {
+    if (screen->find_item(static_cast<lv_obj_t*>(lv_event_get_target(event)), &index) == nullptr) {
         return;
     }
 

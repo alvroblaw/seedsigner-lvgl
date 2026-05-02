@@ -1,5 +1,5 @@
 // SdlDisplay — SDL2-backed display adapter for host desktop builds.
-// See header for attribution / license notes.
+// Uses the LVGL v9 display + indev API (lv_display_create / lv_indev_create).
 
 #include "seedsigner_lvgl/platform/SdlDisplay.hpp"
 #include "seedsigner_lvgl/runtime/InputEvent.hpp"
@@ -11,6 +11,9 @@
 #include <SDL.h>
 
 namespace seedsigner::lvgl {
+
+// 2 bytes per pixel for RGB565 (LV_COLOR_DEPTH = 16).
+static constexpr std::size_t kBytesPerPixel = 2;
 
 // -------------------------------------------------------------------------- //
 // RAII wrapper for SDL state so SdlDisplay stays move-friendly internally.
@@ -35,8 +38,8 @@ SdlDisplay::SdlDisplay(std::uint32_t width, std::uint32_t height, std::uint32_t 
     : width_(width)
     , height_(height)
     , pixel_scale_(pixel_scale)
-    , draw_buf_(static_cast<std::size_t>(width) * 40)          // 40-row LVGL render scratch
-    , framebuffer_(static_cast<std::size_t>(width) * height)
+    , draw_buf_(static_cast<std::size_t>(width) * 40 * kBytesPerPixel)
+    , framebuffer_(static_cast<std::size_t>(width) * height * kBytesPerPixel, 0)
     , argb_buffer_(static_cast<std::size_t>(width) * height)
     , sdl_(std::make_unique<SdlState>())
 {
@@ -47,17 +50,14 @@ SdlDisplay::SdlDisplay(std::uint32_t width, std::uint32_t height, std::uint32_t 
 
     create_sdl_window();
 
-    // Use a small render scratch for LVGL — flush_cb copies partial areas
-    // into the correct position in the full framebuffer.
-    lv_disp_draw_buf_init(&draw_buffer_, draw_buf_.data(), nullptr,
-                          static_cast<uint32_t>(draw_buf_.size()));
-    lv_disp_drv_init(&display_driver_);
-    display_driver_.hor_res  = width_;
-    display_driver_.ver_res  = height_;
-    display_driver_.flush_cb = flush_cb;
-    display_driver_.draw_buf = &draw_buffer_;
-    display_driver_.user_data = this;
-    display_ = lv_disp_drv_register(&display_driver_);
+    display_ = lv_display_create(static_cast<int32_t>(width_),
+                                  static_cast<int32_t>(height_));
+    lv_display_set_user_data(display_, this);
+    lv_display_set_flush_cb(display_, flush_cb);
+    lv_display_set_buffers(display_,
+                                 draw_buf_.data(), nullptr,
+                                 static_cast<uint32_t>(draw_buf_.size()),
+                                 LV_DISPLAY_RENDER_MODE_PARTIAL);
 }
 
 SdlDisplay::~SdlDisplay() = default;
@@ -66,23 +66,24 @@ SdlDisplay::~SdlDisplay() = default;
 // LVGL flush callback
 // -------------------------------------------------------------------------- //
 
-void SdlDisplay::flush_cb(lv_disp_drv_t* disp_drv, const lv_area_t* area, lv_color_t* color_p) {
-    auto* self = static_cast<SdlDisplay*>(disp_drv->user_data);
+void SdlDisplay::flush_cb(lv_display_t* disp, const lv_area_t* area, uint8_t* px_map) {
+    auto* self = static_cast<SdlDisplay*>(lv_display_get_user_data(disp));
     if (self) {
         ++self->flush_count_;
 
-        // Copy the partial render from LVGL's linear scratch buffer into the
-        // correct position in the full framebuffer.
         const int area_w = area->x2 - area->x1 + 1;
+        const std::size_t row_bytes = static_cast<std::size_t>(area_w) * kBytesPerPixel;
+
         for (int y = area->y1; y <= area->y2; ++y) {
-            std::memcpy(&self->framebuffer_[static_cast<std::size_t>(y) * self->width_ + area->x1],
-                        color_p,
-                        static_cast<std::size_t>(area_w) * sizeof(lv_color_t));
-            color_p += area_w;
+            const std::size_t dst_offset =
+                (static_cast<std::size_t>(y) * self->width_ + static_cast<std::size_t>(area->x1))
+                * kBytesPerPixel;
+            std::memcpy(self->framebuffer_.data() + dst_offset, px_map, row_bytes);
+            px_map += row_bytes;
         }
         self->blit_framebuffer();
     }
-    lv_disp_flush_ready(disp_drv);
+    lv_display_flush_ready(disp);
 }
 
 // -------------------------------------------------------------------------- //
@@ -92,7 +93,6 @@ void SdlDisplay::flush_cb(lv_disp_drv_t* disp_drv, const lv_area_t* area, lv_col
 void SdlDisplay::blit_framebuffer() {
     if (!sdl_->renderer) return;
 
-    // Lazily create (or recreate after resolution switch) the persistent texture.
     if (!texture_) {
         texture_ = SDL_CreateTexture(
             sdl_->renderer,
@@ -106,17 +106,17 @@ void SdlDisplay::blit_framebuffer() {
         }
     }
 
-    // Expand RGB565 framebuffer → ARGB8888 intermediate buffer.
-    for (std::size_t i = 0; i < framebuffer_.size(); ++i) {
-        const lv_color_t c = framebuffer_[i];
-        const auto r = static_cast<std::uint32_t>((c.full >> 11) & 0x1F) * 255 / 31;
-        const auto g = static_cast<std::uint32_t>((c.full >>  5) & 0x3F) * 255 / 63;
-        const auto b = static_cast<std::uint32_t>( c.full        & 0x1F) * 255 / 31;
+    // Expand RGB565 framebuffer (raw bytes) → ARGB8888 intermediate buffer.
+    const std::size_t num_pixels = static_cast<std::size_t>(width_) * height_;
+    const auto* fb = reinterpret_cast<const std::uint16_t*>(framebuffer_.data());
+    for (std::size_t i = 0; i < num_pixels; ++i) {
+        const std::uint16_t c = fb[i];
+        const auto r = static_cast<std::uint32_t>((c >> 11) & 0x1F) * 255 / 31;
+        const auto g = static_cast<std::uint32_t>((c >>  5) & 0x3F) * 255 / 63;
+        const auto b = static_cast<std::uint32_t>( c        & 0x1F) * 255 / 31;
         argb_buffer_[i] = (0xFFu << 24) | (r << 16) | (g << 8) | b;
     }
 
-    // Upload full buffer to the persistent texture.
-    // pitch = width * 4 bytes (ARGB8888), guaranteed correct for our linear buffer.
     const int pitch = static_cast<int>(width_) * 4;
     if (SDL_UpdateTexture(texture_, nullptr, argb_buffer_.data(), pitch) != 0) {
         std::fprintf(stderr, "[SdlDisplay] SDL_UpdateTexture failed: %s\n", SDL_GetError());
@@ -136,7 +136,6 @@ void SdlDisplay::blit_framebuffer() {
 // -------------------------------------------------------------------------- //
 
 std::optional<InputEvent> SdlDisplay::poll_input(std::uint32_t timeout_ms) {
-    // Drain all pending SDL events; return the first mapped input event.
     SDL_Event ev;
     while (SDL_WaitEventTimeout(&ev, static_cast<int>(timeout_ms))) {
         if (ev.type == SDL_QUIT) {
@@ -176,16 +175,15 @@ void SdlDisplay::refresh() {
 }
 
 // -------------------------------------------------------------------------- //
-// Pointer (mouse/touch) indev
+// Pointer (mouse/touch) indev — LVGL v9 API
 // -------------------------------------------------------------------------- //
 
 void SdlDisplay::enable_pointer() {
     if (pointer_enabled_) return;
-    lv_indev_drv_init(&pointer_driver_);
-    pointer_driver_.type = LV_INDEV_TYPE_POINTER;
-    pointer_driver_.read_cb = pointer_read_cb;
-    pointer_driver_.user_data = this;
-    pointer_device_ = lv_indev_drv_register(&pointer_driver_);
+    pointer_device_ = lv_indev_create();
+    lv_indev_set_type(pointer_device_, LV_INDEV_TYPE_POINTER);
+    lv_indev_set_read_cb(pointer_device_, pointer_read_cb);
+    lv_indev_set_user_data(pointer_device_, this);
     pointer_enabled_ = true;
     std::fprintf(stderr, "[SdlDisplay] pointer indev registered (mouse/touch)\n");
 }
@@ -197,26 +195,26 @@ void SdlDisplay::handle_mouse_event(const SDL_Event& ev) {
         case SDL_MOUSEBUTTONDOWN:
             if (ev.button.button == SDL_BUTTON_LEFT) {
                 pointer_pressed_ = true;
-                pointer_pos_.x = static_cast<lv_coord_t>(
+                pointer_pos_.x = static_cast<int32_t>(
                     ev.button.x / static_cast<int>(pixel_scale_));
-                pointer_pos_.y = static_cast<lv_coord_t>(
+                pointer_pos_.y = static_cast<int32_t>(
                     ev.button.y / static_cast<int>(pixel_scale_));
             }
             break;
         case SDL_MOUSEBUTTONUP:
             if (ev.button.button == SDL_BUTTON_LEFT) {
                 pointer_pressed_ = false;
-                pointer_pos_.x = static_cast<lv_coord_t>(
+                pointer_pos_.x = static_cast<int32_t>(
                     ev.button.x / static_cast<int>(pixel_scale_));
-                pointer_pos_.y = static_cast<lv_coord_t>(
+                pointer_pos_.y = static_cast<int32_t>(
                     ev.button.y / static_cast<int>(pixel_scale_));
             }
             break;
         case SDL_MOUSEMOTION:
             if (ev.motion.state & SDL_BUTTON_LMASK) {
-                pointer_pos_.x = static_cast<lv_coord_t>(
+                pointer_pos_.x = static_cast<int32_t>(
                     ev.motion.x / static_cast<int>(pixel_scale_));
-                pointer_pos_.y = static_cast<lv_coord_t>(
+                pointer_pos_.y = static_cast<int32_t>(
                     ev.motion.y / static_cast<int>(pixel_scale_));
             }
             break;
@@ -233,9 +231,7 @@ std::optional<InputEvent> SdlDisplay::poll_all_events() {
             if (quit_callback_) quit_callback_();
             return std::nullopt;
         }
-        // Feed mouse/touch events to the pointer indev state.
         handle_mouse_event(ev);
-
         if (ev.type == SDL_KEYDOWN) {
             if (auto mapped = map_sdl_event(ev)) return mapped;
         }
@@ -243,12 +239,11 @@ std::optional<InputEvent> SdlDisplay::poll_all_events() {
     return std::nullopt;
 }
 
-void SdlDisplay::pointer_read_cb(lv_indev_drv_t* drv, lv_indev_data_t* data) {
-    auto* self = static_cast<SdlDisplay*>(drv->user_data);
+void SdlDisplay::pointer_read_cb(lv_indev_t* indev, lv_indev_data_t* data) {
+    auto* self = static_cast<SdlDisplay*>(lv_indev_get_user_data(indev));
     if (!self) return;
     data->point = self->pointer_pos_;
     data->state = self->pointer_pressed_ ? LV_INDEV_STATE_PRESSED : LV_INDEV_STATE_RELEASED;
-    // Continuous reporting — LVGL will keep calling this cb.
     data->continue_reading = false;
 }
 
@@ -257,8 +252,7 @@ void SdlDisplay::pointer_read_cb(lv_indev_drv_t* drv, lv_indev_data_t* data) {
 // -------------------------------------------------------------------------- //
 
 void SdlDisplay::create_sdl_window() {
-    // Destroy previous texture/window/renderer if any.
-    if (texture_)      { SDL_DestroyTexture(texture_);        texture_       = nullptr; }
+    if (texture_)       { SDL_DestroyTexture(texture_);        texture_       = nullptr; }
     if (sdl_->renderer) { SDL_DestroyRenderer(sdl_->renderer); sdl_->renderer = nullptr; }
     if (sdl_->window)   { SDL_DestroyWindow(sdl_->window);     sdl_->window   = nullptr; }
 
@@ -293,47 +287,45 @@ bool SdlDisplay::switch_resolution(std::uint32_t new_width, std::uint32_t new_he
     std::fprintf(stderr, "[SdlDisplay] switch_resolution %ux%u → %ux%u\n",
                  width_, height_, new_width, new_height);
 
-    // 1. Remove the old LVGL display driver.
+    // 1. Remove the old LVGL display.
     if (display_) {
-        lv_disp_remove(display_);
+        lv_display_delete(display_);
         display_ = nullptr;
     }
 
     // 2. Update dimensions and reallocate framebuffer.
     width_  = new_width;
     height_ = new_height;
-    draw_buf_.assign(static_cast<std::size_t>(width_) * 40, lv_color_t{});
-    framebuffer_.assign(static_cast<std::size_t>(width_) * height_, lv_color_t{});
+    draw_buf_.assign(static_cast<std::size_t>(width_) * 40 * kBytesPerPixel, 0);
+    framebuffer_.assign(static_cast<std::size_t>(width_) * height_ * kBytesPerPixel, 0);
     argb_buffer_.assign(static_cast<std::size_t>(width_) * height_, 0);
 
     // 3. Recreate SDL window at new size (also resets texture_).
     create_sdl_window();
     if (!sdl_->window || !sdl_->renderer) return false;
 
-    // 4. Re-register the LVGL display driver with the new resolution.
-    lv_disp_draw_buf_init(&draw_buffer_, draw_buf_.data(), nullptr,
-                          static_cast<uint32_t>(draw_buf_.size()));
-    lv_disp_drv_init(&display_driver_);
-    display_driver_.hor_res  = width_;
-    display_driver_.ver_res  = height_;
-    display_driver_.flush_cb = flush_cb;
-    display_driver_.draw_buf = &draw_buffer_;
-    display_driver_.user_data = this;
-    display_ = lv_disp_drv_register(&display_driver_);
+    // 4. Re-register the LVGL display with the new resolution.
+    display_ = lv_display_create(static_cast<int32_t>(width_),
+                                  static_cast<int32_t>(height_));
+    lv_display_set_user_data(display_, this);
+    lv_display_set_flush_cb(display_, flush_cb);
+    lv_display_set_buffers(display_,
+                                 draw_buf_.data(), nullptr,
+                                 static_cast<uint32_t>(draw_buf_.size()),
+                                 LV_DISPLAY_RENDER_MODE_PARTIAL);
 
     // 5. Re-register pointer indev if it was previously enabled.
     if (pointer_enabled_ && pointer_device_) {
         lv_indev_delete(pointer_device_);
         pointer_device_ = nullptr;
-        lv_indev_drv_init(&pointer_driver_);
-        pointer_driver_.type = LV_INDEV_TYPE_POINTER;
-        pointer_driver_.read_cb = pointer_read_cb;
-        pointer_driver_.user_data = this;
-        pointer_device_ = lv_indev_drv_register(&pointer_driver_);
+        pointer_device_ = lv_indev_create();
+        lv_indev_set_type(pointer_device_, LV_INDEV_TYPE_POINTER);
+        lv_indev_set_read_cb(pointer_device_, pointer_read_cb);
+        lv_indev_set_user_data(pointer_device_, this);
     }
 
     // Force a full refresh.
-    lv_refr_now(nullptr);
+    lv_refr_now(display_);
 
     return display_ != nullptr;
 }

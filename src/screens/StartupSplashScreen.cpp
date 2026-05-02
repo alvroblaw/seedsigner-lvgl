@@ -50,7 +50,7 @@ void StartupSplashScreen::create(const ScreenContext& context, const RouteDescri
     // Timer for auto‑completion (if timeout > 0)
     if (params_.timeout_ms > 0) {
         timer_ = lv_timer_create([](lv_timer_t* timer) {
-            auto* self = static_cast<StartupSplashScreen*>(timer->user_data);
+            auto* self = static_cast<StartupSplashScreen*>(lv_timer_get_user_data(timer));
             self->emit_completed(false); // auto‑completed
         }, params_.timeout_ms, this);
         lv_timer_set_repeat_count(timer_, 1); // one‑shot
@@ -59,7 +59,7 @@ void StartupSplashScreen::create(const ScreenContext& context, const RouteDescri
 
 void StartupSplashScreen::destroy() {
     if (timer_) {
-        lv_timer_del(timer_);
+        lv_timer_delete(timer_);
         timer_ = nullptr;
     }
     if (container_) {
@@ -97,7 +97,7 @@ void StartupSplashScreen::emit_completed(bool skipped) {
     }
     completed_ = true;
     if (timer_) {
-        lv_timer_del(timer_);
+        lv_timer_delete(timer_);
         timer_ = nullptr;
     }
     if (skipped) {

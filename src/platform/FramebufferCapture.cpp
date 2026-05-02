@@ -16,13 +16,16 @@ bool FramebufferCapture::write_png(const std::string& path,
 
     std::vector<std::uint8_t> rgb(static_cast<std::size_t>(fw) * fh * 3);
 
+    // Framebuffer is raw RGB565 bytes, 2 bytes per pixel, little-endian.
+    const auto* pixels = reinterpret_cast<const std::uint16_t*>(fb.data());
+
     for (std::uint32_t y = 0; y < fh; ++y) {
         for (std::uint32_t x = 0; x < fw; ++x) {
             const std::size_t idx = static_cast<std::size_t>(y) * fw + x;
-            const std::uint16_t c = fb[idx].full;
+            const std::uint16_t c = pixels[idx];
             const std::uint8_t r5 = (c >> 11) & 0x1F;
-            const std::uint8_t g6 = (c >> 5) & 0x3F;
-            const std::uint8_t b5 = c & 0x1F;
+            const std::uint8_t g6 = (c >>  5) & 0x3F;
+            const std::uint8_t b5 =  c        & 0x1F;
 
             const std::size_t out = (static_cast<std::size_t>(y) * fw + x) * 3;
             rgb[out + 0] = (r5 << 3) | (r5 >> 2);
@@ -31,7 +34,9 @@ bool FramebufferCapture::write_png(const std::string& path,
         }
     }
 
-    int ok = stbi_write_png(path.c_str(), static_cast<int>(fw), static_cast<int>(fh), 3, rgb.data(), static_cast<int>(fw) * 3);
+    int ok = stbi_write_png(path.c_str(),
+                             static_cast<int>(fw), static_cast<int>(fh),
+                             3, rgb.data(), static_cast<int>(fw) * 3);
     return ok != 0;
 }
 
