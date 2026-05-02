@@ -3,6 +3,7 @@
 #include "icons.h"
 
 #include <algorithm>
+#include <cstdlib>
 #include <sstream>
 #include <string>
 #include <string_view>
@@ -141,7 +142,7 @@ void MenuListScreen::create(const ScreenContext& context, const RouteDescriptor&
             lv_obj_set_style_bg_opa(header, LV_OPA_TRANSP, 0);
             lv_obj_set_style_border_width(header, 0, 0);
             lv_obj_set_style_pad_all(header, 2, 0);
-            lv_obj_clear_flag(header, LV_OBJ_FLAG_SCROLLABLE | LV_OBJ_FLAG_CLICKABLE);
+            lv_obj_clear_flag(header, static_cast<lv_obj_flag_t>(LV_OBJ_FLAG_SCROLLABLE | LV_OBJ_FLAG_CLICKABLE));
 
             auto* lbl = lv_label_create(header);
             std::string header_text = item.label.empty() ? item.id : item.label;
@@ -235,7 +236,7 @@ void MenuListScreen::create(const ScreenContext& context, const RouteDescriptor&
         lv_obj_align(scrollbar_, LV_ALIGN_TOP_RIGHT, -2, 0);
         lv_obj_set_style_bg_opa(scrollbar_, LV_OPA_TRANSP, 0);
         lv_obj_set_style_border_width(scrollbar_, 0, 0);
-        lv_obj_clear_flag(scrollbar_, LV_OBJ_FLAG_SCROLLABLE | LV_OBJ_FLAG_CLICKABLE);
+        lv_obj_clear_flag(scrollbar_, static_cast<lv_obj_flag_t>(LV_OBJ_FLAG_SCROLLABLE | LV_OBJ_FLAG_CLICKABLE));
         lv_obj_set_style_pad_all(scrollbar_, 0, 0);
 
         // Inner thumb
@@ -246,7 +247,7 @@ void MenuListScreen::create(const ScreenContext& context, const RouteDescriptor&
         lv_obj_set_style_bg_opa(thumb, LV_OPA_60, 0);
         lv_obj_set_style_radius(thumb, LV_RADIUS_CIRCLE, 0);
         lv_obj_set_style_border_width(thumb, 0, 0);
-        lv_obj_clear_flag(thumb, LV_OBJ_FLAG_SCROLLABLE | LV_OBJ_FLAG_CLICKABLE);
+        lv_obj_clear_flag(thumb, static_cast<lv_obj_flag_t>(LV_OBJ_FLAG_SCROLLABLE | LV_OBJ_FLAG_CLICKABLE));
     }
 }
 
@@ -311,6 +312,8 @@ bool MenuListScreen::handle_input(const InputEvent& input) {
         return context_.emit_cancel(kMenuComponent);
     case InputKey::Left:
     case InputKey::Right:
+        return false;
+    case InputKey::ProfileSwitch:
         return false;
     }
 
@@ -378,11 +381,13 @@ std::size_t MenuListScreen::parse_selected_index(const PropertyMap& args) {
         return 0;
     }
 
-    try {
-        return static_cast<std::size_t>(std::stoul(it->second));
-    } catch (...) {
+    const char* str = it->second.c_str();
+    char* end = nullptr;
+    long val = std::strtol(str, &end, 10);
+    if (end == str || val < 0) {
         return 0;
     }
+    return static_cast<std::size_t>(val);
 }
 
 std::string MenuListScreen::value_or(const PropertyMap& values, const char* key, const char* fallback) {
@@ -453,7 +458,7 @@ void MenuListScreen::on_item_event(lv_event_t* event) {
     }
 
     std::size_t index = 0;
-    if (screen->find_item(lv_event_get_target(event), &index) == nullptr) {
+    if (screen->find_item(static_cast<lv_obj_t*>(lv_event_get_target(event)), &index) == nullptr) {
         return;
     }
 
