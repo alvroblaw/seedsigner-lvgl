@@ -52,7 +52,7 @@ void CameraPreviewScreen::create(const ScreenContext& context, const RouteDescri
     preview_canvas_buffer_.resize(static_cast<std::size_t>(kPreviewWidth) * static_cast<std::size_t>(kPreviewHeight));
     preview_canvas_ = lv_canvas_create(preview_panel_);
     lv_canvas_set_buffer(preview_canvas_, preview_canvas_buffer_.data(), kPreviewWidth, kPreviewHeight,
-                         LV_IMG_CF_TRUE_COLOR);
+                         LV_COLOR_FORMAT_NATIVE);
     lv_obj_center(preview_canvas_);
 
     frame_label_ = lv_label_create(preview_panel_);
@@ -76,7 +76,7 @@ void CameraPreviewScreen::destroy() {
     top_nav_bar_.reset();
     preview_canvas_buffer_.clear();
     if (container_ != nullptr) {
-        lv_obj_del(container_);
+        lv_obj_delete(container_);
         container_ = nullptr;
         content_container_ = nullptr;
 
@@ -185,8 +185,8 @@ void CameraPreviewScreen::refresh_preview() {
         for (std::uint32_t x = 0; x < scaled_width; ++x) {
             const auto src_x = std::min<std::uint32_t>(frame_width_ - 1, (x * frame_width_) / scaled_width);
             const auto value = latest_frame_[static_cast<std::size_t>(src_y) * source_stride + src_x];
-            lv_canvas_set_px(preview_canvas_, static_cast<lv_coord_t>(x + x_offset), static_cast<lv_coord_t>(y + y_offset),
-                             grayscale_to_color(value));
+            lv_canvas_set_px(preview_canvas_, static_cast<int32_t>(x + x_offset), static_cast<int32_t>(y + y_offset),
+                             grayscale_to_color(value), LV_OPA_COVER);
         }
     }
 

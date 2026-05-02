@@ -2,23 +2,28 @@
 #define LV_CONF_H
 
 /*
- * Project-owned LVGL configuration for host and future embedded builds.
+ * Project-owned LVGL v9 configuration for host and embedded builds.
  *
  * Keep this file in-repo so contributors do not need to copy or generate
  * a local lv_conf.h before configuring the project.
  *
- * We intentionally keep overrides light for now and rely on LVGL's
- * lv_conf_internal.h defaults for everything not specified here.
+ * LVGL v9 restructured many config options; this file follows the v9.3.0
+ * lv_conf_template.h layout.
  */
 
-/* Match the current headless host framebuffer setup. */
+/* Color depth: 16 = RGB565 */
 #define LV_COLOR_DEPTH 16
 
-/* Default to the built-in allocator until platform-specific memory plumbing exists. */
-#define LV_MEM_CUSTOM 0
+/* Use LVGL's built-in stdlib wrappers (v9 replaces LV_MEM_CUSTOM) */
+#define LV_USE_STDLIB_MALLOC    LV_STDLIB_BUILTIN
+#define LV_USE_STDLIB_STRING    LV_STDLIB_BUILTIN
+#define LV_USE_STDLIB_SPRINTF   LV_STDLIB_BUILTIN
 
-/* Keep logging disabled in the bootstrap phase unless a target opts in later. */
+/* Keep logging disabled unless a target opts in */
 #define LV_USE_LOG 0
+
+/* Software renderer (required for headless host builds) */
+#define LV_USE_DRAW_SW 1
 
 /* Enable QR code library */
 #define LV_USE_QRCODE 1

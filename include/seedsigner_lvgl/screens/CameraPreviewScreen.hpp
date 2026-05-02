@@ -31,7 +31,7 @@ private:
     lv_obj_t* frame_label_{nullptr};
     lv_obj_t* status_label_{nullptr};
     std::unique_ptr<TopNavBar> top_nav_bar_{};
-    std::vector<lv_color_t> preview_canvas_buffer_{};
+    std::vector<std::uint16_t> preview_canvas_buffer_{};  ///< RGB565 pixels for canvas
     std::vector<std::uint8_t> latest_frame_{};
     std::string title_{"Scan QR"};
     std::string status_{"Waiting for external frames"};

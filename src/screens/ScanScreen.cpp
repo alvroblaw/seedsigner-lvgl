@@ -79,7 +79,7 @@ void ScanScreen::create(const ScreenContext& context, const RouteDescriptor& rou
     // Create preview canvas (initially black)
     preview_canvas_buffer_.resize(static_cast<std::size_t>(preview_width()) * static_cast<std::size_t>(preview_height()));
     preview_img_ = lv_canvas_create(content_container_);
-    lv_canvas_set_buffer(preview_img_, preview_canvas_buffer_.data(), preview_width(), preview_height(), LV_IMG_CF_TRUE_COLOR);
+    lv_canvas_set_buffer(preview_img_, preview_canvas_buffer_.data(), preview_width(), preview_height(), LV_COLOR_FORMAT_NATIVE);
     lv_obj_set_size(preview_img_, preview_width(), preview_height());
     lv_obj_align(preview_img_, LV_ALIGN_CENTER, 0, 0);
     lv_canvas_fill_bg(preview_img_, seedsigner::lvgl::theme::active_theme().BLACK, LV_OPA_COVER);
@@ -128,7 +128,7 @@ void ScanScreen::destroy() {
     // TopNavBar must be cleared before its parent container is deleted.
     top_nav_bar_.reset();
     if (container_ != nullptr) {
-        lv_obj_del(container_);
+        lv_obj_delete(container_);
         container_ = nullptr;
     }
     content_container_ = nullptr;
@@ -197,8 +197,8 @@ bool ScanScreen::push_frame(const CameraFrame& frame) {
             for (std::uint32_t x = 0; x < scaled_width; ++x) {
                 const auto src_x = std::min<std::uint32_t>(frame_width_ - 1, (x * frame_width_) / scaled_width);
                 const auto value = latest_frame_[static_cast<std::size_t>(src_y) * source_stride + src_x];
-                lv_canvas_set_px(preview_img_, static_cast<lv_coord_t>(x + x_offset), static_cast<lv_coord_t>(y + y_offset),
-                                 grayscale_to_color(value));
+                lv_canvas_set_px(preview_img_, static_cast<int32_t>(x + x_offset), static_cast<int32_t>(y + y_offset),
+                                 grayscale_to_color(value), LV_OPA_COVER);
             }
         }
         lv_obj_invalidate(preview_img_);
