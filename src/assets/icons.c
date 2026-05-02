@@ -18246,169 +18246,253 @@ static const uint8_t img_warning_data[] = {
 };
 
 const lv_img_dsc_t img_arrow_down = {
+    .header.magic = LV_IMAGE_HEADER_MAGIC,
+    .header.cf = LV_COLOR_FORMAT_NATIVE_WITH_ALPHA,
+    .header.flags = 0,
     .header.w = 16,
     .header.h = 8,
-    .header.cf = LV_COLOR_FORMAT_NATIVE_WITH_ALPHA,
+    .header.stride = 48,
+    .header.reserved_2 = 0,
     .data_size = 384,
     .data = img_arrow_down_data
 };
 
 const lv_img_dsc_t img_arrow_down_selected = {
+    .header.magic = LV_IMAGE_HEADER_MAGIC,
+    .header.cf = LV_COLOR_FORMAT_NATIVE_WITH_ALPHA,
+    .header.flags = 0,
     .header.w = 16,
     .header.h = 8,
-    .header.cf = LV_COLOR_FORMAT_NATIVE_WITH_ALPHA,
+    .header.stride = 48,
+    .header.reserved_2 = 0,
     .data_size = 384,
     .data = img_arrow_down_selected_data
 };
 
 const lv_img_dsc_t img_arrow_right = {
+    .header.magic = LV_IMAGE_HEADER_MAGIC,
+    .header.cf = LV_COLOR_FORMAT_NATIVE_WITH_ALPHA,
+    .header.flags = 0,
     .header.w = 24,
     .header.h = 24,
-    .header.cf = LV_COLOR_FORMAT_NATIVE_WITH_ALPHA,
+    .header.stride = 72,
+    .header.reserved_2 = 0,
     .data_size = 1728,
     .data = img_arrow_right_data
 };
 
 const lv_img_dsc_t img_arrow_right_selected = {
+    .header.magic = LV_IMAGE_HEADER_MAGIC,
+    .header.cf = LV_COLOR_FORMAT_NATIVE_WITH_ALPHA,
+    .header.flags = 0,
     .header.w = 24,
     .header.h = 24,
-    .header.cf = LV_COLOR_FORMAT_NATIVE_WITH_ALPHA,
+    .header.stride = 72,
+    .header.reserved_2 = 0,
     .data_size = 1728,
     .data = img_arrow_right_selected_data
 };
 
 const lv_img_dsc_t img_arrow_up = {
+    .header.magic = LV_IMAGE_HEADER_MAGIC,
+    .header.cf = LV_COLOR_FORMAT_NATIVE_WITH_ALPHA,
+    .header.flags = 0,
     .header.w = 16,
     .header.h = 8,
-    .header.cf = LV_COLOR_FORMAT_NATIVE_WITH_ALPHA,
+    .header.stride = 48,
+    .header.reserved_2 = 0,
     .data_size = 384,
     .data = img_arrow_up_data
 };
 
 const lv_img_dsc_t img_arrow_up_selected = {
+    .header.magic = LV_IMAGE_HEADER_MAGIC,
+    .header.cf = LV_COLOR_FORMAT_NATIVE_WITH_ALPHA,
+    .header.flags = 0,
     .header.w = 16,
     .header.h = 8,
-    .header.cf = LV_COLOR_FORMAT_NATIVE_WITH_ALPHA,
+    .header.stride = 48,
+    .header.reserved_2 = 0,
     .data_size = 384,
     .data = img_arrow_up_selected_data
 };
 
 const lv_img_dsc_t img_back = {
+    .header.magic = LV_IMAGE_HEADER_MAGIC,
+    .header.cf = LV_COLOR_FORMAT_NATIVE_WITH_ALPHA,
+    .header.flags = 0,
     .header.w = 24,
     .header.h = 24,
-    .header.cf = LV_COLOR_FORMAT_NATIVE_WITH_ALPHA,
+    .header.stride = 72,
+    .header.reserved_2 = 0,
     .data_size = 1728,
     .data = img_back_data
 };
 
 const lv_img_dsc_t img_back_selected = {
+    .header.magic = LV_IMAGE_HEADER_MAGIC,
+    .header.cf = LV_COLOR_FORMAT_NATIVE_WITH_ALPHA,
+    .header.flags = 0,
     .header.w = 24,
     .header.h = 24,
-    .header.cf = LV_COLOR_FORMAT_NATIVE_WITH_ALPHA,
+    .header.stride = 72,
+    .header.reserved_2 = 0,
     .data_size = 1728,
     .data = img_back_selected_data
 };
 
 const lv_img_dsc_t img_btc_logo = {
+    .header.magic = LV_IMAGE_HEADER_MAGIC,
+    .header.cf = LV_COLOR_FORMAT_NATIVE_WITH_ALPHA,
+    .header.flags = 0,
     .header.w = 24,
     .header.h = 24,
-    .header.cf = LV_COLOR_FORMAT_NATIVE_WITH_ALPHA,
+    .header.stride = 72,
+    .header.reserved_2 = 0,
     .data_size = 1728,
     .data = img_btc_logo_data
 };
 
 const lv_img_dsc_t img_btc_logo_30x30 = {
+    .header.magic = LV_IMAGE_HEADER_MAGIC,
+    .header.cf = LV_COLOR_FORMAT_NATIVE_WITH_ALPHA,
+    .header.flags = 0,
     .header.w = 30,
     .header.h = 30,
-    .header.cf = LV_COLOR_FORMAT_NATIVE_WITH_ALPHA,
+    .header.stride = 90,
+    .header.reserved_2 = 0,
     .data_size = 2700,
     .data = img_btc_logo_30x30_data
 };
 
 const lv_img_dsc_t img_btc_logo_60x60 = {
+    .header.magic = LV_IMAGE_HEADER_MAGIC,
+    .header.cf = LV_COLOR_FORMAT_NATIVE_WITH_ALPHA,
+    .header.flags = 0,
     .header.w = 60,
     .header.h = 60,
-    .header.cf = LV_COLOR_FORMAT_NATIVE_WITH_ALPHA,
+    .header.stride = 180,
+    .header.reserved_2 = 0,
     .data_size = 10800,
     .data = img_btc_logo_60x60_data
 };
 
 const lv_img_dsc_t img_btc_logo_bw = {
+    .header.magic = LV_IMAGE_HEADER_MAGIC,
+    .header.cf = LV_COLOR_FORMAT_NATIVE_WITH_ALPHA,
+    .header.flags = 0,
     .header.w = 24,
     .header.h = 24,
-    .header.cf = LV_COLOR_FORMAT_NATIVE_WITH_ALPHA,
+    .header.stride = 72,
+    .header.reserved_2 = 0,
     .data_size = 1728,
     .data = img_btc_logo_bw_data
 };
 
 const lv_img_dsc_t img_check = {
+    .header.magic = LV_IMAGE_HEADER_MAGIC,
+    .header.cf = LV_COLOR_FORMAT_NATIVE_WITH_ALPHA,
+    .header.flags = 0,
     .header.w = 24,
     .header.h = 24,
-    .header.cf = LV_COLOR_FORMAT_NATIVE_WITH_ALPHA,
+    .header.stride = 72,
+    .header.reserved_2 = 0,
     .data_size = 1728,
     .data = img_check_data
 };
 
 const lv_img_dsc_t img_check_selected = {
+    .header.magic = LV_IMAGE_HEADER_MAGIC,
+    .header.cf = LV_COLOR_FORMAT_NATIVE_WITH_ALPHA,
+    .header.flags = 0,
     .header.w = 24,
     .header.h = 24,
-    .header.cf = LV_COLOR_FORMAT_NATIVE_WITH_ALPHA,
+    .header.stride = 72,
+    .header.reserved_2 = 0,
     .data_size = 1728,
     .data = img_check_selected_data
 };
 
 const lv_img_dsc_t img_close = {
+    .header.magic = LV_IMAGE_HEADER_MAGIC,
+    .header.cf = LV_COLOR_FORMAT_NATIVE_WITH_ALPHA,
+    .header.flags = 0,
     .header.w = 24,
     .header.h = 24,
-    .header.cf = LV_COLOR_FORMAT_NATIVE_WITH_ALPHA,
+    .header.stride = 72,
+    .header.reserved_2 = 0,
     .data_size = 1728,
     .data = img_close_data
 };
 
 const lv_img_dsc_t img_close_selected = {
+    .header.magic = LV_IMAGE_HEADER_MAGIC,
+    .header.cf = LV_COLOR_FORMAT_NATIVE_WITH_ALPHA,
+    .header.flags = 0,
     .header.w = 24,
     .header.h = 24,
-    .header.cf = LV_COLOR_FORMAT_NATIVE_WITH_ALPHA,
+    .header.stride = 72,
+    .header.reserved_2 = 0,
     .data_size = 1728,
     .data = img_close_selected_data
 };
 
 const lv_img_dsc_t img_dire_warning = {
+    .header.magic = LV_IMAGE_HEADER_MAGIC,
+    .header.cf = LV_COLOR_FORMAT_NATIVE_WITH_ALPHA,
+    .header.flags = 0,
     .header.w = 40,
     .header.h = 40,
-    .header.cf = LV_COLOR_FORMAT_NATIVE_WITH_ALPHA,
+    .header.stride = 120,
+    .header.reserved_2 = 0,
     .data_size = 4800,
     .data = img_dire_warning_data
 };
 
 const lv_img_dsc_t img_home = {
+    .header.magic = LV_IMAGE_HEADER_MAGIC,
+    .header.cf = LV_COLOR_FORMAT_NATIVE_WITH_ALPHA,
+    .header.flags = 0,
     .header.w = 24,
     .header.h = 24,
-    .header.cf = LV_COLOR_FORMAT_NATIVE_WITH_ALPHA,
+    .header.stride = 72,
+    .header.reserved_2 = 0,
     .data_size = 1728,
     .data = img_home_data
 };
 
 const lv_img_dsc_t img_home_selected = {
+    .header.magic = LV_IMAGE_HEADER_MAGIC,
+    .header.cf = LV_COLOR_FORMAT_NATIVE_WITH_ALPHA,
+    .header.flags = 0,
     .header.w = 24,
     .header.h = 24,
-    .header.cf = LV_COLOR_FORMAT_NATIVE_WITH_ALPHA,
+    .header.stride = 72,
+    .header.reserved_2 = 0,
     .data_size = 1728,
     .data = img_home_selected_data
 };
 
 const lv_img_dsc_t img_logo_black_240 = {
+    .header.magic = LV_IMAGE_HEADER_MAGIC,
+    .header.cf = LV_COLOR_FORMAT_NATIVE_WITH_ALPHA,
+    .header.flags = 0,
     .header.w = 240,
     .header.h = 240,
-    .header.cf = LV_COLOR_FORMAT_NATIVE_WITH_ALPHA,
+    .header.stride = 720,
+    .header.reserved_2 = 0,
     .data_size = 172800,
     .data = img_logo_black_240_data
 };
 
 const lv_img_dsc_t img_warning = {
+    .header.magic = LV_IMAGE_HEADER_MAGIC,
+    .header.cf = LV_COLOR_FORMAT_NATIVE_WITH_ALPHA,
+    .header.flags = 0,
     .header.w = 40,
     .header.h = 40,
-    .header.cf = LV_COLOR_FORMAT_NATIVE_WITH_ALPHA,
+    .header.stride = 120,
+    .header.reserved_2 = 0,
     .data_size = 4800,
     .data = img_warning_data
 };
