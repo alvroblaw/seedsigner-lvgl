@@ -85,6 +85,10 @@ void MenuListScreen::create(const ScreenContext& context, const RouteDescriptor&
     lv_obj_set_size(container_, lv_pct(100), lv_pct(100));
     lv_obj_set_flex_flow(container_, LV_FLEX_FLOW_COLUMN);
     lv_obj_set_flex_align(container_, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
+    lv_obj_set_style_bg_opa(container_, LV_OPA_TRANSP, 0);
+    lv_obj_set_style_border_width(container_, 0, 0);
+    lv_obj_set_style_pad_all(container_, 0, 0);
+    lv_obj_set_style_pad_row(container_, 0, 0);
     // No padding on root container; TopNavBar and content container manage their own spacing.
 
     // Top navigation bar
@@ -101,6 +105,8 @@ void MenuListScreen::create(const ScreenContext& context, const RouteDescriptor&
     // Content container (everything below the nav bar)
     content_container_ = lv_obj_create(container_);
     lv_obj_set_size(content_container_, lv_pct(100), lv_pct(100));
+    lv_obj_set_style_bg_opa(content_container_, LV_OPA_TRANSP, 0);
+    lv_obj_set_style_border_width(content_container_, 0, 0);
     lv_obj_set_style_pad_all(content_container_, seedsigner::lvgl::theme::spacing::SCREEN_PADDING, 0);
     lv_obj_set_style_pad_row(content_container_, seedsigner::lvgl::theme::spacing::ROW_GAP, 0);
     lv_obj_set_flex_flow(content_container_, LV_FLEX_FLOW_COLUMN);
@@ -111,6 +117,8 @@ void MenuListScreen::create(const ScreenContext& context, const RouteDescriptor&
     lv_obj_set_size(list_, lv_pct(100), lv_pct(100));
     lv_obj_set_flex_grow(list_, 1);
     lv_obj_set_scroll_dir(list_, LV_DIR_VER);
+    lv_obj_set_style_bg_opa(list_, LV_OPA_TRANSP, 0);
+    lv_obj_set_style_border_width(list_, 0, 0);
     lv_obj_set_flex_flow(list_, LV_FLEX_FLOW_COLUMN);
     lv_obj_set_flex_align(list_, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
     lv_obj_set_style_pad_all(list_, 0, 0);

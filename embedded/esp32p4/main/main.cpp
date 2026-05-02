@@ -100,6 +100,8 @@ extern "C" void app_main(void)
     }
 
     create_demo_ui();
+    lv_obj_set_style_bg_color(lv_scr_act(), lv_color_hex(0x000000), 0);
+    lv_obj_set_style_bg_opa(lv_scr_act(), LV_OPA_COVER, 0);
     lv_obj_invalidate(lv_scr_act());
     bsp_display_unlock();
     ESP_LOGI(TAG, "SeedSigner demo UI queued for LVGL render");
